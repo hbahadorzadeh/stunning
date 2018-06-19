@@ -1,4 +1,4 @@
-package lib
+package net
 
 import (
 	"crypto/tls"
@@ -11,17 +11,17 @@ type TlsServer struct {
 	server Vpnserver
 }
 
-func StartTlsServer() *TlsServer {
+func StartTlsServer(crt, key, address string) *TlsServer {
 	log.SetFlags(log.Lshortfile)
 
-	cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
+	cer, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
-	ln, err := tls.Listen("tcp", ":4443", config)
+	ln, err := tls.Listen("tcp", address, config)
 
 	if err != nil {
 		log.Println(err)
@@ -39,7 +39,12 @@ func (s *TlsServer) SetSocksServer(ss *socks_server) {
 	go s.waitingForConnection()
 }
 
-func (s *TlsServer) SetTunServer(ss *TunInterface) {
+func (s *TlsServer) SetTunServer(ss *tun_interface) {
+	s.server = ss
+	go s.waitingForConnection()
+}
+
+func (s *TlsServer) SetTcpServer(ss *tcp_server) {
 	s.server = ss
 	go s.waitingForConnection()
 }

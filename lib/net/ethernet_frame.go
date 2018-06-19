@@ -1,4 +1,4 @@
-package lib
+package net
 
 import "net"
 
@@ -17,7 +17,7 @@ const (
 	DoubleTagged Tagging = 8
 )
 
-func (f Frame) ReplacePart(start int, end int, nval []byte){
+func (f Frame) ReplacePart(start int, end int, nval []byte) {
 	tmp := append(f[:start], nval...)
 	f = append(tmp, f[end:]...)
 }
@@ -34,8 +34,8 @@ func (f Frame) DestinationBytes() []byte {
 	return f[:6:6]
 }
 
-func (f Frame) SetDestination(addr []byte)  {
-	f.ReplacePart(0,6, addr)
+func (f Frame) SetDestination(addr []byte) {
+	f.ReplacePart(0, 6, addr)
 }
 
 // Source returns the source address field of the frame. The address references
@@ -48,8 +48,8 @@ func (f Frame) Source() net.HardwareAddr {
 func (f Frame) SourceBytes() []byte {
 	return f[6:12:12]
 }
-func (f Frame) SetSource(addr []byte){
-	f.ReplacePart(6,12, addr)
+func (f Frame) SetSource(addr []byte) {
+	f.ReplacePart(6, 12, addr)
 }
 
 // Tagging returns whether/how the frame has 802.1Q tag(s).

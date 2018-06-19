@@ -1,12 +1,11 @@
-package stunning
-
+package stunning_test
 
 import (
-	"hbx.ir/stunning/lib"
-	"testing"
+	"github.com/songgao/water"
+	"hbx.ir/stunning/lib/net"
 	"log"
 	"os"
-	"github.com/songgao/water"
+	"testing"
 )
 
 func TestCliTunGet(t *testing.T) {
@@ -24,17 +23,17 @@ func TestCliTunGet(t *testing.T) {
 	//ts.SetTunServer(tunserv)
 	//log.Println("Tun Interface is set to Tls Server")
 
-	stunclientconf :=lib.TunConfig{
+	stunclientconf := net.TunConfig{
 		DevType: water.TUN,
-		Address : "10.0.5.2",
-		Name: "",
-		MTU: "1500",
+		Address: "10.0.5.2",
+		Name:    "",
+		MTU:     "1500",
 	}
-	tuncli := lib.GetTunIface(stunclientconf)
+	tuncli := net.GetTunIface(stunclientconf)
 
 	log.Println("Tun Interface for client is up")
 
-	tc := lib.GetTlsDialer()
+	tc := net.GetTlsDialer()
 
 	log.Println("Tls client started")
 	conn, err := tc.Dial("tcp", "10.0.2.2:4443")

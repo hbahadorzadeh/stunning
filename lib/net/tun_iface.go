@@ -1,17 +1,17 @@
-package lib
+package net
 
 import (
 	"github.com/songgao/water"
 	"github.com/songgao/water/waterutil"
 	"log"
 	"net"
-	"os/exec"
 	"os"
+	"os/exec"
 )
 
-type TunInterface struct {
+type tun_interface struct {
 	Vpnserver
-	conf TunConfig
+	conf  TunConfig
 	iface *water.Interface
 	//nat map[net.IP]
 }
@@ -23,7 +23,7 @@ type TunConfig struct {
 	MTU     string
 }
 
-func GetTunIface(config TunConfig) *TunInterface {
+func GetTunIface(config TunConfig) *tun_interface {
 	ifce, err := water.New(water.Config{
 		DeviceType: config.DevType,
 	})
@@ -36,21 +36,21 @@ func GetTunIface(config TunConfig) *TunInterface {
 		log.Fatal(err)
 	}
 
-	iface := &TunInterface{
+	iface := &tun_interface{
 		iface: ifce,
-		conf: config,
+		conf:  config,
 	}
 	return iface
 }
 
-func (t *TunInterface) HandleConnection(conn net.Conn) error {
-	log.Printf("Tun iface %s handling new connection \n" , t.iface.Name())
-	go t.Reader(conn)
-	t.Writer(conn)
+func (t *tun_interface) HandleConnection(conn net.Conn) error {
+	log.Printf("Tun iface %s handling new connection \n", t.iface.Name())
+	go t.reader(conn)
+	t.writer(conn)
 	return nil
 }
 
-func (t *TunInterface) Reader(conn net.Conn) {
+func (t *tun_interface) reader(conn net.Conn) {
 	var frame Frame
 
 	for {
@@ -77,7 +77,7 @@ func (t *TunInterface) Reader(conn net.Conn) {
 	}
 }
 
-func (t *TunInterface) Writer(conn net.Conn) {
+func (t *tun_interface) writer(conn net.Conn) {
 	var frame Frame
 	for {
 		frame.Resize(1500)
@@ -104,7 +104,7 @@ func (t *TunInterface) Writer(conn net.Conn) {
 	}
 }
 
-func runIP(args... string) {
+func runIP(args ...string) {
 	cmd := exec.Command("/sbin/ip", args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

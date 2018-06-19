@@ -1,4 +1,4 @@
-package lib
+package net
 
 type Ethertype [2]byte
 
