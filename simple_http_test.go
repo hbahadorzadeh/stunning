@@ -1,20 +1,20 @@
 package stunning
 
 import (
+	"fmt"
 	"golang.org/x/net/proxy"
 	"hbx.ir/stunning/lib"
-	"net/http"
-	"testing"
-	"log"
-	"os"
 	"io/ioutil"
-	"fmt"
-	"net"
+	"log"
+	"net/http"
+	"os"
+	"testing"
 )
 
-func TestGet(t *testing.T) {
+func TestHttpGet(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	lib.StartTlsServer()
+	ts := lib.StartTlsServer()
+	ts.SetSocksServer(lib.GetSocksServer())
 	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, lib.GetTlsDialer())
 	if err != nil {
 		log.Println("Error connecting to proxy:", err)

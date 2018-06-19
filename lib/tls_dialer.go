@@ -3,7 +3,6 @@ package lib
 import (
 	"crypto/tls"
 	"golang.org/x/net/proxy"
-	"log"
 	"net"
 )
 
@@ -16,7 +15,6 @@ func GetTlsDialer() *tls_dialer {
 }
 
 func (d *tls_dialer) Dial(network, addr string) (c net.Conn, err error) {
-	log.SetFlags(log.Lshortfile)
 
 	conf := &tls.Config{
 		InsecureSkipVerify: true,

@@ -6,13 +6,18 @@ import (
 	"net"
 )
 
-func StartTlsServer() {
+type TlsServer struct {
+	ln     net.Listener
+	server Vpnserver
+}
+
+func StartTlsServer() *TlsServer {
 	log.SetFlags(log.Lshortfile)
 
 	cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
 	if err != nil {
 		log.Println(err)
-		return
+		return nil
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
@@ -20,29 +25,38 @@ func StartTlsServer() {
 
 	if err != nil {
 		log.Println(err)
-		return
+		return nil
 	}
 	//defer ln.Close()
-
-	sserver := get_socks_server()
-	log.Println("socks server created")
-	go waiting_for_connection(ln, sserver)
-	log.Println("Done tls server")
+	serv := &TlsServer{
+		ln: ln,
+	}
+	return serv
 }
 
-func waiting_for_connection(ln net.Listener, sserver *socks_server){
+func (s *TlsServer) SetSocksServer(ss *socks_server) {
+	s.server = ss
+	go s.waitingForConnection()
+}
+
+func (s *TlsServer) SetTunServer(ss *TunInterface) {
+	s.server = ss
+	go s.waitingForConnection()
+}
+
+func (s *TlsServer) waitingForConnection() {
 	for {
-		conn, err := ln.Accept()
+		conn, err := s.ln.Accept()
 		log.Println("new connection")
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		go handleConnection(conn, sserver)
+		go s.handleConnection(conn)
 	}
 }
 
-func handleConnection(conn net.Conn, sserver *socks_server) {
+func (s *TlsServer) handleConnection(conn net.Conn) {
 	defer conn.Close()
-	sserver.handle_connection(conn)
+	s.server.HandleConnection(conn)
 }
