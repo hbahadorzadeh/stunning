@@ -1,4 +1,4 @@
-package stunning_test
+package test
 
 import (
 	"hbx.ir/stunning/lib/net"

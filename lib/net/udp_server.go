@@ -1,8 +1,8 @@
 package net
 
 import (
-"log"
-"net"
+	"log"
+	"net"
 )
 
 type udp_server struct {
@@ -28,12 +28,12 @@ func GetUdpServer(url string) *udp_server {
 
 func (t *udp_server) HandleConnection(conn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", t.address)
-	go udp_server_reader(conn, t.conn)
-	udp_server_writer(conn, t.conn)
+	go t.udp_server_reader(conn)
+	t.udp_server_writer(conn)
 	return nil
 }
 
-func udp_server_reader(conn net.Conn, tconn net.Conn) {
+func (t *udp_server) udp_server_reader(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
@@ -41,19 +41,19 @@ func udp_server_reader(conn net.Conn, tconn net.Conn) {
 			log.Fatal(err)
 		}
 		buff = buff[:n]
-		wn, werr := tconn.Write(buff)
+		wn, werr := t.conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
 			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
-		log.Printf("%s : %d bytes wrote to socket", tconn.RemoteAddr().String(), wn)
+		log.Printf("%s : %d bytes wrote to socket", t.conn.RemoteAddr().String(), wn)
 	}
 }
 
-func udp_server_writer(conn net.Conn, tconn net.Conn) {
+func (t *udp_server) udp_server_writer(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
-		n, err := tconn.Read(buff)
+		n, err := t.conn.Read(buff)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -66,4 +66,3 @@ func udp_server_writer(conn net.Conn, tconn net.Conn) {
 		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
 	}
 }
-
