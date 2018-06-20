@@ -7,8 +7,8 @@ import (
 )
 
 type TlsServer struct {
-	ln     net.Listener
 	server Vpnserver
+	ln     net.Listener
 }
 
 func StartTlsServer(crt, key, address string) *TlsServer {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hbx.ir/stunning/lib/utils"
 	"strconv"
+	//"encoding/binary"
 )
 
 type udp_client struct {
@@ -46,8 +47,9 @@ func (u *udp_client)udp_client_reader(conn net.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		buff = buff[:n]
-		wn, werr := u.conn..Write(buff)
+		//seq := binary.BigEndian.Uint16(strconv.buff[:10])
+		buff = buff[10:n]
+		wn, werr := u.conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
 			log.Printf("wn : %d, n: %d \n", wn, n)
@@ -71,7 +73,7 @@ func (u *udp_client)udp_client_writer(conn net.Conn) {
 			i = len(u.replyMap)-1
 		}
 
-		buff = append([]byte(strconv.Itoa(i)), buff[:n]...)
+		buff = append(fillIntBytes([]byte(strconv.Itoa(i))), buff[:n]...)
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
@@ -81,3 +83,11 @@ func (u *udp_client)udp_client_writer(conn net.Conn) {
 	}
 }
 
+func fillIntBytes(in []byte) []byte{
+	for len(in) <= 10 {
+		z := make([]byte, 1)
+		z[0] = byte(0)
+		in = append(z, in...)
+	}
+	return in
+}

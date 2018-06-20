@@ -2,7 +2,6 @@ package net
 
 import (
 	"github.com/songgao/water"
-	"github.com/songgao/water/waterutil"
 	"log"
 	"net"
 	"os"
@@ -63,11 +62,6 @@ func (t *tun_interface) reader(conn net.Conn) {
 		if len(frame) == 0 {
 			continue
 		}
-		log.Printf("%d bytes read from iface", n)
-		log.Printf("Dst: %s\n", frame.Destination())
-		log.Printf("Src: %s\n", frame.Source())
-		log.Printf("Ethertype: % x\n", frame.Ethertype())
-		log.Printf("Payload: % x\n", frame.Payload())
 		wn, werr := conn.Write(frame)
 		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
@@ -89,12 +83,6 @@ func (t *tun_interface) writer(conn net.Conn) {
 		if len(frame) == 0 {
 			continue
 		}
-		waterutil.SetIPv4Source(frame, net.ParseIP(t.conf.Address))
-		log.Printf("%d bytes read from socket", n)
-		log.Printf("Dst: %s\n", frame.Destination())
-		log.Printf("Src: %s\n", frame.Source())
-		log.Printf("Ethertype: % x\n", frame.Ethertype())
-		log.Printf("Payload: % x\n", frame.Payload())
 		wn, werr := t.iface.Write(frame)
 		if err != nil || wn != len(frame) {
 			log.Panicln(werr)

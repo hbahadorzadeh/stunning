@@ -118,6 +118,7 @@ func (c *StunningConfig) getTunnelConfs() map[string]*TunnelConfig {
 			}
 		}
 	}
+	return c.tunConf
 }
 
 func (c *StunningConfig) getTunnelConf(name string) *TunnelConfig {

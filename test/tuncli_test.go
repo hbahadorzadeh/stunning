@@ -25,7 +25,7 @@ func TestCliTunGet(t *testing.T) {
 
 	stunclientconf := net.TunConfig{
 		DevType: water.TUN,
-		Address: "10.0.5.2",
+		Address: "10.0.5.2/24",
 		Name:    "",
 		MTU:     "1500",
 	}

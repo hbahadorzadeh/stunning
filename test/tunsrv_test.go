@@ -12,11 +12,11 @@ import (
 
 func TestSrvGet(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	ts := net.StartTlsServer("server.crt", "server.key", ":4443")
+	ts := net.StartTlsServer("../server.crt", "../server.key", ":4443")
 	fmt.Println("Tls Server started")
 	stunconf := net.TunConfig{
 		DevType: water.TUN,
-		Address: "10.0.5.1",
+		Address: "10.0.5.1/24",
 		Name:    "",
 		MTU:     "1500",
 	}
@@ -45,5 +45,7 @@ func TestSrvGet(t *testing.T) {
 	//log.Println("Tls client connected to server")
 	//tuncli.HandleConnection(conn)
 	//log.Println("Tls client set to client tun interface")
-	time.Sleep(100 * time.Second)
+	for {
+		time.Sleep(1*time.Second)
+	}
 }
