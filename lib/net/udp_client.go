@@ -32,15 +32,15 @@ func GetUdpClient(url string, conn net.Conn) *udp_client {
 	s.replyMap = make([]string, 0)
 	return s
 }
-func (u *udp_client) HandleConnection(conn net.Conn) error {
-	log.Printf("Socket to %s handling connection \n", u.address)
-	go u.udp_client_reader(conn)
-	u.udp_client_writer(conn)
+func (c *udp_client) HandleConnection(conn net.Conn) error {
+	log.Printf("Socket to %s handling connection \n", c.address)
+	go c.udp_client_reader(conn)
+	c.udp_client_writer(conn)
 	return nil
 }
 
 
-func (u *udp_client)udp_client_reader(conn net.Conn) {
+func (c *udp_client)udp_client_reader(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
@@ -49,28 +49,28 @@ func (u *udp_client)udp_client_reader(conn net.Conn) {
 		}
 		//seq := binary.BigEndian.Uint16(strconv.buff[:10])
 		buff = buff[10:n]
-		wn, werr := u.conn.Write(buff)
+		wn, werr := c.conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
 			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
-		log.Printf("%s : %d bytes wrote to socket", u.conn.RemoteAddr().String(), wn)
+		log.Printf("%s : %d bytes wrote to socket", c.conn.RemoteAddr().String(), wn)
 	}
 }
 
-func (u *udp_client)udp_client_writer(conn net.Conn) {
+func (c *udp_client)udp_client_writer(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
-		n, addr ,  err := u.conn.ReadFrom(buff)
+		n, addr ,  err := c.conn.ReadFrom(buff)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		i := utils.ArrayIndex(u.replyMap, addr.String())
+		i := utils.ArrayIndex(c.replyMap, addr.String())
 
 		if i == -1 {
-			u.replyMap= append(u.replyMap, addr.String())
-			i = len(u.replyMap)-1
+			c.replyMap= append(c.replyMap, addr.String())
+			i = len(c.replyMap)-1
 		}
 
 		buff = append(fillIntBytes([]byte(strconv.Itoa(i))), buff[:n]...)
