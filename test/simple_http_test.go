@@ -3,7 +3,8 @@ package test
 import (
 	"fmt"
 	"golang.org/x/net/proxy"
-	"hbx.ir/stunning/lib/net"
+	"hbx.ir/stunning/lib/net/interface/socks"
+	tlstun "hbx.ir/stunning/lib/net/tunnel/tls"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,9 +14,9 @@ import (
 
 func TestHttpGet(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	ts := net.StartTlsServer("server.crt", "server.key", ":4443")
-	ts.SetSocksServer(net.GetSocksServer())
-	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, net.GetTlsDialer())
+	ts := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
+	ts.SetServer(socks.GetSocksServer())
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, tlstun.GetTlsDialer())
 	if err != nil {
 		log.Println("Error connecting to proxy:", err)
 	}

@@ -1,7 +1,7 @@
-package net
+package common
 
 import "net"
 
-type Vpnserver interface {
+type TunnelInterfaceServer interface {
 	HandleConnection(conn net.Conn) error
 }

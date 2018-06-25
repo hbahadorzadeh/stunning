@@ -1,6 +1,6 @@
 [application]
-    key = "server.key"
-    crt = "server.crt"
+    key = "../server.key"
+    crt = "../server.crt"
     log_location = "app.log"
     log_level = 9
 [tcp_cli_test]

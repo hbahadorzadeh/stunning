@@ -1,4 +1,4 @@
-package net
+package common
 
 type Ethertype [2]byte
 

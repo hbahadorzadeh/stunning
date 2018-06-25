@@ -1,18 +1,19 @@
-package net
+package udp
 
 import (
 	"log"
 	"net"
+	icommon "hbx.ir/stunning/lib/net/interface/common"
 )
 
-type udp_server struct {
-	Vpnserver
+type UdpServer struct {
+	icommon.TunnelInterfaceServer
 	address string
-	connMap    map[[10]byte]net.Conn
+	connMap map[[10]byte]net.Conn
 }
 
-func GetUdpServer(url string) *udp_server {
-	s := &udp_server{}
+func GetUdpServer(url string) UdpServer {
+	s := UdpServer{}
 	s.address = url
 
 	s.connMap = make(map[[10]byte]net.Conn)
@@ -20,31 +21,31 @@ func GetUdpServer(url string) *udp_server {
 	return s
 }
 
-func(s *udp_server)getConnByAddr(addr [10]byte)net.Conn{
+func (s *UdpServer) getConnByAddr(addr [10]byte) net.Conn {
 
-
-	conn, err := net.Dial("udp", s.address)
+	//conn, err := net.Dial("udp", s.address)
+	_, err := net.Dial("udp", s.address)
 
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (s *udp_server) HandleConnection(conn net.Conn) error {
+func (s UdpServer) HandleConnection(conn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", s.address)
-	go s.udp_server_reader(conn)
-	s.udp_server_writer(conn)
+	//go s.udp_server_reader(conn, s.connMap)
+	//s.udp_server_writer(conn)
 	return nil
 }
 
-func (s *udp_server) udp_server_reader(conn net.Conn) {
+func (s *UdpServer) udp_server_reader(conn, sconn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
 		if err != nil {
 			log.Fatal(err)
 		}
-		addr := buff[:10]
+		//addr := buff[:10]
 		buff = buff[10:n]
 		wn, werr := sconn.Write(buff)
 		if werr != nil || wn != len(buff) {
@@ -55,7 +56,7 @@ func (s *udp_server) udp_server_reader(conn net.Conn) {
 	}
 }
 
-func (s *udp_server) udp_server_writer(conn, sconn net.Conn) {
+func (s *UdpServer) udp_server_writer(conn, sconn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := sconn.Read(buff)

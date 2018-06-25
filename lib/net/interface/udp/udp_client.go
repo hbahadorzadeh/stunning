@@ -1,17 +1,18 @@
-package net
+package udp
 
 import (
-	"log"
-	"net"
 	"fmt"
 	"hbx.ir/stunning/lib/utils"
+	"log"
+	"net"
 	"strconv"
-	//"encoding/binary"
+	icommon "hbx.ir/stunning/lib/net/interface/common"
 )
 
 type udp_client struct {
-	address    string
-	conn *net.UDPConn
+	icommon.TunnelInterfaceClient
+	address  string
+	conn     *net.UDPConn
 	replyMap []string
 }
 
@@ -39,8 +40,7 @@ func (c *udp_client) HandleConnection(conn net.Conn) error {
 	return nil
 }
 
-
-func (c *udp_client)udp_client_reader(conn net.Conn) {
+func (c *udp_client) udp_client_reader(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
@@ -58,10 +58,10 @@ func (c *udp_client)udp_client_reader(conn net.Conn) {
 	}
 }
 
-func (c *udp_client)udp_client_writer(conn net.Conn) {
+func (c *udp_client) udp_client_writer(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
-		n, addr ,  err := c.conn.ReadFrom(buff)
+		n, addr, err := c.conn.ReadFrom(buff)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -69,8 +69,8 @@ func (c *udp_client)udp_client_writer(conn net.Conn) {
 		i := utils.ArrayIndex(c.replyMap, addr.String())
 
 		if i == -1 {
-			c.replyMap= append(c.replyMap, addr.String())
-			i = len(c.replyMap)-1
+			c.replyMap = append(c.replyMap, addr.String())
+			i = len(c.replyMap) - 1
 		}
 
 		buff = append(fillIntBytes([]byte(strconv.Itoa(i))), buff[:n]...)
@@ -83,7 +83,7 @@ func (c *udp_client)udp_client_writer(conn net.Conn) {
 	}
 }
 
-func fillIntBytes(in []byte) []byte{
+func fillIntBytes(in []byte) []byte {
 	for len(in) <= 10 {
 		z := make([]byte, 1)
 		z[0] = byte(0)
