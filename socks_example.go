@@ -3,8 +3,8 @@ package stunning
 import (
 	"fmt"
 	"golang.org/x/net/proxy"
-	"hbx.ir/stunning/interface/socks"
-	tlstun "hbx.ir/stunning/tunnel/tls"
+	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
+	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"io/ioutil"
 	"log"
 	"net/http"

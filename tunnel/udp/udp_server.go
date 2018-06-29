@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	tcommon "hbx.ir/stunning/tunnel/common"
+	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 )

@@ -2,7 +2,7 @@ package socks
 
 import (
 	"github.com/getlantern/go-socks5"
-	icommon "hbx.ir/stunning/interface/common"
+	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
 )

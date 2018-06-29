@@ -3,8 +3,8 @@ package udp
 import (
 	"encoding/binary"
 	"fmt"
-	"hbx.ir/stunning/common"
-	icommon "hbx.ir/stunning/interface/common"
+	"gitlab.com/h.bahadorzadeh/stunning/common"
+	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
 	"sync"

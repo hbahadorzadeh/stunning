@@ -3,7 +3,7 @@ package tun
 import (
 	"github.com/songgao/water"
 	"hbx.ir/stunning/common"
-	icommon "hbx.ir/stunning/interface/common"
+	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
 	"os"

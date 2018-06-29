@@ -1,8 +1,8 @@
 package tcp
 
 import (
-	icommon "hbx.ir/stunning/interface/common"
-	tcommon "hbx.ir/stunning/tunnel/common"
+	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
+	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 )

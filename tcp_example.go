@@ -1,8 +1,8 @@
 package stunning
 
 import (
-	"hbx.ir/stunning/interface/tcp"
-	tlstun "hbx.ir/stunning/tunnel/tls"
+	"gitlab.com/h.bahadorzadeh/stunning/interface/tcp"
+	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
 	"testing"

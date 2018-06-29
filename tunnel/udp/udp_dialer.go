@@ -2,7 +2,7 @@ package client
 
 import (
 	"golang.org/x/net/proxy"
-	tcommon "hbx.ir/stunning/tunnel/common"
+	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
 	"net"
 )
 

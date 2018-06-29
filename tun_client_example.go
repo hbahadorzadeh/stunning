@@ -2,8 +2,8 @@ package stunning
 
 import (
 	"github.com/songgao/water"
-	"hbx.ir/stunning/interface/tun"
-	tlstun "hbx.ir/stunning/tunnel/tls"
+	"gitlab.com/h.bahadorzadeh/stunning/interface/tun"
+	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
 	"testing"
