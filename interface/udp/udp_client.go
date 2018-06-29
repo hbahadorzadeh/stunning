@@ -99,7 +99,6 @@ func (c *udp_client) udp_client_writer(conn net.Conn) {
 	}
 }
 
-
 func arrayIndex(arr []*common.UdpAddress, search *common.UdpAddress) int {
 	for i, v := range arr {
 		if v.Equals(search) {
