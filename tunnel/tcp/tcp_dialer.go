@@ -1,4 +1,4 @@
-package client
+package tcp
 
 import (
 	"golang.org/x/net/proxy"
@@ -8,18 +8,16 @@ import (
 
 type TcpDialer struct {
 	tcommon.TunnelDialer
-	network, addr string
 	dialer        proxy.Dialer
 }
 
 func GetTcpDialer() TcpDialer {
 	d := TcpDialer{}
-	d.network = "tcp"
 	return d
 }
 
 func (d TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
-	conn, err := net.Dial(d.network, d.addr)
+	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}

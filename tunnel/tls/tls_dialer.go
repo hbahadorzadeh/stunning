@@ -1,4 +1,4 @@
-package client
+package tls
 
 import (
 	"crypto/tls"
@@ -9,7 +9,6 @@ import (
 
 type TlsDialer struct {
 	tcommon.TunnelDialer
-	network, addr string
 	dialer        proxy.Dialer
 }
 
@@ -18,14 +17,6 @@ func GetTlsDialer() TlsDialer {
 }
 
 func (d TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
-
-	if network == "" {
-		network = d.network
-	}
-
-	if addr == "" {
-		addr = d.addr
-	}
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}

@@ -1,4 +1,4 @@
-package client
+package udp
 
 import (
 	"golang.org/x/net/proxy"
@@ -8,20 +8,28 @@ import (
 
 type UdpDialer struct {
 	tcommon.TunnelDialer
-	network, addr string
 	dialer        proxy.Dialer
 }
 
 func GetUdpDialer() UdpDialer {
 	d := UdpDialer{}
-	d.network = "udp"
 	return d
 }
 
 func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
-	conn, err := net.Dial(d.network, d.addr)
+	rudpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return nil, err
 	}
-	return conn, err
+	ludpAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:5050")
+	if err != nil {
+		return nil, err
+	}
+	conn, err := net.DialUDP(network, ludpAddr, rudpAddr)
+	if err != nil {
+		return nil, err
+	}
+	return udp_connection{
+		conn: conn,
+	}, err
 }

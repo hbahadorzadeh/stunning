@@ -1,4 +1,4 @@
-package client
+package tls
 
 import (
 	"crypto/tls"
@@ -10,13 +10,12 @@ type TlsServer struct {
 	tcommon.TunnelServer
 }
 
-func StartTlsServer(crt, key, address string) *TlsServer {
-	log.SetFlags(log.Lshortfile)
-
+func StartTlsServer(crt, key, address string) (TlsServer, error) {
+	serv := TlsServer{}
 	cer, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return serv, err
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
@@ -24,22 +23,8 @@ func StartTlsServer(crt, key, address string) *TlsServer {
 
 	if err != nil {
 		log.Println(err)
-		return nil
+		return serv, err
 	}
-	//defer ln.Close()
-	serv := &TlsServer{}
 	serv.Listener = ln
-	return serv
-}
-
-func (s *TlsServer) WaitingForConnection() {
-	for {
-		conn, err := s.Listener.Accept()
-		log.Println("new connection")
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		go s.HandleConnection(conn)
-	}
+	return serv, nil
 }

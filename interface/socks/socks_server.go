@@ -28,3 +28,4 @@ func (s SocksServer) HandleConnection(conn net.Conn) error {
 	log.Println("Serving connection")
 	return s.server.ServeConn(conn)
 }
+

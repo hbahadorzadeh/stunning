@@ -14,7 +14,11 @@ import (
 
 func TestHttpGet(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	ts := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
+	ts, err := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
 	ts.SetServer(socks.GetSocksServer())
 	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, tlstun.GetTlsDialer())
 	if err != nil {

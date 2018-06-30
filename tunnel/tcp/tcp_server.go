@@ -1,4 +1,4 @@
-package client
+package tcp
 
 import (
 	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
@@ -10,26 +10,13 @@ type TcpServer struct {
 	tcommon.TunnelServer
 }
 
-func StartTcpServer(address string) *TcpServer {
-	log.SetFlags(log.Lshortfile)
+func StartTcpServer(address string) (TcpServer, error) {
+	serv := TcpServer{}
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return serv, err
 	}
-	serv := &TcpServer{}
 	serv.Listener = ln
-	return serv
-}
-
-func (s *TcpServer) WaitingForConnection() {
-	for {
-		conn, err := s.Listener.Accept()
-		log.Println("new connection")
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		go s.HandleConnection(conn)
-	}
+	return serv, nil
 }
