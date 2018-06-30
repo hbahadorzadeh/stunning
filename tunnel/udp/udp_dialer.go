@@ -17,11 +17,11 @@ func GetUdpDialer() UdpDialer {
 }
 
 func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
-	rudpAddr, err := net.ResolveUDPAddr("udp", addr)
+	rudpAddr, err := net.ResolveUDPAddr(network, addr)
 	if err != nil {
 		return nil, err
 	}
-	ludpAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:5050")
+	ludpAddr, err := net.ResolveUDPAddr(network, ":0")
 	if err != nil {
 		return nil, err
 	}
@@ -31,5 +31,6 @@ func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	}
 	return udp_connection{
 		conn: conn,
+		addr:nil,
 	}, err
 }

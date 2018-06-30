@@ -50,20 +50,25 @@ type udp_connection struct {
 }
 
 func (u udp_connection) Read(b []byte) (n int, err error) {
-	u.conn.ReadFromUDP(b)
+	n, _ , err = u.conn.ReadFrom(b)
+	return n, err
 }
 
 // Write writes data to the connection.
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
 func (u udp_connection) Write(b []byte) (n int, err error) {
-	return u.conn.WriteToUDP(b, u.addr)
+	if u.addr != nil {
+		return u.conn.WriteToUDP(b, u.addr)
+	}else {
+		return u.conn.Write(b)
+	}
 }
 
 // Close closes the connection.
 // Any blocked Read or Write operations will be unblocked and return errors.
 func (u udp_connection) Close() error {
-	return u.Close()
+	return u.conn.Close()
 }
 
 // LocalAddr returns the local network address.
