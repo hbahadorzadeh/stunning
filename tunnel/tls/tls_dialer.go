@@ -24,3 +24,7 @@ func (d TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conn, err := tls.Dial(network, addr, conf)
 	return conn, err
 }
+
+func (d TlsDialer) Protocol()tcommon.TunnelProtocol{
+	return tcommon.Tls
+}

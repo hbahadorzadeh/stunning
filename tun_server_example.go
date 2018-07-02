@@ -7,15 +7,14 @@ import (
 	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
-	"testing"
 	"time"
 )
 
-func TestSrvGet(t *testing.T) {
+func tun_server_example() {
 	log.SetOutput(os.Stderr)
-	ts, err := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
+	ts, err := tlstun.StartTlsServer("server.crt", "server.key", ":4443")
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 	defer ts.Close()
 	fmt.Println("Tls Server started")

@@ -5,15 +5,14 @@ import (
 	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
-	"testing"
 	"time"
 )
 
-func TestTcp(t *testing.T) {
+func tcp_example() {
 	log.SetOutput(os.Stderr)
 	ts, err := tlstun.StartTlsServer("server.crt", "server.key", "127.0.0.1:4443")
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 	defer ts.Close()
 	ts.SetServer(tcp.GetTcpServer("127.0.0.1:4443"))

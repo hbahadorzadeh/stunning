@@ -4,6 +4,7 @@ import (
 	"github.com/songgao/water"
 	"gitlab.com/h.bahadorzadeh/stunning/common"
 	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
+	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 	"os"
@@ -42,6 +43,29 @@ func GetTunIface(config TunConfig) TunInterface {
 		iface: ifce,
 		conf:  config,
 	}
+	return iface
+}
+
+
+func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) TunInterface {
+	ifce, err := water.New(water.Config{
+		DeviceType: config.DevType,
+	})
+
+	runIP("link", "set", "dev", ifce.Name(), "mtu", config.MTU)
+	runIP("addr", "add", config.Address, "dev", ifce.Name())
+	runIP("link", "set", "dev", ifce.Name(), "up")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	iface := TunInterface{
+		iface: ifce,
+		conf:  config,
+	}
+	conn, err := d.Dial(d.Protocol().String(), addr)
+	go iface.HandleConnection(conn)
 	return iface
 }
 

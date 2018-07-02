@@ -64,6 +64,6 @@ func tcp_writer(conn net.Conn, tconn net.Conn) {
 			log.Panicln(werr)
 			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
-		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
+		log.Printf("%d bytes wrote to socket", wn)
 	}
 }

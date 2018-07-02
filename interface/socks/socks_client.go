@@ -15,11 +15,11 @@ type SocksClient struct {
 	listen     net.Listener
 }
 
-func GetSocksClient(url, surl string, tls_dialer tcommon.TunnelDialer) *SocksClient {
+func GetSocksClient(url, surl string, tun_dialer tcommon.TunnelDialer) *SocksClient {
 	s := &SocksClient{}
 	s.address = url
 	s.saddress = surl
-	s.tun_dialer = tls_dialer
+	s.tun_dialer = tun_dialer
 	listen, err := net.Listen("tcp", s.address)
 	if err != nil {
 		log.Panic(err)
@@ -36,7 +36,7 @@ func (t *SocksClient) waiting_for_connection() {
 			log.Fatalln(err)
 			continue
 		}
-		sconn, serr := t.tun_dialer.Dial("tcp", t.saddress)
+		sconn, serr := t.tun_dialer.Dial(t.tun_dialer.Protocol().String(), t.saddress)
 		if serr != nil {
 			log.Fatalln(serr)
 			continue

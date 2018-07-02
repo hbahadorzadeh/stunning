@@ -9,14 +9,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"testing"
 )
 
-func TestHttpGet(t *testing.T) {
+func socks_example() {
 	log.SetOutput(os.Stderr)
 	ts, err := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 	defer ts.Close()
 	ts.SetServer(socks.GetSocksServer())
