@@ -72,7 +72,6 @@ func TestTcpOverTls(t *testing.T) {
 	}
 	rbuff := buff[:n]
 	assertEqualByteArray(t, rbuff, testBuff, "")
-	t.
 }
 
 func TestTcpOverTcp(t *testing.T) {
