@@ -30,7 +30,7 @@ func (s TunnelServer) WaitingForConnection() {
 	log.Printf("Listening on %s stopped\n", s.Listener.Addr().String())
 }
 
-func(s TunnelServer)Close()error{
+func (s TunnelServer) Close() error {
 	log.Println("Closing connection")
 	return s.Listener.Close()
 }

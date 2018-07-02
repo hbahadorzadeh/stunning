@@ -13,6 +13,7 @@ import (
 	//"time"
 	"gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
 )
+
 //
 //func TestSocksOverTls(t *testing.T) {
 //	log.SetOutput(os.Stderr)
@@ -141,7 +142,7 @@ import (
 func TestSocksOverUdp(t *testing.T) {
 	log.SetOutput(os.Stderr)
 	//time.Sleep(10*time.Second)
-	ts,err := udp.StartUdpServer(":4443")
+	ts, err := udp.StartUdpServer(":4443")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,6 +156,7 @@ func TestSocksOverUdp(t *testing.T) {
 			t.Fatal(err)
 		}
 		conn, cerr := ln.Accept()
+		log.Printf("TCP server: accepted connection from %s", conn.RemoteAddr().String())
 		if cerr != nil {
 			t.Fatal(cerr)
 		}

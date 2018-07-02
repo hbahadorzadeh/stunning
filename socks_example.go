@@ -2,9 +2,9 @@ package stunning
 
 import (
 	"fmt"
-	"golang.org/x/net/proxy"
 	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
 	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
+	"golang.org/x/net/proxy"
 	"io/ioutil"
 	"log"
 	"net/http"

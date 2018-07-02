@@ -25,7 +25,6 @@ func GetSocksServer() SocksServer {
 }
 
 func (s SocksServer) HandleConnection(conn net.Conn) error {
-	log.Println("Serving connection")
+	log.Printf("Serving connection")
 	return s.server.ServeConn(conn)
 }
-

@@ -13,7 +13,7 @@ import (
 
 func TestSrvGet(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	ts,err := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
+	ts, err := tlstun.StartTlsServer("../server.crt", "../server.key", ":4443")
 	if err != nil {
 		t.Fatal(err)
 	}

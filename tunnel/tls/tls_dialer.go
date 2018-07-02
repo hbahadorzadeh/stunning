@@ -2,14 +2,14 @@ package tls
 
 import (
 	"crypto/tls"
-	"golang.org/x/net/proxy"
 	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	"golang.org/x/net/proxy"
 	"net"
 )
 
 type TlsDialer struct {
 	tcommon.TunnelDialer
-	dialer        proxy.Dialer
+	dialer proxy.Dialer
 }
 
 func GetTlsDialer() TlsDialer {

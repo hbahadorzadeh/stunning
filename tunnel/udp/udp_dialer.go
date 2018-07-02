@@ -1,14 +1,15 @@
 package udp
 
 import (
-	"golang.org/x/net/proxy"
+	"bufio"
 	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	"golang.org/x/net/proxy"
 	"net"
 )
 
 type UdpDialer struct {
 	tcommon.TunnelDialer
-	dialer        proxy.Dialer
+	dialer proxy.Dialer
 }
 
 func GetUdpDialer() UdpDialer {
@@ -29,8 +30,10 @@ func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return udp_connection{
-		conn: conn,
-		addr:nil,
-	}, err
+	cnn := clientUdpConnection{
+		conn:   conn,
+		buff:   make([]byte, 1024),
+		reader: bufio.NewReader(conn),
+	}
+	return cnn, err
 }
