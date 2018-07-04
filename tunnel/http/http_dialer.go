@@ -11,17 +11,13 @@ type HttpDialer struct {
 	dialer proxy.Dialer
 }
 
-func GetTcpDialer() HttpDialer {
+func GetHttpDialer() HttpDialer {
 	d := HttpDialer{}
 	return d
 }
 
 func (d HttpDialer) Dial(network, addr string) (c net.Conn, err error) {
-	conn, err := net.Dial(network, addr)
-	if err != nil {
-		return nil, err
-	}
-	return conn, err
+	return getCilentHttpConnection(addr)
 }
 
 func (d HttpDialer) Protocol()tcommon.TunnelProtocol{
