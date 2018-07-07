@@ -61,6 +61,8 @@ func (c clientHttpConnection) Read(b []byte) (n int, err error) {
 	n=len(b)
 	if len(buff) > n{
 		go func(){c.ch <- buff[n:]}()
+	}else{
+		n=len(buff)
 	}
 	copy(b, buff[:n])
 	log.Printf("reading client bytes[%d](%v)", n, b)
