@@ -24,6 +24,6 @@ func (d TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return conn, err
 }
 
-func (d TcpDialer) Protocol()tcommon.TunnelProtocol{
+func (d TcpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

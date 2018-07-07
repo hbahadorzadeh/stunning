@@ -1,4 +1,4 @@
-package stunning
+package example
 
 import (
 	"fmt"

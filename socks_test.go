@@ -3,18 +3,17 @@ package stunning
 import (
 	"fmt"
 	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
+	"gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
+	"gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
 	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
+	"gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
 	"golang.org/x/net/proxy"
 	"log"
 	"net"
 	"os"
 	"testing"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
 	"time"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
 )
-
 
 func TestSocksOverTls(t *testing.T) {
 	log.SetOutput(os.Stderr)
@@ -79,8 +78,8 @@ func TestSocksOverTls(t *testing.T) {
 
 func TestSocksOverTcp(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10*time.Second)
-	ts,err := tcp.StartTcpServer(":4443")
+	time.Sleep(10 * time.Second)
+	ts, err := tcp.StartTcpServer(":4443")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +141,7 @@ func TestSocksOverTcp(t *testing.T) {
 
 func TestSocksOverUdp(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 	ts, err := udp.StartUdpServer(":4443")
 	if err != nil {
 		t.Fatal(err)
@@ -249,7 +248,11 @@ func TestSocksOverHttp(t *testing.T) {
 	log.Println("Connecting through proxy")
 	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 	if err != nil {
-		t.Fatal(err)
+		time.Sleep(time.Second)
+		conn, err = dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	log.Println("Writing through proxy")
 	wn, werr := conn.Write(testBuff)
@@ -267,7 +270,6 @@ func TestSocksOverHttp(t *testing.T) {
 	rbuff := buff[:n]
 	assertEqualByteArray(t, rbuff, testBuff, "")
 }
-
 
 func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {

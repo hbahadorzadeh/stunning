@@ -2,13 +2,13 @@ package stunning
 
 import (
 	"gitlab.com/h.bahadorzadeh/stunning/interface/tcp"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	tcptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
+	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	udptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
 	"log"
+	"net"
 	"os"
 	"testing"
-	"net"
 	"time"
 )
 
@@ -41,7 +41,7 @@ func TestTcpOverTls(t *testing.T) {
 		log.Printf("%d bytes [%v] written", wn, testBuff)
 		bufflen := len(testBuff)
 		assertEqualInt(t, bufflen, wn, "")
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 	}()
 
 	ts, err := tlstun.StartTlsServer("server.crt", "server.key", "127.0.0.1:4443")
@@ -76,7 +76,7 @@ func TestTcpOverTls(t *testing.T) {
 
 func TestTcpOverTcp(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")
@@ -138,7 +138,7 @@ func TestTcpOverTcp(t *testing.T) {
 
 func TestTcpOverUdp(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10*time.Second)
+	time.Sleep(10 * time.Second)
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")

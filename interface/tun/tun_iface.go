@@ -46,7 +46,6 @@ func GetTunIface(config TunConfig) TunInterface {
 	return iface
 }
 
-
 func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) TunInterface {
 	ifce, err := water.New(water.Config{
 		DeviceType: config.DevType,

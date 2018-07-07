@@ -1,30 +1,29 @@
 package http
 
 import (
-	"net/http"
+	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
 	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
-	"sync"
-	"net"
-	"time"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
+	"sync"
+	"time"
 )
-
 
 type HttpServer struct {
 	tcommon.TunnelServer
-	connMap map[string]serverHttpConnection
-	mux     sync.Mutex
-	server *http.Server
+	connMap   map[string]serverHttpConnection
+	mux       sync.Mutex
+	webserver *http.Server
+	handler   func(http.ResponseWriter, *http.Request)
 }
 
 func StartHttpServer(address string) (HttpServer, error) {
 	serv := HttpServer{
-		connMap: make(map[string]serverHttpConnection),
-		server : &http.Server{Addr:address},
+		connMap:   make(map[string]serverHttpConnection),
+		webserver: &http.Server{Addr: address},
 	}
-
-	http.HandleFunc("/", serv.handler)
 
 	go func() {
 		serv.mux.Lock()
@@ -45,33 +44,46 @@ func StartHttpServer(address string) (HttpServer, error) {
 	return serv, nil
 }
 
-func(s HttpServer)WaitingForConnection(){
-	s.server.ListenAndServe()
+func (s HttpServer) SetServer(ss icommon.TunnelInterfaceServer) {
+	s.Server = ss
+	go s.WaitingForConnection()
+	//time.Sleep(2 * time.Second)
 }
 
+func (s HttpServer) WaitingForConnection() {
+	log.Println("Starting webserver")
 
-func(s HttpServer)Close(){
-	s.server.Close()
-}
-
-func(s HttpServer) handler(w http.ResponseWriter, r *http.Request) {
-	log.Print(r)
-	var conn serverHttpConnection
-	var err bool
-	s.mux.Lock()
-	if conn, err = s.connMap[r.RemoteAddr]; !err  || conn.isClosed{
-		conn = getServerHttpConnection()
-		go s.HandleConnection(conn)
-	}
-	s.mux.Unlock()
-	wbuff, ok := ioutil.ReadAll(r.Body)
-	if ok == nil {
-		conn.rch <- wbuff
-		if len(conn.wch) > 0 {
-			rbuff := <- conn.wch
+	s.handler = func(w http.ResponseWriter, r *http.Request) {
+		log.Print(r)
+		var conn serverHttpConnection
+		var err bool
+		s.mux.Lock()
+		if conn, err = s.connMap[r.RemoteAddr]; !err || conn.isClosed {
+			conn = getServerHttpConnection()
+			s.connMap[r.RemoteAddr] = conn
+			go s.HandleConnection(conn)
+		}
+		s.mux.Unlock()
+		wbuff, ok := ioutil.ReadAll(r.Body)
+		if ok == nil {
+			conn.rch <- wbuff
+			//select {
+			//case
+			rbuff := <-conn.wch
 			w.Write(rbuff)
+			//	break
+			//default:
+			//	break
+			//}
 		}
 	}
+
+	http.HandleFunc("/", s.handler)
+	s.webserver.ListenAndServe()
+}
+
+func (s HttpServer) Close() {
+	s.webserver.Close()
 }
 
 func (s HttpServer) HandleConnection(conn net.Conn) {

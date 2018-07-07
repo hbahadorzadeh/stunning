@@ -1,36 +1,36 @@
 package http
 
 import (
-	"time"
-	"net"
-	"log"
-	"net/http"
-	"encoding/base64"
 	"bytes"
-	"io/ioutil"
-	"math/rand"
-	"math"
+	"encoding/base64"
 	"fmt"
 	"golang.org/x/net/proxy"
+	"io/ioutil"
+	"log"
+	"math"
+	"math/rand"
+	"net"
+	"net/http"
+	"time"
 )
 
-func getCilentHttpConnection(serverUrl string)(clientHttpConnection, error){
+func getCilentHttpConnection(serverUrl string) (clientHttpConnection, error) {
 	conn, err := net.Dial("tcp", serverUrl)
-	if err != nil{
+	if err != nil {
 		return clientHttpConnection{}, err
 	}
 	cd := clientHttpDialer{
 		conn: conn,
 	}
-	tr :=&http.Transport{Dial: cd.Dial}
+	tr := &http.Transport{Dial: cd.Dial}
 	c := clientHttpConnection{
-		conn : conn,
+		conn: conn,
 		client: http.Client{
-			Transport:tr,
+			Transport: tr,
 		},
-		serverUrl:serverUrl,
-		ch : make(chan []byte),
-		rs : rand.New(rand.NewSource(time.Now().UnixNano())),
+		serverUrl: serverUrl,
+		ch:        make(chan []byte),
+		rs:        rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	return c, nil
 }
@@ -40,27 +40,30 @@ type clientHttpDialer struct {
 	conn net.Conn
 }
 
-func(cl clientHttpDialer)Dial(network, addr string) (c net.Conn, err error){
+
+
+func (cl clientHttpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return cl.conn, nil
 }
 
-
 type clientHttpConnection struct {
 	net.Conn
-	conn net.Conn
-	client http.Client
+	conn      net.Conn
+	client    http.Client
 	serverUrl string
-	rs *rand.Rand
-	ch chan []byte
+	rs        *rand.Rand
+	ch        chan []byte
 }
 
 func (c clientHttpConnection) Read(b []byte) (n int, err error) {
-	if len(c.ch) == 0{
-		c.Write([]byte{})
-	}
+	log.Printf("Waiting for client bytes")
 	buff := <- c.ch
-	copy(b, buff)
-	log.Printf("reading bytes[%d](%v) %s -> %s", n, b)
+	n=len(b)
+	if len(buff) > n{
+		go func(){c.ch <- buff[n:]}()
+	}
+	copy(b, buff[:n])
+	log.Printf("reading client bytes[%d](%v)", n, b)
 	return n, nil
 }
 
@@ -72,15 +75,18 @@ func (c clientHttpConnection) Write(b []byte) (n int, err error) {
 	url := fmt.Sprintf("http://%s/get?id=%d", c.serverUrl, c.rs.Int63n(math.MaxInt64))
 	buff := make([]byte, 4096)
 	if len(b) == 0 {
-		url := fmt.Sprintf("%s/get?id=%d", c.serverUrl, c.rs.Int63n(math.MaxInt64))
 		req, err = http.NewRequest("GET", url, nil)
+		if err != nil {
+			log.Print(err)
+			panic(err)
+		}
 		req.Header.Set("Content-Type", "application/octet-stream")
 		req.Header.Set("Content-length", "0")
-	}else {
+	} else {
 		base64.StdEncoding.Encode(buff, b)
 		buff = buff[:base64.StdEncoding.EncodedLen(len(b))]
 		req, err = http.NewRequest("POST", url, bytes.NewBuffer(buff))
-		if err!= nil{
+		if err != nil {
 			log.Print(err)
 			panic(err)
 		}
@@ -91,16 +97,24 @@ func (c clientHttpConnection) Write(b []byte) (n int, err error) {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("writing bytes(%v) %s -> %s", b, resp.Request.RemoteAddr, c.serverUrl)
-	rbuff, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	base64.StdEncoding.Decode(buff, rbuff)
-	buff = buff[:base64.StdEncoding.DecodedLen(len(rbuff))]
-	if len(buff) > 0 {
-		c.ch <- buff
-	}
+	log.Printf("writing client bytes %v(%v) -> %s", b, buff, c.serverUrl)
+	go func(){
+		buff, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		rbuff := make([]byte, 4096)
+		n,err = base64.StdEncoding.Decode(rbuff, buff)
+		if err != nil {
+			log.Print(err)
+			panic(err)
+		}
+		rbuff = rbuff[:n]
+		log.Printf("read buff %v", buff)
+		log.Printf("decoded buff %v", rbuff)
+		c.ch <- rbuff
+		log.Printf("reading bytes(%v) %s ->", rbuff, c.serverUrl)
+	}()
 	return len(b), err
 }
 
@@ -155,10 +169,10 @@ func (c clientHttpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-func getServerHttpConnection()serverHttpConnection{
+func getServerHttpConnection() serverHttpConnection {
 	c := serverHttpConnection{
-		rch : make(chan []byte),
-		wch : make(chan []byte),
+		rch:      make(chan []byte),
+		wch:      make(chan []byte),
 		lastUsed: time.Now(),
 		isClosed: false,
 	}
@@ -167,17 +181,24 @@ func getServerHttpConnection()serverHttpConnection{
 
 type serverHttpConnection struct {
 	net.Conn
-	rch chan []byte
-	wch chan []byte
+	rch      chan []byte
+	wch      chan []byte
 	lastUsed time.Time
 	isClosed bool
 }
 
 func (c serverHttpConnection) Read(b []byte) (n int, err error) {
-	buff := <- c.rch
-	base64.StdEncoding.Decode(b, buff)
-	n = len(b)
+	buff := <-c.rch
+	wb := make([]byte, 4096)
+	n, err = base64.StdEncoding.Decode(wb, buff)
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+	wb = wb[:n]
+	copy(b, wb)
 	c.lastUsed = time.Now()
+	log.Printf("Reading Server bytes %v(%v)", b, buff)
 	return n, nil
 }
 
@@ -186,8 +207,10 @@ func (c serverHttpConnection) Read(b []byte) (n int, err error) {
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
 func (c serverHttpConnection) Write(b []byte) (n int, err error) {
 	buff := make([]byte, 4096)
-	base64.StdEncoding.Decode(buff, b)
+	base64.StdEncoding.Encode(buff, b)
+	buff = buff[:base64.StdEncoding.EncodedLen(len(b))]
 	c.wch <- buff
+	log.Printf("Writing Server bytes %v(%v)", b, buff)
 	return len(buff), err
 }
 

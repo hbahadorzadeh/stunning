@@ -20,6 +20,6 @@ func (d HttpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return getCilentHttpConnection(addr)
 }
 
-func (d HttpDialer) Protocol()tcommon.TunnelProtocol{
+func (d HttpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }
