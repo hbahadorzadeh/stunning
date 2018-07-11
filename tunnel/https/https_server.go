@@ -1,4 +1,4 @@
-package http
+package https
 
 import (
 	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
@@ -11,18 +11,21 @@ import (
 	"time"
 )
 
-type HttpServer struct {
+type HttpsServer struct {
 	tcommon.TunnelServer
 	connMap   map[string]tcommon.ServerHttpConnection
 	mux       sync.Mutex
 	webserver *http.Server
 	handler   func(http.ResponseWriter, *http.Request)
+	crt, key  string
 }
 
-func StartHttpServer(address string) (HttpServer, error) {
-	serv := HttpServer{
+func StartHttpsServer(crt, key, address string) (HttpsServer, error) {
+	serv := HttpsServer{
 		connMap:   make(map[string]tcommon.ServerHttpConnection),
 		webserver: &http.Server{Addr: address},
+		crt:       crt,
+		key:       key,
 	}
 
 	go func() {
@@ -44,13 +47,13 @@ func StartHttpServer(address string) (HttpServer, error) {
 	return serv, nil
 }
 
-func (s HttpServer) SetServer(ss icommon.TunnelInterfaceServer) {
+func (s HttpsServer) SetServer(ss icommon.TunnelInterfaceServer) {
 	s.Server = ss
 	go s.WaitingForConnection()
 	//time.Sleep(2 * time.Second)
 }
 
-func (s HttpServer) WaitingForConnection() {
+func (s HttpsServer) WaitingForConnection() {
 	log.Println("Starting webserver")
 
 	s.handler = func(w http.ResponseWriter, r *http.Request) {
@@ -79,14 +82,14 @@ func (s HttpServer) WaitingForConnection() {
 	}
 
 	http.HandleFunc("/", s.handler)
-	s.webserver.ListenAndServe()
+	s.webserver.ListenAndServeTLS(s.crt, s.key)
 }
 
-func (s HttpServer) Close() {
+func (s HttpsServer) Close() {
 	s.webserver.Close()
 }
 
-func (s HttpServer) HandleConnection(conn net.Conn) {
+func (s HttpsServer) HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	s.Server.HandleConnection(conn)
 }

@@ -13,15 +13,15 @@ type UdpServer struct {
 	tcommon.TunnelServer
 	conn    *net.UDPConn
 	mux     *sync.Mutex
-	wch     chan udp_packet
-	connMap map[string]*serverUdpConnection
+	wch     chan tcommon.UdpPacket
+	connMap map[string]*tcommon.ServerUdpConnection
 }
 
 func StartUdpServer(address string) (UdpServer, error) {
 	serv := UdpServer{}
-	serv.connMap = make(map[string]*serverUdpConnection)
+	serv.connMap = make(map[string]*tcommon.ServerUdpConnection)
 	serv.mux = &sync.Mutex{}
-	serv.wch = make(chan udp_packet)
+	serv.wch = make(chan tcommon.UdpPacket)
 	go func() {
 		for range time.Tick(30 * time.Second) {
 			serv.mux.Lock()
@@ -69,12 +69,12 @@ func (s UdpServer) WaitingForConnection() {
 			log.Printf("connection existance : %t", exists)
 			if !exists {
 				ch := make(chan []byte)
-				conn = &serverUdpConnection{
-					conn:   s.conn,
-					addr:   addr,
-					ch:     ch,
-					wch:    s.wch,
-					closed: false,
+				conn = &tcommon.ServerUdpConnection{
+					Connection: s.conn,
+					Addr:       addr,
+					RCh:        ch,
+					WCh:        s.wch,
+					Closed:     false,
 				}
 				s.mux.Lock()
 				s.connMap[addr.String()] = conn
@@ -82,19 +82,19 @@ func (s UdpServer) WaitingForConnection() {
 				log.Printf("Accepted connection from %s", addr.String())
 				go s.HandleConnection(conn)
 			}
-			conn.ch <- buff[:n]
+			conn.RCh <- buff[:n]
 		}
 	}
 }
 
 func (s UdpServer) handleWriting() {
 	for upack := range s.wch {
-		n, err := s.conn.WriteToUDP(upack.buff, upack.addr)
+		n, err := s.conn.WriteToUDP(upack.Buffer, upack.Addr)
 		if err != nil {
-			log.Printf("Error in writing bytes(%v) to %s : %v", upack.buff, upack.addr.String(), err)
+			log.Printf("Error in writing bytes(%v) to %s : %v", upack.Buffer, upack.Addr.String(), err)
 		}
-		if n != len(upack.buff) {
-			log.Printf("Error in writing bytes(%v) to %s : %d bytes writen insted of %d", upack.buff, upack.addr.String(), n, len(upack.buff))
+		if n != len(upack.Buffer) {
+			log.Printf("Error in writing bytes(%v) to %s : %d bytes writen insted of %d", upack.Buffer, upack.Addr.String(), n, len(upack.Buffer))
 		}
 	}
 }

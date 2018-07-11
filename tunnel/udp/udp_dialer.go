@@ -30,10 +30,10 @@ func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	if err != nil {
 		return nil, err
 	}
-	cnn := clientUdpConnection{
-		conn:   conn,
-		buff:   make([]byte, 1024),
-		reader: bufio.NewReader(conn),
+	cnn := tcommon.ClientUdpConnection{
+		Connection: conn,
+		Buffer:     make([]byte, 1024),
+		Reader:     bufio.NewReader(conn),
 	}
 	return cnn, err
 }

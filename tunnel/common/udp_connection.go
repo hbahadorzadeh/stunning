@@ -1,4 +1,4 @@
-package udp
+package common
 
 import (
 	"bufio"
@@ -7,59 +7,59 @@ import (
 	"time"
 )
 
-type udp_packet struct {
-	buff []byte
-	addr *net.UDPAddr
+type UdpPacket struct {
+	Buffer []byte
+	Addr   *net.UDPAddr
 }
 
-type serverUdpConnection struct {
+type ServerUdpConnection struct {
 	net.Conn
-	conn   *net.UDPConn
-	addr   *net.UDPAddr
-	ch     chan []byte
-	wch    chan udp_packet
-	closed bool
+	Connection *net.UDPConn
+	Addr       *net.UDPAddr
+	RCh        chan []byte
+	WCh        chan UdpPacket
+	Closed     bool
 }
 
-func (u serverUdpConnection) IsClosed() bool {
-	return u.closed
+func (u ServerUdpConnection) IsClosed() bool {
+	return u.Closed
 }
 
-func (u serverUdpConnection) Read(b []byte) (n int, err error) {
-	buff := <-u.ch
+func (u ServerUdpConnection) Read(b []byte) (n int, err error) {
+	buff := <-u.RCh
 	n = len(buff)
 	copy(b, buff)
-	log.Printf("reading bytes(%v) %s -> %s", buff, u.addr.String(), u.conn.LocalAddr().String())
+	log.Printf("reading bytes(%v) %s -> %s", buff, u.Addr.String(), u.Connection.LocalAddr().String())
 	return n, nil
 }
 
 // Write writes data to the connection.
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
-func (u serverUdpConnection) Write(b []byte) (n int, err error) {
-	log.Printf("writing bytes(%v) %s -> %s", b, u.conn.LocalAddr().String(), u.addr.String())
-	u.wch <- udp_packet{
-		buff: b,
-		addr: u.addr,
+func (u ServerUdpConnection) Write(b []byte) (n int, err error) {
+	log.Printf("writing bytes(%v) %s -> %s", b, u.Connection.LocalAddr().String(), u.Addr.String())
+	u.WCh <- UdpPacket{
+		Buffer: b,
+		Addr:   u.Addr,
 	}
 	return len(b), nil
 }
 
 // Close closes the connection.
 // Any blocked Read or Write operations will be unblocked and return errors.
-func (u serverUdpConnection) Close() error {
-	u.closed = true
+func (u ServerUdpConnection) Close() error {
+	u.Closed = true
 	return nil
 }
 
 // LocalAddr returns the local network address.
-func (u serverUdpConnection) LocalAddr() net.Addr {
-	return u.conn.LocalAddr()
+func (u ServerUdpConnection) LocalAddr() net.Addr {
+	return u.Connection.LocalAddr()
 }
 
 // RemoteAddr returns the remote network address.
-func (u serverUdpConnection) RemoteAddr() net.Addr {
-	return u.conn.RemoteAddr()
+func (u ServerUdpConnection) RemoteAddr() net.Addr {
+	return u.Connection.RemoteAddr()
 }
 
 // SetDeadline sets the read and write deadlines associated
@@ -77,14 +77,14 @@ func (u serverUdpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (u serverUdpConnection) SetDeadline(t time.Time) error {
+func (u ServerUdpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (u serverUdpConnection) SetReadDeadline(t time.Time) error {
+func (u ServerUdpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -93,45 +93,45 @@ func (u serverUdpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (u serverUdpConnection) SetWriteDeadline(t time.Time) error {
+func (u ServerUdpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-type clientUdpConnection struct {
+type ClientUdpConnection struct {
 	net.Conn
-	conn   *net.UDPConn
-	buff   []byte
-	reader *bufio.Reader
+	Connection *net.UDPConn
+	Buffer     []byte
+	Reader     *bufio.Reader
 }
 
-func (u clientUdpConnection) Read(b []byte) (n int, err error) {
-	n, err = u.reader.Read(b)
-	log.Printf("reading bytes[%d](%v) %s -> %s", n, b, u.conn.RemoteAddr().String(), u.conn.LocalAddr().String())
+func (u ClientUdpConnection) Read(b []byte) (n int, err error) {
+	n, err = u.Reader.Read(b)
+	log.Printf("reading bytes[%d](%v) %s -> %s", n, b, u.Connection.RemoteAddr().String(), u.Connection.LocalAddr().String())
 	return n, err
 }
 
 // Write writes data to the connection.
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
-func (u clientUdpConnection) Write(b []byte) (n int, err error) {
-	log.Printf("writing bytes(%v) %s -> %s", b, u.conn.LocalAddr().String(), u.conn.RemoteAddr().String())
-	return u.conn.Write(b)
+func (u ClientUdpConnection) Write(b []byte) (n int, err error) {
+	log.Printf("writing bytes(%v) %s -> %s", b, u.Connection.LocalAddr().String(), u.Connection.RemoteAddr().String())
+	return u.Connection.Write(b)
 }
 
 // Close closes the connection.
 // Any blocked Read or Write operations will be unblocked and return errors.
-func (u clientUdpConnection) Close() error {
-	return u.conn.Close()
+func (u ClientUdpConnection) Close() error {
+	return u.Connection.Close()
 }
 
 // LocalAddr returns the local network address.
-func (u clientUdpConnection) LocalAddr() net.Addr {
-	return u.conn.LocalAddr()
+func (u ClientUdpConnection) LocalAddr() net.Addr {
+	return u.Connection.LocalAddr()
 }
 
 // RemoteAddr returns the remote network address.
-func (u clientUdpConnection) RemoteAddr() net.Addr {
-	return u.conn.RemoteAddr()
+func (u ClientUdpConnection) RemoteAddr() net.Addr {
+	return u.Connection.RemoteAddr()
 }
 
 // SetDeadline sets the read and write deadlines associated
@@ -149,14 +149,14 @@ func (u clientUdpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (u clientUdpConnection) SetDeadline(t time.Time) error {
+func (u ClientUdpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (u clientUdpConnection) SetReadDeadline(t time.Time) error {
+func (u ClientUdpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -165,6 +165,6 @@ func (u clientUdpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (u clientUdpConnection) SetWriteDeadline(t time.Time) error {
+func (u ClientUdpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
 	"gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
+	"gitlab.com/h.bahadorzadeh/stunning/tunnel/https"
 	"gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
 	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
 	"gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
@@ -270,6 +271,76 @@ func TestSocksOverHttp(t *testing.T) {
 	rbuff := buff[:n]
 	assertEqualByteArray(t, rbuff, testBuff, "")
 }
+
+
+func TestSocksOverHttps(t *testing.T) {
+	log.SetOutput(os.Stderr)
+	//time.Sleep(10*time.Second)
+	ts, err := https.StartHttpsServer("server.crt", "server.key", "127.0.0.1:4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
+	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
+	go func() {
+		ln, err := net.Listen("tcp", "127.0.0.1:8888")
+		defer ln.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		conn, cerr := ln.Accept()
+		log.Printf("TCP server: accepted connection from %s", conn.RemoteAddr().String())
+		if cerr != nil {
+			t.Fatal(cerr)
+		}
+		buff := make([]byte, 1024)
+		n, rerr := conn.Read(buff)
+		if rerr != nil {
+			t.Fatal(rerr)
+		}
+		rbuff := buff[:n]
+		assertEqualByteArray(t, rbuff, testBuff, "")
+		log.Printf("%v = %v", rbuff, testBuff)
+		wn, werr := conn.Write(testBuff)
+		if werr != nil {
+			t.Fatal(werr)
+		}
+		log.Printf("%d bytes [%v] written", wn, testBuff)
+		bufflen := len(testBuff)
+		assertEqualInt(t, bufflen, wn, "")
+	}()
+
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, https.GetHttpsDialer())
+	if err != nil {
+		log.Println("Error connecting to proxy:", err)
+	}
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
+	if err != nil {
+		time.Sleep(time.Second)
+		conn, err = dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	log.Println("Writing through proxy")
+	wn, werr := conn.Write(testBuff)
+	if werr != nil {
+		t.Fatal(werr)
+	}
+	bufflen := len(testBuff)
+	assertEqualInt(t, bufflen, wn, "")
+	buff := make([]byte, 1024)
+	log.Println("Read from proxy")
+	n, rerr := conn.Read(buff)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+	rbuff := buff[:n]
+	assertEqualByteArray(t, rbuff, testBuff, "")
+}
+
 
 func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {

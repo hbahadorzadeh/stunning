@@ -17,7 +17,7 @@ func GetHttpDialer() HttpDialer {
 }
 
 func (d HttpDialer) Dial(network, addr string) (c net.Conn, err error) {
-	return getCilentHttpConnection(addr)
+	return tcommon.GetCilentHttpConnection("http", addr)
 }
 
 func (d HttpDialer) Protocol() tcommon.TunnelProtocol {
