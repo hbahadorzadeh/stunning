@@ -272,7 +272,6 @@ func TestSocksOverHttp(t *testing.T) {
 	assertEqualByteArray(t, rbuff, testBuff, "")
 }
 
-
 func TestSocksOverHttps(t *testing.T) {
 	log.SetOutput(os.Stderr)
 	//time.Sleep(10*time.Second)
@@ -340,7 +339,6 @@ func TestSocksOverHttps(t *testing.T) {
 	rbuff := buff[:n]
 	assertEqualByteArray(t, rbuff, testBuff, "")
 }
-
 
 func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {

@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"golang.org/x/net/proxy"
 	"io/ioutil"
@@ -11,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"time"
-	"crypto/tls"
 )
 
 func GetCilentHttpConnection(proto, serverUrl string) (ClientHttpConnection, error) {
@@ -19,7 +19,7 @@ func GetCilentHttpConnection(proto, serverUrl string) (ClientHttpConnection, err
 	var err error
 	if proto == "http" {
 		conn, err = net.Dial("tcp", serverUrl)
-	}else{
+	} else {
 		conf := &tls.Config{
 			InsecureSkipVerify: true,
 		}
@@ -40,7 +40,7 @@ func GetCilentHttpConnection(proto, serverUrl string) (ClientHttpConnection, err
 		ServerUrl: serverUrl,
 		Ch:        make(chan []byte),
 		RandomGen: rand.New(rand.NewSource(time.Now().UnixNano())),
-		proto:proto,
+		proto:     proto,
 	}
 	return c, nil
 }
@@ -61,7 +61,7 @@ type ClientHttpConnection struct {
 	ServerUrl  string
 	RandomGen  *rand.Rand
 	Ch         chan []byte
-	proto 	   string
+	proto      string
 }
 
 func (c ClientHttpConnection) Read(b []byte) (n int, err error) {

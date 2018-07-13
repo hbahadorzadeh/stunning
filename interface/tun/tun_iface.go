@@ -75,7 +75,7 @@ func (t TunInterface) HandleConnection(conn net.Conn) error {
 	return nil
 }
 
-func (t *TunInterface) reader(conn net.Conn) {
+func (t TunInterface) reader(conn net.Conn) {
 	var frame common.Frame
 
 	for {
@@ -97,7 +97,7 @@ func (t *TunInterface) reader(conn net.Conn) {
 	}
 }
 
-func (t *TunInterface) writer(conn net.Conn) {
+func (t TunInterface) writer(conn net.Conn) {
 	var frame common.Frame
 	for {
 		frame.Resize(1500)
