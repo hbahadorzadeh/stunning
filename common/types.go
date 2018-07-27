@@ -18,3 +18,18 @@ const (
 	UDP_IFACE   InterfaceType = "udp"
 	TUN_IFACE   InterfaceType = "tun"
 )
+
+
+type PluginMode string
+
+const (
+	ENC PluginMode = "encoder"
+	DEC PluginMode = "decoder"
+)
+
+type TunnelMode string
+
+const (
+	SERVER TunnelMode = "server"
+	CLIENT TunnelMode = "client"
+)

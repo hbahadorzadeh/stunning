@@ -25,11 +25,10 @@ func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) *TcpClient 
 		log.Panic(err)
 	}
 	s.listen = listen
-	go s.waiting_for_connection()
 	return s
 }
 
-func (t *TcpClient) waiting_for_connection() {
+func (t *TcpClient) WaitingForConnection() {
 	for {
 		conn, err := t.listen.Accept()
 		if err != nil {

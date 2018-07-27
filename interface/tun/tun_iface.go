@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"time"
 )
 
 type TunInterface struct {
@@ -16,8 +17,15 @@ type TunInterface struct {
 	icommon.TunnelInterfaceClient
 	conf  TunConfig
 	iface *water.Interface
-	//nat map[net.IP]
 }
+
+
+type TunInterfaceClient struct {
+	TunInterface
+	address string
+	dialer tcommon.TunnelDialer
+}
+
 
 type TunConfig struct {
 	DevType water.DeviceType
@@ -46,7 +54,7 @@ func GetTunIface(config TunConfig) TunInterface {
 	return iface
 }
 
-func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) TunInterface {
+func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) TunInterfaceClient {
 	ifce, err := water.New(water.Config{
 		DeviceType: config.DevType,
 	})
@@ -59,12 +67,12 @@ func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) Tu
 		log.Fatal(err)
 	}
 
-	iface := TunInterface{
-		iface: ifce,
-		conf:  config,
+	iface := TunInterfaceClient{
+		address:addr,
+		dialer: d,
 	}
-	conn, err := d.Dial(d.Protocol().String(), addr)
-	go iface.HandleConnection(conn)
+	iface.iface = ifce
+	iface.conf = config
 	return iface
 }
 
@@ -126,5 +134,18 @@ func runIP(args ...string) {
 	err := cmd.Run()
 	if nil != err {
 		log.Fatalln("Error running /sbin/ip:", err)
+	}
+}
+
+func(t TunInterfaceClient)WaitingForConnection(){
+	conn, err := t.dialer.Dial(t.dialer.Protocol().String(), t.address)
+	if err == nil {
+		t.HandleConnection(conn)
+	}
+}
+
+func(t TunInterface)WaitingForConnection(){
+	for {
+		time.Sleep(time.Second)
 	}
 }

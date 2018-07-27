@@ -25,11 +25,10 @@ func GetSocksClient(url, surl string, tun_dialer tcommon.TunnelDialer) *SocksCli
 		log.Panic(err)
 	}
 	s.listen = listen
-	go s.waiting_for_connection()
 	return s
 }
 
-func (t *SocksClient) waiting_for_connection() {
+func (t SocksClient) WaitingForConnection() {
 	for {
 		conn, err := t.listen.Accept()
 		if err != nil {
@@ -45,11 +44,16 @@ func (t *SocksClient) waiting_for_connection() {
 	}
 }
 
-func (t *SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+func (t SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", t.address)
 	go tcp_reader(conn, tconn)
 	tcp_writer(conn, tconn)
 	return nil
+}
+
+
+func (t SocksClient) Close() {
+	t.listen.Close()
 }
 
 func tcp_reader(conn net.Conn, tconn net.Conn) {

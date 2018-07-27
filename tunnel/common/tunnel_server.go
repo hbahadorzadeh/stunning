@@ -13,7 +13,6 @@ type TunnelServer struct {
 
 func (s TunnelServer) SetServer(ss icommon.TunnelInterfaceServer) {
 	s.Server = ss
-	go s.WaitingForConnection()
 }
 
 func (s TunnelServer) WaitingForConnection() {

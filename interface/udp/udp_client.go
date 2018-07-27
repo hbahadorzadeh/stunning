@@ -47,6 +47,10 @@ func GetUdpClient(url string) *udp_client {
 	}()
 	return s
 }
+func (c *udp_client)WaitingForConnection(){
+
+}
+
 func (c *udp_client) HandleConnection(conn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", c.address)
 	go c.udp_client_reader(conn)

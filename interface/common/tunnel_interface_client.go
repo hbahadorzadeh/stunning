@@ -6,4 +6,6 @@ import (
 
 type TunnelInterfaceClient interface {
 	HandleConnection(conn net.Conn, tconn net.Conn) error
+	WaitingForConnection()
+	Close()
 }
