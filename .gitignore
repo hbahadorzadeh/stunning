@@ -24,3 +24,7 @@ _testmain.go
 *.test
 *.prof
 
+server.key
+server.crt
+
+.idea/
