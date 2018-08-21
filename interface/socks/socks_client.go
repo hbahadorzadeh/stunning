@@ -51,7 +51,6 @@ func (t SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	return nil
 }
 
-
 func (t SocksClient) Close() {
 	t.listen.Close()
 }

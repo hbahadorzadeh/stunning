@@ -12,7 +12,7 @@ import (
 )
 
 type HttpsServer struct {
-	tcommon.TunnelServer
+	tcommon.TunnelServerCommon
 	connMap   map[string]tcommon.ServerHttpConnection
 	mux       sync.Mutex
 	webserver *http.Server
@@ -85,8 +85,9 @@ func (s HttpsServer) WaitingForConnection() {
 	s.webserver.ListenAndServeTLS(s.crt, s.key)
 }
 
-func (s HttpsServer) Close() {
+func (s HttpsServer) Close() error {
 	s.webserver.Close()
+	return nil
 }
 
 func (s HttpsServer) HandleConnection(conn net.Conn) {

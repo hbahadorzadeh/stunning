@@ -197,20 +197,19 @@ func (p LuaPluginChain) Close() {
 	p.pool.Shutdown()
 }
 
-
-func PluginFactory(plugins string)(input, output PluginChain){
+func PluginFactory(plugins string) (input, output PluginChain) {
 	var ip PluginChain
 	var op PluginChain
-	for _, plugin := range strings.Split(plugins, ","){
+	for _, plugin := range strings.Split(plugins, ",") {
 		var nextip PluginChain
 		var nextop PluginChain
-		if plugin[:3] == "cpp"{
+		if plugin[:3] == "cpp" {
 			nextip = GetCPluginChain(plugin[4:], DEC)
 			nextop = GetCPluginChain(plugin[4:], ENC)
-		}else if plugin[:3] == "lua"{
+		} else if plugin[:3] == "lua" {
 			nextip = GetLuaPluginChain(plugin[4:], DEC)
 			nextop = GetLuaPluginChain(plugin[4:], ENC)
-		}else if plugin[:2] == "go" {
+		} else if plugin[:2] == "go" {
 			nextip = GetGoPluginChain(plugin[3:], DEC)
 			nextop = GetGoPluginChain(plugin[3:], ENC)
 		}
@@ -219,7 +218,7 @@ func PluginFactory(plugins string)(input, output PluginChain){
 			op.AddNextChainLoop(nextop)
 			nextip.AddNextChainLoop(ip)
 			ip = nextip
-		}else{
+		} else {
 			ip = nextip
 			op = nextop
 		}

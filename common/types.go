@@ -13,12 +13,12 @@ const (
 type InterfaceType string
 
 const (
-	SOCKS_IFACE InterfaceType = "socks"
-	TCP_IFACE   InterfaceType = "tcp"
-	UDP_IFACE   InterfaceType = "udp"
-	TUN_IFACE   InterfaceType = "tun"
+	SOCKS_IFACE  InterfaceType = "socks"
+	TCP_IFACE    InterfaceType = "tcp"
+	UDP_IFACE    InterfaceType = "udp"
+	TUN_IFACE    InterfaceType = "tun"
+	SERIAL_IFACE InterfaceType = "serial"
 )
-
 
 type PluginMode string
 

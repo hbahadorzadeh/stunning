@@ -10,7 +10,7 @@ import (
 )
 
 type UdpServer struct {
-	tcommon.TunnelServer
+	tcommon.TunnelServerCommon
 	conn    *net.UDPConn
 	mux     *sync.Mutex
 	wch     chan tcommon.UdpPacket

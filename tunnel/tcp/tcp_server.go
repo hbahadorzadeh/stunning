@@ -7,7 +7,7 @@ import (
 )
 
 type TcpServer struct {
-	tcommon.TunnelServer
+	tcommon.TunnelServerCommon
 }
 
 func StartTcpServer(address string) (TcpServer, error) {

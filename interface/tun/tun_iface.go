@@ -17,15 +17,14 @@ type TunInterface struct {
 	icommon.TunnelInterfaceClient
 	conf  TunConfig
 	iface *water.Interface
+	stopped bool
 }
-
 
 type TunInterfaceClient struct {
 	TunInterface
 	address string
-	dialer tcommon.TunnelDialer
+	dialer  tcommon.TunnelDialer
 }
-
 
 type TunConfig struct {
 	DevType water.DeviceType
@@ -50,6 +49,7 @@ func GetTunIface(config TunConfig) TunInterface {
 	iface := TunInterface{
 		iface: ifce,
 		conf:  config,
+		stopped: false,
 	}
 	return iface
 }
@@ -68,8 +68,8 @@ func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) Tu
 	}
 
 	iface := TunInterfaceClient{
-		address:addr,
-		dialer: d,
+		address: addr,
+		dialer:  d,
 	}
 	iface.iface = ifce
 	iface.conf = config
@@ -137,15 +137,21 @@ func runIP(args ...string) {
 	}
 }
 
-func(t TunInterfaceClient)WaitingForConnection(){
+func (t TunInterfaceClient) WaitingForConnection() {
 	conn, err := t.dialer.Dial(t.dialer.Protocol().String(), t.address)
 	if err == nil {
 		t.HandleConnection(conn)
 	}
 }
 
-func(t TunInterface)WaitingForConnection(){
-	for {
+func (t TunInterface) WaitingForConnection() {
+	for !t.stopped{
 		time.Sleep(time.Second)
 	}
+}
+
+
+func (t TunInterface) Close() error {
+	t.stopped = true
+	return nil
 }

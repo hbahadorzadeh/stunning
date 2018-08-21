@@ -47,7 +47,7 @@ func GetUdpClient(url string) *udp_client {
 	}()
 	return s
 }
-func (c *udp_client)WaitingForConnection(){
+func (c *udp_client) WaitingForConnection() {
 
 }
 

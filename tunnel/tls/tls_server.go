@@ -7,7 +7,7 @@ import (
 )
 
 type TlsServer struct {
-	tcommon.TunnelServer
+	tcommon.TunnelServerCommon
 }
 
 func StartTlsServer(crt, key, address string) (TlsServer, error) {
