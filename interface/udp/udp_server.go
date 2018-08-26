@@ -1,8 +1,8 @@
 package udp
 
 import (
-	"gitlab.com/h.bahadorzadeh/stunning/common"
-	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
+	"github.com/hbahadorzadeh/stunning/common"
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
 	"sync"

@@ -2,8 +2,8 @@ package example
 
 import (
 	"github.com/songgao/water"
-	"gitlab.com/h.bahadorzadeh/stunning/interface/tun"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/interface/tun"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
 )

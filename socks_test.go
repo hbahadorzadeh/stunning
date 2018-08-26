@@ -2,12 +2,12 @@ package stunning
 
 import (
 	"fmt"
-	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/https"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
-	"gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
+	"github.com/hbahadorzadeh/stunning/interface/socks"
+	"github.com/hbahadorzadeh/stunning/tunnel/http"
+	"github.com/hbahadorzadeh/stunning/tunnel/https"
+	"github.com/hbahadorzadeh/stunning/tunnel/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/tunnel/udp"
 	"golang.org/x/net/proxy"
 	"log"
 	"net"

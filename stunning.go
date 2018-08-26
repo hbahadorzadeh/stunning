@@ -2,17 +2,17 @@ package stunning
 
 import (
 	"github.com/songgao/water"
-	"gitlab.com/h.bahadorzadeh/stunning/common"
-	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
-	socksiface "gitlab.com/h.bahadorzadeh/stunning/interface/socks"
-	tcpiface "gitlab.com/h.bahadorzadeh/stunning/interface/tcp"
-	tuniface "gitlab.com/h.bahadorzadeh/stunning/interface/tun"
-	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
-	httptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
-	httpstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/https"
-	tcptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
-	udptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
+	"github.com/hbahadorzadeh/stunning/common"
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	socksiface "github.com/hbahadorzadeh/stunning/interface/socks"
+	tcpiface "github.com/hbahadorzadeh/stunning/interface/tcp"
+	tuniface "github.com/hbahadorzadeh/stunning/interface/tun"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	httptun "github.com/hbahadorzadeh/stunning/tunnel/http"
+	httpstun "github.com/hbahadorzadeh/stunning/tunnel/https"
+	tcptun "github.com/hbahadorzadeh/stunning/tunnel/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
 	"log"
 )
 

@@ -2,8 +2,8 @@ package example
 
 import (
 	"fmt"
-	"gitlab.com/h.bahadorzadeh/stunning/interface/socks"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/interface/socks"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	"golang.org/x/net/proxy"
 	"io/ioutil"
 	"log"

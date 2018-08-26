@@ -2,9 +2,9 @@ package tun
 
 import (
 	"github.com/songgao/water"
-	"gitlab.com/h.bahadorzadeh/stunning/common"
-	icommon "gitlab.com/h.bahadorzadeh/stunning/interface/common"
-	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	"github.com/hbahadorzadeh/stunning/common"
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 	"os"

@@ -1,8 +1,8 @@
 package example
 
 import (
-	"gitlab.com/h.bahadorzadeh/stunning/interface/tcp"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/interface/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	"log"
 	"os"
 	"time"

@@ -1,7 +1,7 @@
 package tcp
 
 import (
-	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 )

@@ -2,12 +2,12 @@ package stunning
 
 import (
 	"fmt"
-	"gitlab.com/h.bahadorzadeh/stunning/interface/tcp"
-	httptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/http"
-	httpstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/https"
-	tcptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tcp"
-	tlstun "gitlab.com/h.bahadorzadeh/stunning/tunnel/tls"
-	udptun "gitlab.com/h.bahadorzadeh/stunning/tunnel/udp"
+	"github.com/hbahadorzadeh/stunning/interface/tcp"
+	httptun "github.com/hbahadorzadeh/stunning/tunnel/http"
+	httpstun "github.com/hbahadorzadeh/stunning/tunnel/https"
+	tcptun "github.com/hbahadorzadeh/stunning/tunnel/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
 	"log"
 	"net"
 	"os"

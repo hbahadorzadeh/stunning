@@ -1,7 +1,7 @@
 package https
 
 import (
-	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"golang.org/x/net/proxy"
 	"net"
 )

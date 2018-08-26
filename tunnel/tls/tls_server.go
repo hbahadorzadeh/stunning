@@ -2,7 +2,7 @@ package tls
 
 import (
 	"crypto/tls"
-	tcommon "gitlab.com/h.bahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 )
 
