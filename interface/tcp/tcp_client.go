@@ -16,8 +16,8 @@ type TcpClient struct {
 	closed     bool
 }
 
-func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) TcpClient {
-	s := TcpClient{}
+func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) *TcpClient {
+	s := &TcpClient{}
 	s.address = url
 	s.saddress = surl
 	s.tun_dialer = tun_dialer
