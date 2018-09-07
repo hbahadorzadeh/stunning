@@ -13,10 +13,11 @@ type TcpClient struct {
 	tun_dialer tcommon.TunnelDialer
 	saddress   string
 	listen     net.Listener
+	closed     bool
 }
 
-func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) *TcpClient {
-	s := &TcpClient{}
+func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) TcpClient {
+	s := TcpClient{}
 	s.address = url
 	s.saddress = surl
 	s.tun_dialer = tun_dialer
@@ -25,11 +26,12 @@ func GetTcpClient(url, surl string, tun_dialer tcommon.TunnelDialer) *TcpClient 
 		log.Panic(err)
 	}
 	s.listen = listen
+	s.closed = false
 	return s
 }
 
 func (t *TcpClient) WaitingForConnection() {
-	for {
+	for !t.closed {
 		conn, err := t.listen.Accept()
 		if err != nil {
 			log.Fatalln(err)
@@ -42,11 +44,20 @@ func (t *TcpClient) WaitingForConnection() {
 		}
 		go t.HandleConnection(conn, sconn)
 	}
+	t.closed = true
 }
 
-func (t *TcpClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+func (t TcpClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", t.address)
 	go tcp_reader(conn, tconn)
 	tcp_writer(conn, tconn)
 	return nil
+}
+
+func (t *TcpClient) Close() {
+	t.closed = true
+}
+
+func (t TcpClient) Closed() bool {
+	return t.closed
 }

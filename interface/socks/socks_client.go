@@ -13,6 +13,7 @@ type SocksClient struct {
 	tun_dialer tcommon.TunnelDialer
 	saddress   string
 	listen     net.Listener
+	closed     bool
 }
 
 func GetSocksClient(url, surl string, tun_dialer tcommon.TunnelDialer) *SocksClient {
@@ -25,6 +26,7 @@ func GetSocksClient(url, surl string, tun_dialer tcommon.TunnelDialer) *SocksCli
 		log.Panic(err)
 	}
 	s.listen = listen
+	s.closed = false
 	return s
 }
 
@@ -53,6 +55,11 @@ func (t SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 
 func (t SocksClient) Close() {
 	t.listen.Close()
+	t.closed = true
+}
+
+func (t SocksClient) Closed() bool {
+	return t.closed
 }
 
 func tcp_reader(conn net.Conn, tconn net.Conn) {

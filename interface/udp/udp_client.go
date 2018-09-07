@@ -17,6 +17,7 @@ type udp_client struct {
 	conn     *net.UDPConn
 	replyMap []*common.UdpAddress
 	mux      sync.Mutex
+	closed   bool
 }
 
 func GetUdpClient(url string) *udp_client {
@@ -45,8 +46,18 @@ func GetUdpClient(url string) *udp_client {
 		}
 		s.mux.Unlock()
 	}()
+	s.closed = false
 	return s
 }
+
+func (c *udp_client) Close() {
+	c.closed = true
+}
+
+func (c udp_client) Closed() bool {
+	return c.closed
+}
+
 func (c *udp_client) WaitingForConnection() {
 
 }

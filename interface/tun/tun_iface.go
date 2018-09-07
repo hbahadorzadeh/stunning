@@ -1,10 +1,10 @@
 package tun
 
 import (
-	"github.com/songgao/water"
 	"github.com/hbahadorzadeh/stunning/common"
 	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	"github.com/songgao/water"
 	"log"
 	"net"
 	"os"
@@ -15,8 +15,8 @@ import (
 type TunInterface struct {
 	icommon.TunnelInterfaceServer
 	icommon.TunnelInterfaceClient
-	conf  TunConfig
-	iface *water.Interface
+	conf    TunConfig
+	iface   *water.Interface
 	stopped bool
 }
 
@@ -24,6 +24,7 @@ type TunInterfaceClient struct {
 	TunInterface
 	address string
 	dialer  tcommon.TunnelDialer
+	closed  bool
 }
 
 type TunConfig struct {
@@ -47,8 +48,8 @@ func GetTunIface(config TunConfig) TunInterface {
 	}
 
 	iface := TunInterface{
-		iface: ifce,
-		conf:  config,
+		iface:   ifce,
+		conf:    config,
 		stopped: false,
 	}
 	return iface
@@ -73,6 +74,7 @@ func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) Tu
 	}
 	iface.iface = ifce
 	iface.conf = config
+	iface.closed = false
 	return iface
 }
 
@@ -137,19 +139,28 @@ func runIP(args ...string) {
 	}
 }
 
-func (t TunInterfaceClient) WaitingForConnection() {
+func (t *TunInterfaceClient) WaitingForConnection() {
 	conn, err := t.dialer.Dial(t.dialer.Protocol().String(), t.address)
 	if err == nil {
 		t.HandleConnection(conn)
 	}
+	t.closed = true
+}
+
+func (t *TunInterfaceClient) Close() {
+	t.iface.Close()
+	t.closed = true
+}
+
+func (t TunInterfaceClient) Closed() bool {
+	return t.closed
 }
 
 func (t TunInterface) WaitingForConnection() {
-	for !t.stopped{
+	for !t.stopped {
 		time.Sleep(time.Second)
 	}
 }
-
 
 func (t TunInterface) Close() error {
 	t.stopped = true

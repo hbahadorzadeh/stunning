@@ -1,9 +1,9 @@
 package serial
 
 import (
-	"github.com/jacobsa/go-serial/serial"
 	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	"github.com/jacobsa/go-serial/serial"
 	"io"
 	"log"
 	"net"
