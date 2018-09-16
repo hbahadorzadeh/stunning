@@ -1,4 +1,4 @@
-package stunning
+package test
 
 import (
 	"fmt"

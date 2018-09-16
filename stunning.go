@@ -1,4 +1,4 @@
-package stunning
+package main
 
 import (
 	"encoding/json"
@@ -298,15 +298,14 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 }
 
 func main() {
-	argsWithoutProg := os.Args[1:]
 	var confFile string
-	for i := 0; i < len(argsWithoutProg); i++ {
-		arg := argsWithoutProg[i]
-		if arg[:8] == "--config=" {
-			confFile = arg[8:]
-		} else if arg == "-c" && i+1 <= len(argsWithoutProg) {
+	for i := 1 ; i < len(os.Args); i++ {
+		arg := os.Args[i]
+		if len(arg) > 9 && arg[:9] == "--config=" {
+			confFile = arg[9:]
+		} else if len(arg) == 2 && arg[:2] == "-c" && i+1 <= len(os.Args) {
 			i++
-			arg := argsWithoutProg[i]
+			arg := os.Args[i]
 			confFile = arg
 		} else if arg[:2] == "-c" && len(arg) > 2 {
 			confFile = arg[2:]

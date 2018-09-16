@@ -1,13 +1,14 @@
-package stunning
+package test
 
 import (
 	"fmt"
-	"github.com/hbahadorzadeh/stunning/interface/tcp"
-	httptun "github.com/hbahadorzadeh/stunning/tunnel/http"
-	httpstun "github.com/hbahadorzadeh/stunning/tunnel/https"
-	tcptun "github.com/hbahadorzadeh/stunning/tunnel/tcp"
+	"github.com/hbahadorzadeh/stunning/interface/socks"
+	"github.com/hbahadorzadeh/stunning/tunnel/http"
+	"github.com/hbahadorzadeh/stunning/tunnel/https"
+	"github.com/hbahadorzadeh/stunning/tunnel/tcp"
 	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
-	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
+	"github.com/hbahadorzadeh/stunning/tunnel/udp"
+	"golang.org/x/net/proxy"
 	"log"
 	"net"
 	"os"
@@ -15,8 +16,14 @@ import (
 	"time"
 )
 
-func TestTcpOverTls(t *testing.T) {
+func TestSocksOverTls(t *testing.T) {
 	log.SetOutput(os.Stderr)
+	ts, err := tlstun.StartTlsServer("server.crt", "server.key", ":4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")
@@ -25,7 +32,6 @@ func TestTcpOverTls(t *testing.T) {
 			t.Fatal(err)
 		}
 		conn, cerr := ln.Accept()
-		log.Printf("TCP server: accepted connection from %s", conn.RemoteAddr().String())
 		if cerr != nil {
 			t.Fatal(cerr)
 		}
@@ -35,7 +41,69 @@ func TestTcpOverTls(t *testing.T) {
 			t.Fatal(rerr)
 		}
 		rbuff := buff[:n]
-		assertTEqualByteArray(t, rbuff, testBuff, "")
+		assertEqualByteArray(t, rbuff, testBuff, "")
+		wn, werr := conn.Write(testBuff)
+		if werr != nil {
+			t.Fatal(werr)
+		}
+		bufflen := len(testBuff)
+		assertEqualInt(t, bufflen, wn, "")
+	}()
+
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, tlstun.GetTlsDialer())
+	if err != nil {
+		log.Println("Error connecting to proxy:", err)
+	}
+
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Println("Writing through proxy")
+	wn, werr := conn.Write(testBuff)
+	if werr != nil {
+		t.Fatal(werr)
+	}
+	bufflen := len(testBuff)
+	assertEqualInt(t, bufflen, wn, "")
+	buff := make([]byte, 1024)
+	log.Println("Reading from proxy")
+	n, rerr := conn.Read(buff)
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+	rbuff := buff[:n]
+	assertEqualByteArray(t, rbuff, testBuff, "")
+}
+
+func TestSocksOverTcp(t *testing.T) {
+	log.SetOutput(os.Stderr)
+	time.Sleep(10 * time.Second)
+	ts, err := tcp.StartTcpServer(":4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
+	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
+	go func() {
+		ln, err := net.Listen("tcp", "127.0.0.1:8888")
+		defer ln.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		conn, cerr := ln.Accept()
+		if cerr != nil {
+			t.Fatal(cerr)
+		}
+		buff := make([]byte, 1024)
+		n, rerr := conn.Read(buff)
+		if rerr != nil {
+			t.Fatal(rerr)
+		}
+		rbuff := buff[:n]
+		assertEqualByteArray(t, rbuff, testBuff, "")
 		log.Printf("%v = %v", rbuff, testBuff)
 		wn, werr := conn.Write(testBuff)
 		if werr != nil {
@@ -43,30 +111,25 @@ func TestTcpOverTls(t *testing.T) {
 		}
 		log.Printf("%d bytes [%v] written", wn, testBuff)
 		bufflen := len(testBuff)
-		assertTEqualInt(t, bufflen, wn, "")
-		time.Sleep(5 * time.Second)
+		assertEqualInt(t, bufflen, wn, "")
 	}()
 
-	ts, err := tlstun.StartTlsServer("server.crt", "server.key", "127.0.0.1:4443")
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, tcp.GetTcpDialer())
+	if err != nil {
+		log.Println("Error connecting to proxy:", err)
+	}
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ts.Close()
-	ts.SetServer(tcp.GetTcpServer("127.0.0.1:8888"))
-	tcp.GetTcpClient("127.0.0.1:8080", "127.0.0.1:4443", tlstun.GetTlsDialer())
-
-	conn, err := net.Dial("tcp", "127.0.0.1:8080")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
 	log.Println("Writing through proxy")
 	wn, werr := conn.Write(testBuff)
 	if werr != nil {
 		t.Fatal(werr)
 	}
 	bufflen := len(testBuff)
-	assertTEqualInt(t, bufflen, wn, "")
+	assertEqualInt(t, bufflen, wn, "")
 	buff := make([]byte, 1024)
 	log.Println("Read from proxy")
 	n, rerr := conn.Read(buff)
@@ -74,13 +137,18 @@ func TestTcpOverTls(t *testing.T) {
 		t.Fatal(rerr)
 	}
 	rbuff := buff[:n]
-	assertTEqualByteArray(t, rbuff, testBuff, "")
-	defer recover()
+	assertEqualByteArray(t, rbuff, testBuff, "")
 }
 
-func TestTcpOverTcp(t *testing.T) {
+func TestSocksOverUdp(t *testing.T) {
 	log.SetOutput(os.Stderr)
 	time.Sleep(10 * time.Second)
+	ts, err := udp.StartUdpServer(":4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")
@@ -99,7 +167,7 @@ func TestTcpOverTcp(t *testing.T) {
 			t.Fatal(rerr)
 		}
 		rbuff := buff[:n]
-		assertTEqualByteArray(t, rbuff, testBuff, "")
+		assertEqualByteArray(t, rbuff, testBuff, "")
 		log.Printf("%v = %v", rbuff, testBuff)
 		wn, werr := conn.Write(testBuff)
 		if werr != nil {
@@ -107,29 +175,25 @@ func TestTcpOverTcp(t *testing.T) {
 		}
 		log.Printf("%d bytes [%v] written", wn, testBuff)
 		bufflen := len(testBuff)
-		assertTEqualInt(t, bufflen, wn, "")
+		assertEqualInt(t, bufflen, wn, "")
 	}()
 
-	ts, err := tcptun.StartTcpServer("127.0.0.1:4443")
+	dialSocksProxy, err := proxy.SOCKS5("udp", "127.0.0.1:4443", nil, udp.GetUdpDialer())
+	if err != nil {
+		log.Println("Error connecting to proxy:", err)
+	}
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer ts.Close()
-	ts.SetServer(tcp.GetTcpServer("127.0.0.1:8888"))
-	tcp.GetTcpClient("127.0.0.1:8080", "127.0.0.1:4443", tcptun.GetTcpDialer())
-
-	conn, err := net.Dial("tcp", "127.0.0.1:8080")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
 	log.Println("Writing through proxy")
 	wn, werr := conn.Write(testBuff)
 	if werr != nil {
 		t.Fatal(werr)
 	}
 	bufflen := len(testBuff)
-	assertTEqualInt(t, bufflen, wn, "")
+	assertEqualInt(t, bufflen, wn, "")
 	buff := make([]byte, 1024)
 	log.Println("Read from proxy")
 	n, rerr := conn.Read(buff)
@@ -137,13 +201,18 @@ func TestTcpOverTcp(t *testing.T) {
 		t.Fatal(rerr)
 	}
 	rbuff := buff[:n]
-	assertTEqualByteArray(t, rbuff, testBuff, "")
-	defer recover()
+	assertEqualByteArray(t, rbuff, testBuff, "")
 }
 
-func TestTcpOverUdp(t *testing.T) {
+func TestSocksOverHttp(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10 * time.Second)
+	//time.Sleep(10*time.Second)
+	ts, err := http.StartHttpServer("127.0.0.1:4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")
@@ -162,7 +231,7 @@ func TestTcpOverUdp(t *testing.T) {
 			t.Fatal(rerr)
 		}
 		rbuff := buff[:n]
-		assertTEqualByteArray(t, rbuff, testBuff, "")
+		assertEqualByteArray(t, rbuff, testBuff, "")
 		log.Printf("%v = %v", rbuff, testBuff)
 		wn, werr := conn.Write(testBuff)
 		if werr != nil {
@@ -170,95 +239,29 @@ func TestTcpOverUdp(t *testing.T) {
 		}
 		log.Printf("%d bytes [%v] written", wn, testBuff)
 		bufflen := len(testBuff)
-		assertTEqualInt(t, bufflen, wn, "")
+		assertEqualInt(t, bufflen, wn, "")
 	}()
 
-	ts, err := udptun.StartUdpServer("127.0.0.1:4443")
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, http.GetHttpDialer())
 	if err != nil {
-		t.Fatal(err)
+		log.Println("Error connecting to proxy:", err)
 	}
-	defer ts.Close()
-	ts.SetServer(tcp.GetTcpServer("127.0.0.1:8888"))
-	tcp.GetTcpClient("127.0.0.1:8080", "127.0.0.1:4443", udptun.GetUdpDialer())
-
-	conn, err := net.Dial("tcp", "127.0.0.1:8080")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
-	log.Println("Writing through proxy")
-	wn, werr := conn.Write(testBuff)
-	if werr != nil {
-		t.Fatal(werr)
-	}
-	bufflen := len(testBuff)
-	assertTEqualInt(t, bufflen, wn, "")
-	buff := make([]byte, 1024)
-	log.Println("Read from proxy")
-	n, rerr := conn.Read(buff)
-	if rerr != nil {
-		t.Fatal(rerr)
-	}
-	rbuff := buff[:n]
-	assertTEqualByteArray(t, rbuff, testBuff, "")
-	defer recover()
-}
-func TestTcpOverHttp(t *testing.T) {
-	log.SetOutput(os.Stderr)
-	time.Sleep(10 * time.Second)
-	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
-	go func() {
-		ln, err := net.Listen("tcp", "127.0.0.1:8888")
-		defer ln.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-		conn, cerr := ln.Accept()
-		log.Printf("TCP server: accepted connection from %s", conn.RemoteAddr().String())
-		if cerr != nil {
-			t.Fatal(cerr)
-		}
-		buff := make([]byte, 1024)
-		n, rerr := conn.Read(buff)
-		if rerr != nil {
-			t.Fatal(rerr)
-		}
-		rbuff := buff[:n]
-		assertTEqualByteArray(t, rbuff, testBuff, "")
-		log.Printf("%v = %v", rbuff, testBuff)
-		wn, werr := conn.Write(testBuff)
-		if werr != nil {
-			t.Fatal(werr)
-		}
-		log.Printf("%d bytes [%v] written", wn, testBuff)
-		bufflen := len(testBuff)
-		assertTEqualInt(t, bufflen, wn, "")
-	}()
-	time.Sleep(time.Second)
-	ts, err := httptun.StartHttpServer("127.0.0.1:4443")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer ts.Close()
-	ts.SetServer(tcp.GetTcpServer("127.0.0.1:8888"))
-	tcp.GetTcpClient("127.0.0.1:8080", "127.0.0.1:4443", httptun.GetHttpDialer())
-
-	conn, err := net.Dial("tcp", "127.0.0.1:8080")
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 	if err != nil {
 		time.Sleep(time.Second)
-		conn, err = net.Dial("tcp", "127.0.0.1:8080")
+		conn, err = dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	defer conn.Close()
 	log.Println("Writing through proxy")
 	wn, werr := conn.Write(testBuff)
 	if werr != nil {
 		t.Fatal(werr)
 	}
 	bufflen := len(testBuff)
-	assertTEqualInt(t, bufflen, wn, "")
+	assertEqualInt(t, bufflen, wn, "")
 	buff := make([]byte, 1024)
 	log.Println("Read from proxy")
 	n, rerr := conn.Read(buff)
@@ -266,12 +269,18 @@ func TestTcpOverHttp(t *testing.T) {
 		t.Fatal(rerr)
 	}
 	rbuff := buff[:n]
-	assertTEqualByteArray(t, rbuff, testBuff, "")
-	defer recover()
+	assertEqualByteArray(t, rbuff, testBuff, "")
 }
-func TestTcpOverHttps(t *testing.T) {
+
+func TestSocksOverHttps(t *testing.T) {
 	log.SetOutput(os.Stderr)
-	time.Sleep(10 * time.Second)
+	//time.Sleep(10*time.Second)
+	ts, err := https.StartHttpsServer("server.crt", "server.key", "127.0.0.1:4443")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ts.Close()
+	ts.SetServer(socks.GetSocksServer())
 	testBuff := append([]byte{}, []byte{0, 1, 2, 3, 4, 5, 6, 7}...)
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:8888")
@@ -290,7 +299,7 @@ func TestTcpOverHttps(t *testing.T) {
 			t.Fatal(rerr)
 		}
 		rbuff := buff[:n]
-		assertTEqualByteArray(t, rbuff, testBuff, "")
+		assertEqualByteArray(t, rbuff, testBuff, "")
 		log.Printf("%v = %v", rbuff, testBuff)
 		wn, werr := conn.Write(testBuff)
 		if werr != nil {
@@ -298,33 +307,29 @@ func TestTcpOverHttps(t *testing.T) {
 		}
 		log.Printf("%d bytes [%v] written", wn, testBuff)
 		bufflen := len(testBuff)
-		assertTEqualInt(t, bufflen, wn, "")
+		assertEqualInt(t, bufflen, wn, "")
 	}()
-	time.Sleep(time.Second)
-	ts, err := httpstun.StartHttpsServer("server.crt", "server.key", "127.0.0.1:4443")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer ts.Close()
-	ts.SetServer(tcp.GetTcpServer("127.0.0.1:8888"))
-	tcp.GetTcpClient("127.0.0.1:8080", "127.0.0.1:4443", httpstun.GetHttpsDialer())
 
-	conn, err := net.Dial("tcp", "127.0.0.1:8080")
+	dialSocksProxy, err := proxy.SOCKS5("tcp", "127.0.0.1:4443", nil, https.GetHttpsDialer())
+	if err != nil {
+		log.Println("Error connecting to proxy:", err)
+	}
+	log.Println("Connecting through proxy")
+	conn, err := dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 	if err != nil {
 		time.Sleep(time.Second)
-		conn, err = net.Dial("tcp", "127.0.0.1:8080")
+		conn, err = dialSocksProxy.Dial("tcp", "127.0.0.1:8888")
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	defer conn.Close()
 	log.Println("Writing through proxy")
 	wn, werr := conn.Write(testBuff)
 	if werr != nil {
 		t.Fatal(werr)
 	}
 	bufflen := len(testBuff)
-	assertTEqualInt(t, bufflen, wn, "")
+	assertEqualInt(t, bufflen, wn, "")
 	buff := make([]byte, 1024)
 	log.Println("Read from proxy")
 	n, rerr := conn.Read(buff)
@@ -332,11 +337,10 @@ func TestTcpOverHttps(t *testing.T) {
 		t.Fatal(rerr)
 	}
 	rbuff := buff[:n]
-	assertTEqualByteArray(t, rbuff, testBuff, "")
-	defer recover()
+	assertEqualByteArray(t, rbuff, testBuff, "")
 }
 
-func assertTEqual(t *testing.T, a interface{}, b interface{}, message string) {
+func assertEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if a == b {
 		return
 	}
@@ -346,7 +350,7 @@ func assertTEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	t.Fatal(message)
 }
 
-func assertTEqualInt(t *testing.T, a int, b int, message string) {
+func assertEqualInt(t *testing.T, a int, b int, message string) {
 	if a == b {
 		return
 	}
@@ -356,7 +360,7 @@ func assertTEqualInt(t *testing.T, a int, b int, message string) {
 	t.Fatal(message)
 }
 
-func assertTEqualByteArray(t *testing.T, a []byte, b []byte, message string) {
+func assertEqualByteArray(t *testing.T, a []byte, b []byte, message string) {
 	eq := true
 	if len(a) == len(b) {
 		for i := 0; i < len(a); i++ {
