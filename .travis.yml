@@ -5,11 +5,7 @@ go:
 
 before_install:
   - go get -v github.com/hbahadorzadeh/stunning
-  - openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 <<EOL
-
-
-
-EOL
+  - echo -e "\n\n\n\n\n" | openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365
 
 script:
   - go test
