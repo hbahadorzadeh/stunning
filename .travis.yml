@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - "1.10.x"
+
+before_install:
+  - go get -v github.com/hbahadorzadeh/stunning
+
+script:
+  - go test
+  - go build
