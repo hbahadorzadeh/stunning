@@ -92,6 +92,14 @@ Run with configuration:
 
 ## Architecture
 
+### Visual Overview
+
+#### Core Capabilities & Roadmap
+![Architecture Overview](./docs/images/architecture-overview.png)
+
+#### Network Architecture
+![Network Architecture](./docs/images/network-architecture.png)
+
 ### Two-Layer Design
 
 1. **Tunnel Layer** - Transport mechanism (TCP, UDP, TLS, HTTP, HTTPS)
