@@ -97,6 +97,13 @@ func (t TunnelClient) ListenAndServer() {
 	}
 }
 
+func (t TunnelClient) IsAlive() bool {
+	if t.interfaceClient != nil {
+		return !t.interfaceClient.Closed()
+	}
+	return false
+}
+
 func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 	if sorc := conf.ServiceMode; sorc != "" {
 		if common.TunnelMode(sorc) == common.CLIENT {
