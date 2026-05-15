@@ -2,14 +2,19 @@ package main
 
 /*
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     char* name;
     int   running;
-    long  rx_bytes;
-    long  tx_bytes;
+    long long rx_bytes;
+    long long tx_bytes;
     char* error;
 } TunnelStatus;
+
+static inline void cgo_free(void *ptr) {
+    free(ptr);
+}
 */
 import "C"
 
@@ -17,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"unsafe"
 
 	"github.com/hbahadorzadeh/stunning/core"
 )
@@ -47,9 +53,21 @@ type TunnelStatusJSON struct {
 }
 
 // StartTunnelJSON starts a tunnel from JSON config string
+// NOTE: The returned C string must be freed by the caller using FreeString()
 //
 //export StartTunnelJSON
-func StartTunnelJSON(name *C.char, configJSON *C.char) *C.char {
+func StartTunnelJSON(name *C.char, configJSON *C.char) (result *C.char) {
+	defer func() {
+		if r := recover(); r != nil {
+			resp := JSONResponse{
+				Success: false,
+				Error:   fmt.Sprintf("tunnel factory panic: %v", r),
+			}
+			data, _ := json.Marshal(resp)
+			result = C.CString(string(data))
+		}
+	}()
+
 	if name == nil || configJSON == nil {
 		resp := JSONResponse{
 			Success: false,
@@ -85,15 +103,6 @@ func StartTunnelJSON(name *C.char, configJSON *C.char) *C.char {
 		data, _ := json.Marshal(resp)
 		return C.CString(string(data))
 	}
-
-	// Create tunnel via factory
-	defer func() {
-		if r := recover(); r != nil {
-			tunnelsMu.Lock()
-			delete(tunnels, nameStr)
-			tunnelsMu.Unlock()
-		}
-	}()
 
 	tunnel := core.TunnelFactory(nameStr, config)
 
@@ -205,7 +214,13 @@ func GetStatusJSON(name *C.char) *C.char {
 // StartTunnel starts a tunnel from JSON config (struct API)
 //
 //export StartTunnel
-func StartTunnel(name *C.char, configJSON *C.char) C.int {
+func StartTunnel(name *C.char, configJSON *C.char) (result C.int) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = -1
+		}
+	}()
+
 	if name == nil || configJSON == nil {
 		return -1
 	}
@@ -226,15 +241,6 @@ func StartTunnel(name *C.char, configJSON *C.char) C.int {
 	if err := json.Unmarshal([]byte(configStr), &config); err != nil {
 		return -1
 	}
-
-	// Create tunnel via factory
-	defer func() {
-		if r := recover(); r != nil {
-			tunnelsMu.Lock()
-			delete(tunnels, nameStr)
-			tunnelsMu.Unlock()
-		}
-	}()
 
 	tunnel := core.TunnelFactory(nameStr, config)
 
@@ -314,6 +320,13 @@ func GetStatus(name *C.char) C.TunnelStatus {
 		tx_bytes: 0,
 		error:   C.CString(""),
 	}
+}
+
+// FreeString frees a C string allocated by this library
+//
+//export FreeString
+func FreeString(s *C.char) {
+	C.cgo_free(unsafe.Pointer(s))
 }
 
 // main is required for buildmode=c-shared
