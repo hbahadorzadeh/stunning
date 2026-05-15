@@ -3,7 +3,7 @@ package dns
 import (
 	"testing"
 
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 )
 
 func TestStartDnsServer(t *testing.T) {

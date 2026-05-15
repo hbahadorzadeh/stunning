@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hbahadorzadeh/stunning/common"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	"github.com/hbahadorzadeh/stunning/core/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
 )
 
 const AddrLenght int = 8

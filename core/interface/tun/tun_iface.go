@@ -8,9 +8,9 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/hbahadorzadeh/stunning/common"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	"github.com/hbahadorzadeh/stunning/core/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 	"github.com/songgao/water"
 )
 

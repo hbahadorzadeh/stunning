@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
 )
 
 type TunnelServer interface {

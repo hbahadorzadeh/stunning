@@ -4,7 +4,7 @@ package udps
 import (
 	"net"
 
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 	"github.com/pion/dtls/v3"
 )
 

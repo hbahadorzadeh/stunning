@@ -4,7 +4,7 @@ package dns
 import (
 	"net"
 
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 )
 
 type DnsDialer struct {

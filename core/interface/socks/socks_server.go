@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/getlantern/go-socks5"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
 )
 
 type SocksServer struct {

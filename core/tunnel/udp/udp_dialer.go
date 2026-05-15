@@ -5,7 +5,7 @@ import (
 	"bufio"
 	"net"
 
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 )
 
 type UdpDialer struct {

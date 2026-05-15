@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 	"golang.org/x/net/icmp"
 )
 
