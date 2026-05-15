@@ -7,7 +7,6 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/pion/dtls/v2 v2.2.12
-	github.com/rainycape/dl v0.0.0-20151222075243-1b01514224a1
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/yuin/gopher-lua v1.1.2
 	golang.org/x/net v0.21.0
