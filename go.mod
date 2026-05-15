@@ -1,6 +1,6 @@
 module github.com/hbahadorzadeh/stunning
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -28,5 +28,5 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 )
