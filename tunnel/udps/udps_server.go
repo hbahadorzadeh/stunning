@@ -6,7 +6,7 @@ import (
 	"net"
 
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"github.com/pion/dtls/v2"
+	"github.com/pion/dtls/v3"
 )
 
 type UdpsServer struct {
