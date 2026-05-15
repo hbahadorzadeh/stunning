@@ -1,6 +1,6 @@
 module github.com/hbahadorzadeh/stunning
 
-go 1.24
+go 1.25.0
 
 require (
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -8,7 +8,7 @@ require (
 	github.com/rainycape/dl v0.0.0-20151222075243-1b01514224a1
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9
-	golang.org/x/net v0.21.0
+	golang.org/x/net v0.54.0
 )
 
 require (
@@ -28,5 +28,5 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 )
