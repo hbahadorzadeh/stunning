@@ -13,12 +13,12 @@ import (
 
 type HttpsServer struct {
 	tcommon.TunnelServerCommon
-	connMap    map[string]tcommon.ServerHttpConnection
-	mux        sync.Mutex
-	webserver  *http.Server
-	handler    func(http.ResponseWriter, *http.Request)
+	connMap     map[string]tcommon.ServerHttpConnection
+	mux         sync.Mutex
+	webserver   *http.Server
+	handler     func(http.ResponseWriter, *http.Request)
 	mux_handler *http.ServeMux
-	crt, key   string
+	crt, key    string
 }
 
 func StartHttpsServer(crt, key, address string) (*HttpsServer, error) {

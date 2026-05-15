@@ -1,9 +1,9 @@
 package ws
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"crypto/tls"
 	"github.com/gorilla/websocket"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"net"
 )
 

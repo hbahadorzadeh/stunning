@@ -13,10 +13,10 @@ import (
 
 type HttpServer struct {
 	tcommon.TunnelServerCommon
-	connMap    map[string]tcommon.ServerHttpConnection
-	mux        sync.Mutex
-	webserver  *http.Server
-	handler    func(http.ResponseWriter, *http.Request)
+	connMap     map[string]tcommon.ServerHttpConnection
+	mux         sync.Mutex
+	webserver   *http.Server
+	handler     func(http.ResponseWriter, *http.Request)
 	mux_handler *http.ServeMux
 }
 

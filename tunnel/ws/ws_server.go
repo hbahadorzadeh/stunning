@@ -1,9 +1,9 @@
 package ws
 
 import (
+	"github.com/gorilla/websocket"
 	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 )

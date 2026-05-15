@@ -10,12 +10,12 @@ import (
 
 type IcmpServer struct {
 	tcommon.TunnelServerCommon
-	conn                *icmp.PacketConn
-	mux                 sync.Mutex
-	wch                 chan icmpPacket
-	connMap             map[string]*ServerIcmpConnection
-	closeDone           chan struct{}
-	writeGoroutineDone  chan struct{}
+	conn               *icmp.PacketConn
+	mux                sync.Mutex
+	wch                chan icmpPacket
+	connMap            map[string]*ServerIcmpConnection
+	closeDone          chan struct{}
+	writeGoroutineDone chan struct{}
 }
 
 func StartIcmpServer(address string) (*IcmpServer, error) {
@@ -26,12 +26,12 @@ func StartIcmpServer(address string) (*IcmpServer, error) {
 	}
 
 	return &IcmpServer{
-		conn:                conn,
-		mux:                 sync.Mutex{},
-		wch:                 make(chan icmpPacket, 100),
-		connMap:             make(map[string]*ServerIcmpConnection),
-		closeDone:           make(chan struct{}),
-		writeGoroutineDone:  make(chan struct{}),
+		conn:               conn,
+		mux:                sync.Mutex{},
+		wch:                make(chan icmpPacket, 100),
+		connMap:            make(map[string]*ServerIcmpConnection),
+		closeDone:          make(chan struct{}),
+		writeGoroutineDone: make(chan struct{}),
 	}, nil
 }
 

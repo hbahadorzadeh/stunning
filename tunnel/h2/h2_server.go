@@ -11,13 +11,13 @@ import (
 
 type H2Server struct {
 	tcommon.TunnelServerCommon
-	connMap         map[string]*tcommon.ServerHttpConnection
-	mux             sync.Mutex
-	webserver       *http.Server
-	mux_handler     *http.ServeMux
-	crt, key        string
-	stopCleanup     chan struct{}
-	cleanupTicker   *time.Ticker
+	connMap       map[string]*tcommon.ServerHttpConnection
+	mux           sync.Mutex
+	webserver     *http.Server
+	mux_handler   *http.ServeMux
+	crt, key      string
+	stopCleanup   chan struct{}
+	cleanupTicker *time.Ticker
 }
 
 func StartH2Server(crt, key, address string) (*H2Server, error) {
