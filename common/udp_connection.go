@@ -30,18 +30,19 @@ func GetUdpConnection(raddress string, laddr [8]byte, ch chan []byte) (UdpConnec
 }
 
 func (u UdpConnection) Reader() {
+	defer u.conn.Close()
+	defer func() { u.closed = true }()
 	for {
 		buff := make([]byte, 1024)
 		n, err := u.conn.Read(buff)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error reading from UDP connection: %v", err)
+			return
 		}
 		buff = append(append([]byte{}, u.addr[0], u.addr[1], u.addr[2], u.addr[3], u.addr[4], u.addr[5], u.addr[6], u.addr[7]), buff[:n]...)
 		u.ch <- buff
 		log.Printf("%v : %d bytes wrote to socket", u.addr, n)
 	}
-	u.conn.Close()
-	u.closed = true
 }
 
 func (u UdpConnection) IsClosed() bool {

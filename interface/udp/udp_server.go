@@ -18,13 +18,15 @@ type UdpServer struct {
 	mux     sync.Mutex
 }
 
-func GetUdpServer(url string) UdpServer {
-	s := UdpServer{}
+func GetUdpServer(url string) *UdpServer {
+	s := &UdpServer{}
 	s.address = url
 	s.connMap = make(map[[AddrLenght]byte]common.UdpConnection)
 	go func() {
-		s.mux.Lock()
-		for range time.Tick(30 * time.Second) {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			s.mux.Lock()
 			toBeDeleted := make([][AddrLenght]byte, 0)
 			for i, conn := range s.connMap {
 				if conn.IsClosed() {
@@ -35,8 +37,8 @@ func GetUdpServer(url string) UdpServer {
 			for _, i := range toBeDeleted {
 				delete(s.connMap, i)
 			}
+			s.mux.Unlock()
 		}
-		s.mux.Unlock()
 	}()
 	return s
 }
@@ -60,7 +62,7 @@ func (s *UdpServer) getConnByAddr(buff []byte, ch chan []byte) net.Conn {
 	return conn
 }
 
-func (s UdpServer) HandleConnection(conn net.Conn) error {
+func (s *UdpServer) HandleConnection(conn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", s.address)
 	ch := make(chan []byte)
 	go s.udp_server_reader(conn, ch)

@@ -36,20 +36,22 @@ func GetTcpClient(saddress, PortName string, BaudRate, DataBits, StopBits, Minim
 }
 
 func (s SerialClient) WaitingForConnection() {
-	//for {
-	//
-	//	sconn, serr := s.tun_dialer.Dial(s.tun_dialer.Protocol().String(), s.saddress)
-	//	if serr != nil {
-	//		log.Fatalln(serr)
-	//		continue
-	//	}
-	//	// Write 4 bytes to the port.
-	//	b := []byte{0x00, 0x01, 0x02, 0x03}
-	//	n, err := port.Write(b)
-	//	if err != nil {
-	//		log.Fatalf("port.Write: %v", err)
-	//	}
-	//}
+	for {
+		sconn, serr := s.tun_dialer.Dial(s.tun_dialer.Protocol().String(), s.saddress)
+		if serr != nil {
+			log.Fatalln(serr)
+			continue
+		}
+		// Write 4 bytes to the port.
+		b := []byte{0x00, 0x01, 0x02, 0x03}
+		n, err := s.port.Write(b)
+		if err != nil {
+			log.Fatalf("port.Write: %v", err)
+		}
+		if n > 0 {
+			s.HandleConnection(nil, sconn)
+		}
+	}
 }
 
 func (s SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
@@ -60,4 +62,8 @@ func (s SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 
 func (s SerialClient) Close() {
 	s.port.Close()
+}
+
+func (s SerialClient) Closed() bool {
+	return s.port == nil
 }

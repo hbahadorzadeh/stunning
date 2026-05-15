@@ -34,12 +34,13 @@ func (t *TcpClient) WaitingForConnection() {
 	for !t.closed {
 		conn, err := t.listen.Accept()
 		if err != nil {
-			log.Fatalln(err)
+			log.Printf("error accepting connection: %v", err)
 			continue
 		}
 		sconn, serr := t.tun_dialer.Dial(t.tun_dialer.Protocol().String(), t.saddress)
 		if serr != nil {
-			log.Fatalln(serr)
+			log.Printf("error dialing upstream: %v", serr)
+			conn.Close()
 			continue
 		}
 		go t.HandleConnection(conn, sconn)

@@ -40,8 +40,3 @@ func (pl *lStatePool) Shutdown() {
 		L.Close()
 	}
 }
-
-// Global LState pool
-var luaPool = &lStatePool{
-	saved: make([]*lua.LState, 0, 4),
-}

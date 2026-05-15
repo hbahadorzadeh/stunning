@@ -21,7 +21,8 @@ type TunInterface struct {
 }
 
 type TunInterfaceClient struct {
-	TunInterface
+	conf    TunConfig
+	iface   *water.Interface
 	address string
 	dialer  tcommon.TunnelDialer
 	closed  bool
@@ -34,20 +35,20 @@ type TunConfig struct {
 	MTU     string
 }
 
-func GetTunIface(config TunConfig) TunInterface {
+func GetTunIface(config TunConfig) *TunInterface {
 	ifce, err := water.New(water.Config{
 		DeviceType: config.DevType,
 	})
-
-	runIP("link", "set", "dev", ifce.Name(), "mtu", config.MTU)
-	runIP("addr", "add", config.Address, "dev", ifce.Name())
-	runIP("link", "set", "dev", ifce.Name(), "up")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	iface := TunInterface{
+	runIP("link", "set", "dev", ifce.Name(), "mtu", config.MTU)
+	runIP("addr", "add", config.Address, "dev", ifce.Name())
+	runIP("link", "set", "dev", ifce.Name(), "up")
+
+	iface := &TunInterface{
 		iface:   ifce,
 		conf:    config,
 		stopped: false,
@@ -55,20 +56,20 @@ func GetTunIface(config TunConfig) TunInterface {
 	return iface
 }
 
-func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) TunInterfaceClient {
+func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) *TunInterfaceClient {
 	ifce, err := water.New(water.Config{
 		DeviceType: config.DevType,
 	})
-
-	runIP("link", "set", "dev", ifce.Name(), "mtu", config.MTU)
-	runIP("addr", "add", config.Address, "dev", ifce.Name())
-	runIP("link", "set", "dev", ifce.Name(), "up")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	iface := TunInterfaceClient{
+	runIP("link", "set", "dev", ifce.Name(), "mtu", config.MTU)
+	runIP("addr", "add", config.Address, "dev", ifce.Name())
+	runIP("link", "set", "dev", ifce.Name(), "up")
+
+	iface := &TunInterfaceClient{
 		address: addr,
 		dialer:  d,
 	}
@@ -78,14 +79,14 @@ func GetTunIfaceClient(config TunConfig, addr string, d tcommon.TunnelDialer) Tu
 	return iface
 }
 
-func (t TunInterface) HandleConnection(conn net.Conn) error {
+func (t *TunInterface) HandleConnection(conn net.Conn) error {
 	log.Printf("Tun iface %s handling new connection \n", t.iface.Name())
 	go t.reader(conn)
 	t.writer(conn)
 	return nil
 }
 
-func (t TunInterface) reader(conn net.Conn) {
+func (t *TunInterface) reader(conn net.Conn) {
 	var frame common.Frame
 
 	for {
@@ -107,7 +108,7 @@ func (t TunInterface) reader(conn net.Conn) {
 	}
 }
 
-func (t TunInterface) writer(conn net.Conn) {
+func (t *TunInterface) writer(conn net.Conn) {
 	var frame common.Frame
 	for {
 		frame.Resize(1500)
@@ -120,7 +121,7 @@ func (t TunInterface) writer(conn net.Conn) {
 			continue
 		}
 		wn, werr := t.iface.Write(frame)
-		if err != nil || wn != len(frame) {
+		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
 			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
@@ -142,7 +143,8 @@ func runIP(args ...string) {
 func (t *TunInterfaceClient) WaitingForConnection() {
 	conn, err := t.dialer.Dial(t.dialer.Protocol().String(), t.address)
 	if err == nil {
-		t.HandleConnection(conn)
+		// TunInterfaceClient doesn't use the tunnel connection parameter
+		t.HandleConnection(conn, conn)
 	}
 	t.closed = true
 }
@@ -152,17 +154,67 @@ func (t *TunInterfaceClient) Close() {
 	t.closed = true
 }
 
-func (t TunInterfaceClient) Closed() bool {
+func (t *TunInterfaceClient) Closed() bool {
 	return t.closed
 }
 
-func (t TunInterface) WaitingForConnection() {
+func (t *TunInterfaceClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+	log.Printf("Tun client handling new connection \n")
+	go t.reader(conn)
+	t.writer(conn)
+	return nil
+}
+
+func (t *TunInterfaceClient) reader(conn net.Conn) {
+	var frame common.Frame
+
+	for {
+		frame.Resize(1500)
+		n, err := t.iface.Read([]byte(frame))
+		if err != nil {
+			log.Fatal(err)
+		}
+		frame = frame[:n]
+		if len(frame) == 0 {
+			continue
+		}
+		wn, werr := conn.Write(frame)
+		if werr != nil || wn != len(frame) {
+			log.Panicln(werr)
+			log.Printf("wn : %d, n: %d \n", wn, n)
+		}
+		log.Printf("%d bytes wrote to socket", wn)
+	}
+}
+
+func (t *TunInterfaceClient) writer(conn net.Conn) {
+	var frame common.Frame
+	for {
+		frame.Resize(1500)
+		n, err := conn.Read([]byte(frame))
+		if err != nil {
+			log.Fatal(err)
+		}
+		frame = frame[:n]
+		if len(frame) == 0 {
+			continue
+		}
+		wn, werr := t.iface.Write(frame)
+		if werr != nil || wn != len(frame) {
+			log.Panicln(werr)
+			log.Printf("wn : %d, n: %d \n", wn, n)
+		}
+		log.Printf("%d bytes wrote to iface", wn)
+	}
+}
+
+func (t *TunInterface) WaitingForConnection() {
 	for !t.stopped {
 		time.Sleep(time.Second)
 	}
 }
 
-func (t TunInterface) Close() error {
+func (t *TunInterface) Close() error {
 	t.stopped = true
 	return nil
 }

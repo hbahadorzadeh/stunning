@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"golang.org/x/net/proxy"
-	"io/ioutil"
+	"io"
 	"log"
 	"math"
 	"math/rand"
@@ -21,7 +21,7 @@ func GetCilentHttpConnection(proto, serverUrl string) (ClientHttpConnection, err
 		conn, err = net.Dial("tcp", serverUrl)
 	} else {
 		conf := &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: false,
 		}
 		conn, err = tls.Dial("tcp", serverUrl, conf)
 	}
@@ -99,7 +99,7 @@ func (c ClientHttpConnection) Write(b []byte) (n int, err error) {
 			panic(err)
 		}
 		req.Header.Set("Content-Type", "application/octet-stream")
-		req.Header.Set("Content-length", fmt.Sprint("%d", len(b)))
+		req.Header.Set("Content-length", fmt.Sprintf("%d", len(b)))
 	}
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -107,8 +107,9 @@ func (c ClientHttpConnection) Write(b []byte) (n int, err error) {
 	}
 	log.Printf("writing Client bytes %v -> %s", b, c.ServerUrl)
 	go func() {
+		defer resp.Body.Close()
 		buff := make([]byte, 4096)
-		buff, err = ioutil.ReadAll(resp.Body)
+		buff, err = io.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}
@@ -192,7 +193,7 @@ type ServerHttpConnection struct {
 	Closed   bool
 }
 
-func (c ServerHttpConnection) Read(b []byte) (n int, err error) {
+func (c *ServerHttpConnection) Read(b []byte) (n int, err error) {
 	buff := <-c.RCh
 	n = len(buff)
 	b = b[:n]
@@ -205,26 +206,26 @@ func (c ServerHttpConnection) Read(b []byte) (n int, err error) {
 // Write writes data to the connection.
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
-func (c ServerHttpConnection) Write(b []byte) (n int, err error) {
+func (c *ServerHttpConnection) Write(b []byte) (n int, err error) {
 	c.WCh <- b
-	log.Printf("Writing Server bytes %v(%v)", b)
+	log.Printf("Writing Server bytes %v", b)
 	return len(b), err
 }
 
 // Close closes the connection.
 // Any blocked Read or Write operations will be unblocked and return errors.
-func (c ServerHttpConnection) Close() error {
+func (c *ServerHttpConnection) Close() error {
 	c.Closed = true
 	return nil
 }
 
 // LocalAddr returns the local network address.
-func (c ServerHttpConnection) LocalAddr() net.Addr {
+func (c *ServerHttpConnection) LocalAddr() net.Addr {
 	return nil
 }
 
 // RemoteAddr returns the remote network address.
-func (c ServerHttpConnection) RemoteAddr() net.Addr {
+func (c *ServerHttpConnection) RemoteAddr() net.Addr {
 	return nil
 }
 
@@ -243,14 +244,14 @@ func (c ServerHttpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (c ServerHttpConnection) SetDeadline(t time.Time) error {
+func (c *ServerHttpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (c ServerHttpConnection) SetReadDeadline(t time.Time) error {
+func (c *ServerHttpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -259,6 +260,6 @@ func (c ServerHttpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (c ServerHttpConnection) SetWriteDeadline(t time.Time) error {
+func (c *ServerHttpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

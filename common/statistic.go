@@ -76,8 +76,13 @@ func (sw statisticWindow) getTotal() (rx, tx int) {
 func (sw statisticWindow) getAverageByTime() (rx, tx int) {
 	var arx, atx int
 	sw.mux.Lock()
-	arx = sw.rx / int(sw.startTime-sw.timestamp.Unix())
-	atx = sw.tx / int(sw.startTime-sw.timestamp.Unix())
+	if divisor := int(sw.startTime - sw.timestamp.Unix()); divisor != 0 {
+		arx = sw.rx / divisor
+		atx = sw.tx / divisor
+	} else {
+		arx = 0
+		atx = 0
+	}
 	sw.mux.Unlock()
 	return arx, atx
 }
@@ -85,8 +90,13 @@ func (sw statisticWindow) getAverageByTime() (rx, tx int) {
 func (sw statisticWindow) getAverageByCount() (rx, tx int) {
 	var arx, atx int
 	sw.mux.Lock()
-	arx = sw.rx / sw.count
-	atx = sw.tx / sw.count
+	if sw.count > 0 {
+		arx = sw.rx / sw.count
+		atx = sw.tx / sw.count
+	} else {
+		arx = 0
+		atx = 0
+	}
 	sw.mux.Unlock()
 	return arx, atx
 }
@@ -109,7 +119,9 @@ func GetTunnelStatistic(name string, duration time.Duration, historyDuration tim
 	historySize := int(historyDuration.Seconds() / ts.windowDuration.Seconds())
 	ts.currentWin = getStatisticWindow(time.Now(), ts.windowDuration)
 	go func() {
-		for range time.Tick(ts.windowDuration) {
+		ticker := time.NewTicker(ts.windowDuration)
+		defer ticker.Stop()
+		for range ticker.C {
 			ts.mux.Lock()
 			c := ts.currentWin
 			if len(ts.history) >= historySize {
@@ -184,8 +196,13 @@ func (ts TunnelStatistic) GetAverageByTime(start, end time.Time) (arx, atx int) 
 			atx += s.tx
 		}
 	}
-	arx = arx / int((startUnix-endUnix)/int64(ts.windowDuration.Seconds()))
-	atx = atx / int((startUnix-endUnix)/int64(ts.windowDuration.Seconds()))
+	if divisor := int((endUnix - startUnix) / int64(ts.windowDuration.Seconds())); divisor != 0 {
+		arx = arx / divisor
+		atx = atx / divisor
+	} else {
+		arx = 0
+		atx = 0
+	}
 	return arx, atx
 }
 
@@ -202,7 +219,12 @@ func (ts TunnelStatistic) GetAverageByCount(start, end time.Time) (arx, atx int)
 			count += s.count
 		}
 	}
-	arx = arx / count
-	atx = atx / count
+	if count > 0 {
+		arx = arx / count
+		atx = atx / count
+	} else {
+		arx = 0
+		atx = 0
+	}
 	return arx, atx
 }

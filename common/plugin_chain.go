@@ -24,8 +24,8 @@ type GoPluginChain struct {
 	next PluginChain
 }
 
-func GetGoPluginChain(name string, mode PluginMode) (p GoPluginChain) {
-	p = GoPluginChain{
+func GetGoPluginChain(name string, mode PluginMode) *GoPluginChain {
+	p := &GoPluginChain{
 		name: name,
 		mode: mode,
 	}
@@ -54,26 +54,26 @@ func GetGoPluginChain(name string, mode PluginMode) (p GoPluginChain) {
 	return p
 }
 
-func (p GoPluginChain) AddNextChainLoop(n PluginChain) {
+func (p *GoPluginChain) AddNextChainLoop(n PluginChain) {
 	p.next = n
 }
 
-func (p GoPluginChain) HasNext() bool {
+func (p *GoPluginChain) HasNext() bool {
 	return p.next != nil
 }
 
-func (p GoPluginChain) GetNext() PluginChain {
+func (p *GoPluginChain) GetNext() PluginChain {
 	return p.next
 }
 
-func (p GoPluginChain) Call(ibuff []byte) (obuff []byte) {
+func (p *GoPluginChain) Call(ibuff []byte) (obuff []byte) {
 	obuff = p.call(ibuff)
 	if p.HasNext() {
 		obuff = p.next.Call(obuff)
 	}
 	return obuff
 }
-func (p GoPluginChain) Close() {}
+func (p *GoPluginChain) Close() {}
 
 type CPluginChain struct {
 	PluginChain
@@ -84,13 +84,13 @@ type CPluginChain struct {
 	lib  *dl.DL
 }
 
-func GetCPluginChain(name string, mode PluginMode) (p CPluginChain) {
-	p = CPluginChain{
+func GetCPluginChain(name string, mode PluginMode) *CPluginChain {
+	p := &CPluginChain{
 		name: name,
 		mode: mode,
 	}
 
-	lib, err := dl.Open("libc", 0)
+	lib, err := dl.Open(name, 0)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -113,26 +113,26 @@ func GetCPluginChain(name string, mode PluginMode) (p CPluginChain) {
 	return p
 }
 
-func (p CPluginChain) AddNextChainLoop(n PluginChain) {
+func (p *CPluginChain) AddNextChainLoop(n PluginChain) {
 	p.next = n
 }
 
-func (p CPluginChain) HasNext() bool {
+func (p *CPluginChain) HasNext() bool {
 	return p.next != nil
 }
 
-func (p CPluginChain) GetNext() PluginChain {
+func (p *CPluginChain) GetNext() PluginChain {
 	return p.next
 }
 
-func (p CPluginChain) Call(ibuff []byte) (obuff []byte) {
+func (p *CPluginChain) Call(ibuff []byte) (obuff []byte) {
 	obuff = p.call(ibuff)
 	if p.HasNext() {
 		obuff = p.next.Call(obuff)
 	}
 	return obuff
 }
-func (p CPluginChain) Close() {
+func (p *CPluginChain) Close() {
 	p.lib.Close()
 }
 
@@ -146,11 +146,11 @@ type LuaPluginChain struct {
 	fname string
 }
 
-func GetLuaPluginChain(name string, mode PluginMode) (p LuaPluginChain) {
-	p = LuaPluginChain{
+func GetLuaPluginChain(name string, mode PluginMode) *LuaPluginChain {
+	p := &LuaPluginChain{
 		name: name,
 		mode: mode,
-		pool: lStatePool{saved: make([]*lua.LState, 10)},
+		pool: lStatePool{saved: make([]*lua.LState, 0, 10)},
 	}
 	if mode == ENC {
 		p.fname = "encode"
@@ -160,19 +160,19 @@ func GetLuaPluginChain(name string, mode PluginMode) (p LuaPluginChain) {
 	return p
 }
 
-func (p LuaPluginChain) AddNextChainLoop(n PluginChain) {
+func (p *LuaPluginChain) AddNextChainLoop(n PluginChain) {
 	p.next = n
 }
 
-func (p LuaPluginChain) HasNext() bool {
+func (p *LuaPluginChain) HasNext() bool {
 	return p.next != nil
 }
 
-func (p LuaPluginChain) GetNext() PluginChain {
+func (p *LuaPluginChain) GetNext() PluginChain {
 	return p.next
 }
 
-func (p LuaPluginChain) Call(ibuff []byte) (obuff []byte) {
+func (p *LuaPluginChain) Call(ibuff []byte) (obuff []byte) {
 	L := p.pool.Get()
 	defer p.pool.Put(L)
 	if err := L.DoFile(p.name); err != nil {
@@ -190,10 +190,9 @@ func (p LuaPluginChain) Call(ibuff []byte) (obuff []byte) {
 		obuff = p.next.Call(obuff)
 	}
 
-	L.DoFile("")
 	return obuff
 }
-func (p LuaPluginChain) Close() {
+func (p *LuaPluginChain) Close() {
 	p.pool.Shutdown()
 }
 

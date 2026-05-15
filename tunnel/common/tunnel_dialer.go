@@ -13,7 +13,7 @@ type TunnelProtocol string
 
 const (
 	Tcp TunnelProtocol = "tcp"
-	Tls TunnelProtocol = "tcp"
+	Tls TunnelProtocol = "tls"
 	Udp TunnelProtocol = "udp"
 )
 

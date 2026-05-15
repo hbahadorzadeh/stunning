@@ -30,67 +30,74 @@ func GetSocksClient(url, surl string, tun_dialer tcommon.TunnelDialer) *SocksCli
 	return s
 }
 
-func (t SocksClient) WaitingForConnection() {
+func (t *SocksClient) WaitingForConnection() {
 	for {
 		conn, err := t.listen.Accept()
 		if err != nil {
-			log.Fatalln(err)
+			log.Printf("error accepting connection: %v", err)
 			continue
 		}
 		sconn, serr := t.tun_dialer.Dial(t.tun_dialer.Protocol().String(), t.saddress)
 		if serr != nil {
-			log.Fatalln(serr)
+			log.Printf("error dialing upstream: %v", serr)
+			conn.Close()
 			continue
 		}
 		go t.HandleConnection(conn, sconn)
 	}
 }
 
-func (t SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+func (t *SocksClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", t.address)
 	go tcp_reader(conn, tconn)
 	tcp_writer(conn, tconn)
 	return nil
 }
 
-func (t SocksClient) Close() {
+func (t *SocksClient) Close() {
 	t.listen.Close()
 	t.closed = true
 }
 
-func (t SocksClient) Closed() bool {
+func (t *SocksClient) Closed() bool {
 	return t.closed
 }
 
 func tcp_reader(conn net.Conn, tconn net.Conn) {
+	defer conn.Close()
+	defer tconn.Close()
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error reading from conn: %v", err)
+			return
 		}
 		buff = buff[:n]
 		wn, werr := tconn.Write(buff)
 		if werr != nil || wn != len(buff) {
-			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
+			log.Printf("Error writing to tconn: %v", werr)
+			return
 		}
 		log.Printf("%s : %d bytes wrote to socket", tconn.RemoteAddr().String(), wn)
 	}
 }
 
 func tcp_writer(conn net.Conn, tconn net.Conn) {
+	defer conn.Close()
+	defer tconn.Close()
 	for {
 		buff := make([]byte, 1024)
 		n, err := tconn.Read(buff)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error reading from tconn: %v", err)
+			return
 		}
 		buff = buff[:n]
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {
-			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
+			log.Printf("Error writing to conn: %v", werr)
+			return
 		}
 		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
 	}

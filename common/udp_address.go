@@ -36,5 +36,5 @@ func (ua *UdpAddress) GetAddress() *net.UDPAddr {
 }
 
 func (ua *UdpAddress) Equals(uan *UdpAddress) bool {
-	return ua.addr.IP.Equal(uan.addr.IP) && ua.addr.Port == ua.addr.Port
+	return ua.addr.IP.Equal(uan.addr.IP) && ua.addr.Port == uan.addr.Port
 }

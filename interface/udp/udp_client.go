@@ -36,15 +36,17 @@ func GetUdpClient(url string) *udp_client {
 	s.conn = conn
 	s.replyMap = make([]*common.UdpAddress, 0)
 	go func() {
-		s.mux.Lock()
-		for range time.Tick(30 * time.Second) {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			s.mux.Lock()
 			for i, conn := range s.replyMap {
-				if conn.IsTimedOut() {
+				if conn != nil && conn.IsTimedOut() {
 					s.replyMap[i] = nil
 				}
 			}
+			s.mux.Unlock()
 		}
-		s.mux.Unlock()
 	}()
 	s.closed = false
 	return s
@@ -54,7 +56,7 @@ func (c *udp_client) Close() {
 	c.closed = true
 }
 
-func (c udp_client) Closed() bool {
+func (c *udp_client) Closed() bool {
 	return c.closed
 }
 

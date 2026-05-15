@@ -35,34 +35,40 @@ func (t TcpServer) HandleConnection(conn net.Conn) error {
 }
 
 func tcp_reader(conn net.Conn, tconn net.Conn) {
+	defer conn.Close()
+	defer tconn.Close()
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error reading from conn: %v", err)
+			return
 		}
 		buff = buff[:n]
 		wn, werr := tconn.Write(buff)
 		if werr != nil || wn != len(buff) {
-			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
+			log.Printf("Error writing to tconn: %v", werr)
+			return
 		}
 		log.Printf("%s : %d bytes wrote to socket", tconn.RemoteAddr().String(), wn)
 	}
 }
 
 func tcp_writer(conn net.Conn, tconn net.Conn) {
+	defer conn.Close()
+	defer tconn.Close()
 	for {
 		buff := make([]byte, 1024)
 		n, err := tconn.Read(buff)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error reading from tconn: %v", err)
+			return
 		}
 		buff = buff[:n]
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {
-			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
+			log.Printf("Error writing to conn: %v", werr)
+			return
 		}
 		log.Printf("%d bytes wrote to socket", wn)
 	}

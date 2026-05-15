@@ -10,8 +10,8 @@ type TcpServer struct {
 	tcommon.TunnelServerCommon
 }
 
-func StartTcpServer(address string) (TcpServer, error) {
-	serv := TcpServer{}
+func StartTcpServer(address string) (*TcpServer, error) {
+	serv := &TcpServer{}
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Println(err)

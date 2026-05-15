@@ -1,4 +1,5 @@
 package main
+
 import (
 	"fmt"
 	"github.com/hbahadorzadeh/stunning/interface/socks"

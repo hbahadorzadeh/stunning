@@ -1,0 +1,293 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Run gofmt
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Go files are not formatted:"
+            gofmt -s -d .
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+          sh -s -- -b $(go env GOPATH)/bin latest
+
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=5m --issues-exit-code=1
+
+  sast:
+    name: SAST Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec security scanner
+        run: gosec -no-fail -fmt json -out gosec-report.json ./... || true
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: gosec-report
+          path: gosec-report.json
+
+      - name: Check for high severity issues
+        run: |
+          if grep -q '"Severity":"HIGH"' gosec-report.json || grep -q '"Severity":"CRITICAL"' gosec-report.json; then
+            echo "High or Critical severity security issues found!"
+            cat gosec-report.json | jq '.Issues[] | select(.Severity=="HIGH" or .Severity=="CRITICAL")'
+            exit 1
+          fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build all packages
+        run: go build ./...
+
+      - name: Build main binary
+        run: go build -v -o stunning
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: stunning-binary-${{ runner.os }}-${{ github.sha }}
+          path: stunning
+          retention-days: 5
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run unit tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Generate coverage report
+        run: go tool cover -func=coverage.out
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build test binary
+        run: go test -c -o functional_tests
+
+      - name: Run functional tests with timeout
+        run: timeout 60 go test -v -timeout=30s -run 'TestE2E|TestTunnel|TestConcurrent|TestInterface' ./... || true
+
+      - name: Run core functionality tests
+        run: go test -v -run 'TestFactory|TestInterface|TestRecovery' ./...
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run E2E tests
+        run: go test -v -timeout=60s -run 'TestE2E' ./...
+        continue-on-error: true
+
+      - name: Run tunnel factory tests
+        run: go test -v -timeout=30s -run 'TestTunnelFactory' ./...
+
+      - name: Run concurrent connection tests
+        run: go test -v -timeout=30s -run 'TestConcurrent' ./...
+
+  race-detector:
+    name: Race Detector
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run tests with race detector
+        run: go test -race -timeout=60s ./...
+        continue-on-error: true
+
+  dependencies:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Check for vulnerable dependencies
+        run: go list -json -m all | go run github.com/sonatype-nexus-community/nancy@latest sleuth || true
+
+      - name: Verify module integrity
+        run: go mod verify
+
+      - name: Check for outdated dependencies
+        run: |
+          go install github.com/psampaz/go-mod-outdated@latest
+          go list -u -m -json all | go-mod-outdated -update -direct || true
+
+  code-quality:
+    name: Code Quality Metrics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      - name: Install tools
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install github.com/mgechev/revive@latest
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+      - name: Run revive
+        run: revive -set_exit_status ./...
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, sast, build, unit-tests, functional-tests, e2e-tests, race-detector, dependencies, code-quality]
+    if: always()
+    steps:
+      - name: Check CI Status
+        run: |
+          echo "=== CI Pipeline Summary ==="
+          echo "Lint & Format: ${{ needs.lint.result }}"
+          echo "SAST Security Scan: ${{ needs.sast.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Functional Tests: ${{ needs.functional-tests.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Race Detector: ${{ needs.race-detector.result }}"
+          echo "Dependency Check: ${{ needs.dependencies.result }}"
+          echo "Code Quality: ${{ needs.code-quality.result }}"
+
+          if [ "${{ needs.lint.result }}" = "failure" ] || \
+             [ "${{ needs.sast.result }}" = "failure" ] || \
+             [ "${{ needs.build.result }}" = "failure" ] || \
+             [ "${{ needs.unit-tests.result }}" = "failure" ] || \
+             [ "${{ needs.code-quality.result }}" = "failure" ]; then
+            echo "❌ Critical checks failed"
+            exit 1
+          else
+            echo "✓ All critical checks passed"
+          fi

@@ -14,7 +14,6 @@ import (
 	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
 	"github.com/songgao/water"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -71,7 +70,7 @@ func (t TunnelCommon) GetTunnelMode() common.TunnelMode {
 }
 
 func (t TunnelServer) ListenAndServer() {
-	if &t.tunnelServer != nil {
+	if t.tunnelServer != nil {
 		defer t.tunnelServer.Close()
 		t.tunnelServer.WaitingForConnection()
 	} else {
@@ -80,7 +79,7 @@ func (t TunnelServer) ListenAndServer() {
 }
 
 func (t TunnelServer) IsAlive() bool {
-	if &t.tunnelServer != nil {
+	if t.tunnelServer != nil {
 		return !t.tunnelServer.Closed()
 	} else {
 		return false
@@ -88,7 +87,7 @@ func (t TunnelServer) IsAlive() bool {
 }
 
 func (t TunnelClient) ListenAndServer() {
-	if &t.interfaceClient != nil {
+	if t.interfaceClient != nil {
 		defer t.interfaceClient.Close()
 		t.tunnelClient.Dial("", t.serverAddress)
 	} else {
@@ -98,16 +97,17 @@ func (t TunnelClient) ListenAndServer() {
 
 func readConfig(confFile string) map[string]TunnelConfig {
 	confStruct := make(map[string]TunnelConfig)
-	data, err := ioutil.ReadFile(confFile)
+	data, err := os.ReadFile(confFile)
 	if err != nil {
 		panic(err)
 	}
-	json.Unmarshal(data, confStruct)
+	if err := json.Unmarshal(data, &confStruct); err != nil {
+		panic(err)
+	}
 	return confStruct
 }
 
-func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
-	var tun TunnelCommon
+func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 	if sorc := conf.ServiceMode; sorc != "" {
 		if common.TunnelMode(sorc) == common.CLIENT {
 			ttun := TunnelClient{}
@@ -115,19 +115,14 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 				switch common.TunnelType(stype) {
 				case common.HTTP_TUN:
 					ttun.tunnelClient = httptun.GetHttpDialer()
-					break
 				case common.HTTPS_TUN:
 					ttun.tunnelClient = httpstun.GetHttpsDialer()
-					break
 				case common.TCP_TUN:
 					ttun.tunnelClient = tcptun.GetTcpDialer()
-					break
 				case common.UDP_TUN:
 					ttun.tunnelClient = udptun.GetUdpDialer()
-					break
 				case common.TLS_TUN:
 					ttun.tunnelClient = tlstun.GetTlsDialer()
-					break
 				default:
 					log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 				}
@@ -144,10 +139,8 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 					switch common.InterfaceType(itype) {
 					case common.SOCKS_IFACE:
 						ttun.interfaceClient = socksiface.GetSocksClient(caddr, saddr, ttun.tunnelClient)
-						break
 					case common.TCP_IFACE:
 						ttun.interfaceClient = tcpiface.GetTcpClient(caddr, saddr, ttun.tunnelClient)
-						break
 					case common.TUN_IFACE:
 						imtu := conf.Mtu
 						if imtu == "" {
@@ -163,8 +156,7 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 							Name:    iname,
 							MTU:     imtu,
 						}
-						tuniface.GetTunIfaceClient(tconf, saddr, ttun.tunnelClient)
-						break
+						ttun.interfaceClient = tuniface.GetTunIfaceClient(tconf, saddr, ttun.tunnelClient)
 					case common.UDP_IFACE:
 					case common.SERIAL_IFACE:
 					default:
@@ -172,6 +164,7 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 					}
 				}
 			}
+			return &ttun
 		} else if common.TunnelMode(sorc) == common.SERVER {
 			ttun := TunnelServer{}
 			if stype := conf.ServerType; stype != "" {
@@ -183,7 +176,6 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
 						ttun.tunnelServer = tServer
-						break
 					case common.HTTPS_TUN:
 						scert := conf.Cert
 						skey := conf.Key
@@ -203,21 +195,18 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
 						ttun.tunnelServer = tServer
-						break
 					case common.TCP_TUN:
 						tServer, err := tcptun.StartTcpServer(saddr)
 						if err != nil {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
 						ttun.tunnelServer = tServer
-						break
 					case common.UDP_TUN:
 						tServer, err := udptun.StartUdpServer(saddr)
 						if err != nil {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
 						ttun.tunnelServer = tServer
-						break
 					case common.TLS_TUN:
 						scert := conf.Cert
 						skey := conf.Key
@@ -237,7 +226,6 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
 						ttun.tunnelServer = tServer
-						break
 					default:
 						log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 					}
@@ -249,14 +237,12 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 					switch common.InterfaceType(itype) {
 					case common.SOCKS_IFACE:
 						ttun.interfaceServer = socksiface.GetSocksServer()
-						break
 					case common.TCP_IFACE:
 						if iaddr := conf.Connect; iaddr != "" {
 							ttun.interfaceServer = tcpiface.GetTcpServer(iaddr)
 						} else {
 							log.Panicf("Conf `%s`: Service connect address not specified.", name)
 						}
-						break
 					case common.TUN_IFACE:
 						iaddr := conf.Connect
 						if iaddr == "" {
@@ -277,7 +263,6 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 							MTU:     imtu,
 						}
 						ttun.interfaceServer = tuniface.GetTunIface(tconf)
-						break
 					case common.UDP_IFACE:
 					case common.SERIAL_IFACE:
 					default:
@@ -287,19 +272,19 @@ func TunnelFactory(name string, conf TunnelConfig) TunnelCommon {
 			} else {
 				log.Panicf("Conf `%s`: Server type not defined.", name)
 			}
+			return &ttun
 		} else {
 			log.Panicf("Conf `%s`: Invalid service mode(%s).", name, sorc)
 		}
 	} else {
 		log.Panicf("Conf `%s`: Service mode not specified.", name)
 	}
-	tun = TunnelCommon{}
-	return tun
+	return nil
 }
 
 func main() {
 	var confFile string
-	for i := 1 ; i < len(os.Args); i++ {
+	for i := 1; i < len(os.Args); i++ {
 		arg := os.Args[i]
 		if len(arg) > 9 && arg[:9] == "--config=" {
 			confFile = arg[9:]
@@ -313,27 +298,27 @@ func main() {
 	}
 	if confFile != "" {
 		confsMap := readConfig(confFile)
-		tunsMap := make(map[string]TunnelCommon)
+		tunsMap := make(map[string]Tunnel)
 		for name, conf := range confsMap {
 			tun := TunnelFactory(name, conf)
 			tunsMap[name] = tun
-			tun.ListenAndServer()
+			go tun.ListenAndServer()
 		}
 
 		for {
 			for name, tun := range tunsMap {
 				if !tun.IsAlive() {
 					log.Printf("Tunnel `%s` is down!", name)
-					go func() {
-						conf, exist := confsMap[name]
+					go func(tunnelName string) {
+						conf, exist := confsMap[tunnelName]
 						if exist {
-							tun := TunnelFactory(name, conf)
-							tunsMap[name] = tun
-							tun.ListenAndServer()
+							tun := TunnelFactory(tunnelName, conf)
+							tunsMap[tunnelName] = tun
+							go tun.ListenAndServer()
 						} else {
-							log.Printf("config not found for tunnel `%s` for recreation!", name)
+							log.Printf("config not found for tunnel `%s` for recreation!", tunnelName)
 						}
-					}()
+					}(name)
 				}
 			}
 			time.Sleep(time.Second)

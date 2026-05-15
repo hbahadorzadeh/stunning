@@ -17,13 +17,15 @@ type UdpServer struct {
 	connMap map[string]*tcommon.ServerUdpConnection
 }
 
-func StartUdpServer(address string) (UdpServer, error) {
-	serv := UdpServer{}
+func StartUdpServer(address string) (*UdpServer, error) {
+	serv := &UdpServer{}
 	serv.connMap = make(map[string]*tcommon.ServerUdpConnection)
 	serv.mux = &sync.Mutex{}
 	serv.wch = make(chan tcommon.UdpPacket)
 	go func() {
-		for range time.Tick(30 * time.Second) {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
 			serv.mux.Lock()
 			toBeDeleted := make([]string, 0)
 			for i, conn := range serv.connMap {
@@ -50,13 +52,13 @@ func StartUdpServer(address string) (UdpServer, error) {
 	return serv, nil
 }
 
-func (s UdpServer) SetServer(ss icommon.TunnelInterfaceServer) {
+func (s *UdpServer) SetServer(ss icommon.TunnelInterfaceServer) {
 	s.Server = ss
 	go s.handleWriting()
 	go s.WaitingForConnection()
 }
 
-func (s UdpServer) WaitingForConnection() {
+func (s *UdpServer) WaitingForConnection() {
 	for {
 		buff := make([]byte, 1024)
 		n, addr, err := s.conn.ReadFromUDP(buff)
@@ -87,7 +89,7 @@ func (s UdpServer) WaitingForConnection() {
 	}
 }
 
-func (s UdpServer) handleWriting() {
+func (s *UdpServer) handleWriting() {
 	for upack := range s.wch {
 		n, err := s.conn.WriteToUDP(upack.Buffer, upack.Addr)
 		if err != nil {
@@ -99,6 +101,6 @@ func (s UdpServer) handleWriting() {
 	}
 }
 
-func (s UdpServer) Close() error {
+func (s *UdpServer) Close() error {
 	return s.conn.Close()
 }

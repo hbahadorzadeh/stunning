@@ -10,8 +10,8 @@ type TlsServer struct {
 	tcommon.TunnelServerCommon
 }
 
-func StartTlsServer(crt, key, address string) (TlsServer, error) {
-	serv := TlsServer{}
+func StartTlsServer(crt, key, address string) (*TlsServer, error) {
+	serv := &TlsServer{}
 	cer, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		log.Println(err)

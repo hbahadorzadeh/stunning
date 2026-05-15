@@ -13,8 +13,8 @@ type SocksServer struct {
 	server *socks5.Server
 }
 
-func GetSocksServer() SocksServer {
-	s := SocksServer{}
+func GetSocksServer() *SocksServer {
+	s := &SocksServer{}
 	s.conf = &socks5.Config{}
 	server, err := socks5.New(s.conf)
 	if err != nil {
@@ -24,7 +24,15 @@ func GetSocksServer() SocksServer {
 	return s
 }
 
-func (s SocksServer) HandleConnection(conn net.Conn) error {
+func (s *SocksServer) WaitingForConnection() {
+	// No-op: WaitingForConnection is managed by the tunnel server
+}
+
+func (s *SocksServer) Close() error {
+	return nil
+}
+
+func (s *SocksServer) HandleConnection(conn net.Conn) error {
 	log.Printf("Serving connection")
 	return s.server.ServeConn(conn)
 }

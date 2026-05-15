@@ -21,11 +21,11 @@ type TunnelServerCommon struct {
 	Listener net.Listener
 }
 
-func (s TunnelServerCommon) SetServer(ss icommon.TunnelInterfaceServer) {
+func (s *TunnelServerCommon) SetServer(ss icommon.TunnelInterfaceServer) {
 	s.Server = ss
 }
 
-func (s TunnelServerCommon) WaitingForConnection() {
+func (s *TunnelServerCommon) WaitingForConnection() {
 	s.closed = false
 	log.Printf("listening for connection on %s\n", s.Listener.Addr().String())
 	for {
@@ -41,18 +41,18 @@ func (s TunnelServerCommon) WaitingForConnection() {
 	log.Printf("Listening on %s stopped\n", s.Listener.Addr().String())
 }
 
-func (s TunnelServerCommon) Close() error {
+func (s *TunnelServerCommon) Close() error {
 	log.Println("Closing connection")
 	err := s.Listener.Close()
 	s.closed = true
 	return err
 }
 
-func (s TunnelServerCommon) Closed() bool {
+func (s *TunnelServerCommon) Closed() bool {
 	return s.closed
 }
 
-func (s TunnelServerCommon) HandleConnection(conn net.Conn) {
+func (s *TunnelServerCommon) HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	s.Server.HandleConnection(conn)
 }
