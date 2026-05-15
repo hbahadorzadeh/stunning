@@ -1,0 +1,207 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release-cli:
+    name: Release CLI
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            artifact: stunning-linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            artifact: stunning-linux-arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            artifact: stunning-darwin-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            artifact: stunning-darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Build CLI
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -o ${{ matrix.artifact }} .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release-library:
+    name: Release C Library
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            output: libstunning.so
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            output: libstunning.dylib
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Build C library
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -buildmode=c-shared -o ${{ matrix.output }} ./clib/
+      - name: Upload shared library
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}
+      - name: Upload header
+        uses: actions/upload-artifact@v4
+        with:
+          name: libstunning.h
+          path: libstunning.h
+
+  release-desktop:
+    name: Release Desktop App
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            output: stunning-desktop
+          - os: macos-latest
+            output: Stunning.app
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Install Fyne
+        run: |
+          go install fyne.io/fyne/v2/cmd/fyne@latest
+      - name: Build desktop (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          go build -o stunning-desktop ./app/desktop/
+      - name: Package desktop (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          fyne package -os darwin -appID com.stunning.tunnel \
+            -name Stunning -icon app/desktop/assets/icon.png \
+            -sourceDir ./app/desktop
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}
+
+  release-android:
+    name: Release Android App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Fyne and gomobile
+        run: |
+          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install golang.org/x/mobile/cmd/gomobile@latest
+      - name: Init gomobile
+        run: gomobile init
+      - name: Build Android APK
+        run: |
+          fyne package -os android -appID com.stunning.tunnel \
+            -name Stunning -icon app/mobile/assets/icon.png \
+            -sourceDir ./app/mobile
+      - name: Build Android bindings
+        run: |
+          gomobile bind -target android -o libstunning.aar ./bindings/
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stunning.apk
+          path: Stunning.apk
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: libstunning.aar
+          path: libstunning.aar
+
+  release-ios:
+    name: Release iOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Install Fyne and gomobile
+        run: |
+          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install golang.org/x/mobile/cmd/gomobile@latest
+      - name: Init gomobile
+        run: gomobile init
+      - name: Build iOS IPA
+        run: |
+          fyne package -os ios -appID com.stunning.tunnel \
+            -name Stunning -icon app/mobile/assets/icon.png \
+            -sourceDir ./app/mobile
+      - name: Build iOS bindings
+        run: |
+          gomobile bind -target ios -o Stunning.xcframework ./bindings/
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stunning.ipa
+          path: Stunning.ipa
+      - name: Upload xcframework
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stunning.xcframework
+          path: Stunning.xcframework
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: [release-cli, release-library, release-desktop, release-android, release-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

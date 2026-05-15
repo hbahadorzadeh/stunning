@@ -1,10 +1,29 @@
+<p align="center">
+  <img src="./stunning.png" width="128" alt="Stunning Logo"/>
+</p>
+
 # Stunning - Network Tunneling Library
 
 [![CI](https://github.com/hbahadorzadeh/stunning/workflows/CI/badge.svg)](https://github.com/hbahadorzadeh/stunning/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/hbahadorzadeh/stunning)](https://goreportcard.com/report/github.com/hbahadorzadeh/stunning)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Downloads
+
+[![Download Linux](https://img.shields.io/badge/Download-Linux-blue?logo=linux)](https://github.com/hbahadorzadeh/stunning/releases)
+[![Download macOS](https://img.shields.io/badge/Download-macOS-black?logo=apple)](https://github.com/hbahadorzadeh/stunning/releases)
+[![Download Android](https://img.shields.io/badge/Download-Android-3DDC84?logo=android)](https://github.com/hbahadorzadeh/stunning/releases)
+[![Download iOS](https://img.shields.io/badge/Download-iOS-000000?logo=apple)](https://github.com/hbahadorzadeh/stunning/releases)
+
 **Stunning** is a production-ready Go library for tunneling different types of network traffic. It's a modern alternative to stunnel, providing flexible tunneling capabilities with multiple protocols and interfaces.
+
+### Applications
+
+- **CLI Tool** - Command-line tunnel manager with JSON configuration
+- **Desktop App** - Cross-platform GUI (Linux, macOS) with Fyne
+- **Mobile Apps** - iOS and Android VPN clients with native integration
+- **C Library** - Shared library (.so/.dylib) for embedding in other languages
+- **Go Library** - Core library for programmatic use
 
 ## Features
 
@@ -330,6 +349,72 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 - Fixed all resource leaks
 
 Total: **65+ bugs fixed**, production-ready code
+
+## Multi-Platform Releases
+
+Stunning is built and released for multiple platforms automatically via GitHub Actions:
+
+### Supported Platforms
+
+- **Linux** - CLI, Desktop GUI, C Library
+- **macOS** - CLI, Desktop GUI, C Library (Intel + Apple Silicon)
+- **Android** - Mobile VPN app
+- **iOS** - Mobile VPN app
+
+### Building for Your Platform
+
+```bash
+# CLI tool (pure Go, no CGO required)
+go build -o stunning .
+
+# C Shared Library (Linux/macOS)
+# Note: Requires CGO_ENABLED=1 and C compiler (gcc/clang)
+CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.so ./clib/    # Linux
+CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.dylib ./clib/ # macOS
+
+# Desktop App (requires Fyne and CGO)
+# Note: Fyne requires CGO_ENABLED=1 for native platform integration
+go install fyne.io/fyne/v2/cmd/fyne@latest
+CGO_ENABLED=1 go build -o stunning-desktop ./app/desktop/
+
+# Mobile bindings (requires gomobile)
+# Note: Android and iOS builds have platform-specific requirements
+go install golang.org/x/mobile/cmd/gomobile@latest
+gomobile init
+
+# Android APK (requires Android SDK)
+CGO_ENABLED=1 fyne package -os android -appID com.stunning.tunnel -name Stunning ./app/mobile/
+
+# iOS IPA (requires Xcode on macOS)
+CGO_ENABLED=1 fyne package -os ios -appID com.stunning.tunnel -name Stunning ./app/mobile/
+
+# Generate bindings for native embedding
+gomobile bind -target android -o libstunning.aar ./bindings/    # Android
+gomobile bind -target ios -o Stunning.xcframework ./bindings/   # iOS
+```
+
+### Automated Release Pipeline
+
+Triggered automatically when pushing a version tag to GitHub (e.g., `v1.0.0`), the CI/CD workflow in `.github/workflows/release.yml` handles:
+
+1. **CLI Binaries** - Compiled for Linux/macOS (amd64, arm64)
+2. **Libraries** - C shared libraries (.so/.dylib) with auto-generated headers
+3. **Desktop Apps** - Linux binaries and macOS app bundles via Fyne
+4. **Mobile Apps** - Android APK + AAR bindings, iOS IPA + xcframework
+5. **GitHub Release** - Automatic release notes with all downloadable artifacts
+
+**To Create a Release**:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+# GitHub Actions automatically builds all platforms and publishes release
+```
+
+**Artifacts Published** (one per platform):
+- CLI: `stunning-linux-amd64`, `stunning-linux-arm64`, `stunning-darwin-amd64`, `stunning-darwin-arm64`
+- Libraries: `libstunning.so` / `libstunning.h` (Linux), `libstunning.dylib` / `libstunning.h` (macOS)
+- Desktop: `stunning-desktop` (Linux), `Stunning.app` (macOS)
+- Mobile: `Stunning.apk` + `libstunning.aar` (Android), `Stunning.ipa` + `Stunning.xcframework` (iOS)
 
 ## Performance
 
