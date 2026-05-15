@@ -1,3 +1,4 @@
+// Package dns provides DNS tunnel interface.
 package dns
 
 import (
@@ -13,7 +14,7 @@ func GetDnsDialer() DnsDialer {
 	return DnsDialer{}
 }
 
-func (d DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -21,6 +22,6 @@ func (d DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return &DnsConn{conn: conn}, nil
 }
 
-func (d DnsDialer) Protocol() tcommon.TunnelProtocol {
+func (_ DnsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Dns
 }

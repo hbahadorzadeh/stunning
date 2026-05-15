@@ -1,3 +1,4 @@
+// Package tcp provides TCP tunnel implementation.
 package tcp
 
 import (
@@ -14,7 +15,7 @@ func GetTcpDialer() TcpDialer {
 	return d
 }
 
-func (d TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
@@ -22,6 +23,6 @@ func (d TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return conn, err
 }
 
-func (d TcpDialer) Protocol() tcommon.TunnelProtocol {
+func (_ TcpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

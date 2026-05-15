@@ -1,0 +1,91 @@
+# Revive linting configuration
+# This disables style checks that require large refactors and focuses on functional issues
+
+[rule.blank-imports]
+Disabled = false
+
+[rule.context-as-argument]
+Disabled = false
+
+[rule.context-keys-type]
+Disabled = false
+
+[rule.dot-imports]
+Disabled = false
+
+[rule.duplicated-imports]
+Disabled = false
+
+[rule.error-naming]
+Disabled = false
+
+[rule.error-return]
+Disabled = false
+
+[rule.error-strings]
+Disabled = false
+
+[rule.errorf]
+Disabled = false
+
+[rule.exported]
+# Disabled - pre-existing missing comments
+Disabled = true
+
+[rule.if-return]
+Disabled = false
+
+[rule.increment-decrement]
+Disabled = false
+
+[rule.indent-error-flow]
+Disabled = false
+
+[rule.package-comments]
+Disabled = false
+
+[rule.range]
+Disabled = false
+
+[rule.receiver-naming]
+# Disabled due to pre-existing naming style in codebase
+Disabled = true
+
+[rule.redefines-builtin-id]
+Disabled = false
+
+[rule.superfluous-else]
+Disabled = false
+
+[rule.time-naming]
+Disabled = false
+
+[rule.unexported-naming]
+# Disabled due to pre-existing naming style in codebase
+Disabled = true
+
+[rule.unexported-return]
+Disabled = false
+
+[rule.unnecessary-stmt]
+Disabled = false
+
+[rule.unreachable-code]
+Disabled = false
+
+[rule.unused-parameter]
+# Disabled because interface methods may have unused parameters
+Disabled = true
+
+[rule.unused-receiver]
+Disabled = false
+
+[rule.var-declaration]
+Disabled = false
+
+[rule.var-naming]
+# Disabled because codebase uses snake_case in some places
+Disabled = true
+
+[rule.bare-return]
+Disabled = false

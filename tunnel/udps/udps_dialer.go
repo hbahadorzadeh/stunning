@@ -1,3 +1,4 @@
+// Package udps provides DTLS tunnel implementation.
 package udps
 
 import (
@@ -14,7 +15,7 @@ func GetUdpsDialer() UdpsDialer {
 	return UdpsDialer{}
 }
 
-func (d UdpsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ UdpsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return nil, err
@@ -32,6 +33,6 @@ func (d UdpsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return conn, nil
 }
 
-func (d UdpsDialer) Protocol() tcommon.TunnelProtocol {
+func (_ UdpsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Udps
 }

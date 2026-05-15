@@ -1,3 +1,4 @@
+// Package main provides the tunnel factory and main tunnel configuration.
 package main
 
 import (
@@ -84,9 +85,8 @@ func (t TunnelServer) ListenAndServer() {
 func (t TunnelServer) IsAlive() bool {
 	if t.tunnelServer != nil {
 		return !t.tunnelServer.Closed()
-	} else {
-		return false
 	}
+	return false
 }
 
 func (t TunnelClient) ListenAndServer() {
@@ -353,12 +353,10 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 				log.Panicf("Conf `%s`: Server type not defined.", name)
 			}
 			return &ttun
-		} else {
-			log.Panicf("Conf `%s`: Invalid service mode(%s).", name, sorc)
 		}
-	} else {
-		log.Panicf("Conf `%s`: Service mode not specified.", name)
+		log.Panicf("Conf `%s`: Invalid service mode(%s).", name, sorc)
 	}
+	log.Panicf("Conf `%s`: Service mode not specified.", name)
 	return nil
 }
 

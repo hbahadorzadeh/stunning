@@ -15,12 +15,12 @@ type aggregatedStatistic struct {
 	duration time.Duration
 }
 
-func (s *Statistic) add(new Statistic) {
-	s.count += new.count
-	s.rx += new.rx
-	s.tx += new.tx
-	if new.timestamp.After(s.timestamp) {
-		s.timestamp = new.timestamp
+func (s *Statistic) add(stat Statistic) {
+	s.count += stat.count
+	s.rx += stat.rx
+	s.tx += stat.tx
+	if stat.timestamp.After(s.timestamp) {
+		s.timestamp = stat.timestamp
 	}
 }
 

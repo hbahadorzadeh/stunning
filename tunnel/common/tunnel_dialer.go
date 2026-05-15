@@ -25,11 +25,12 @@ const (
 func (t TunnelProtocol) String() string {
 	if t == Udp {
 		return "udp"
-	} else if t == Udps {
-		return "udp"
-	} else if t == Icmp {
-		return "ip4:icmp"
-	} else {
-		return "tcp"
 	}
+	if t == Udps {
+		return "udp"
+	}
+	if t == Icmp {
+		return "ip4:icmp"
+	}
+	return "tcp"
 }

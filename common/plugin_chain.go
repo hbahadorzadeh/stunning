@@ -71,7 +71,7 @@ func (p *GoPluginChain) Call(ibuff []byte) (obuff []byte) {
 	}
 	return obuff
 }
-func (p *GoPluginChain) Close() {}
+func (_ *GoPluginChain) Close() {}
 
 // CPluginChain is unused and commented out due to dl package CGO requirements
 // type CPluginChain struct {

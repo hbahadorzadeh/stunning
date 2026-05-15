@@ -1,3 +1,4 @@
+// Package h2 provides HTTP/2 tunnel dialer.
 package h2
 
 import (
@@ -13,10 +14,10 @@ func GetH2Dialer() H2Dialer {
 	return H2Dialer{}
 }
 
-func (d H2Dialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ H2Dialer) Dial(network, addr string) (c net.Conn, err error) {
 	return tcommon.GetCilentHttpConnection("https", addr)
 }
 
-func (d H2Dialer) Protocol() tcommon.TunnelProtocol {
+func (_ H2Dialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.H2
 }

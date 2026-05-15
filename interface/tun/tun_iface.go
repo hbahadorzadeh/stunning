@@ -1,3 +1,4 @@
+// Package tun provides TUN device-based tunnel interface.
 package tun
 
 import (
@@ -102,7 +103,6 @@ func (t *TunInterface) reader(conn net.Conn) {
 		wn, werr := conn.Write(frame)
 		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%d bytes wrote to socket", wn)
 	}
@@ -123,7 +123,6 @@ func (t *TunInterface) writer(conn net.Conn) {
 		wn, werr := t.iface.Write(frame)
 		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%d bytes wrote to iface", wn)
 	}
@@ -181,7 +180,6 @@ func (t *TunInterfaceClient) reader(conn net.Conn) {
 		wn, werr := conn.Write(frame)
 		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%d bytes wrote to socket", wn)
 	}
@@ -202,7 +200,6 @@ func (t *TunInterfaceClient) writer(conn net.Conn) {
 		wn, werr := t.iface.Write(frame)
 		if werr != nil || wn != len(frame) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%d bytes wrote to iface", wn)
 	}

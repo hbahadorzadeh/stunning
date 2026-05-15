@@ -83,18 +83,16 @@ func (s *UdpServer) udp_server_reader(conn net.Conn, ch chan []byte) {
 		wn, werr := dconn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%s : %d bytes wrote to socket", dconn.RemoteAddr().String(), wn)
 	}
 }
 
-func (s *UdpServer) udp_server_writer(conn net.Conn, ch chan []byte) {
+func (_ *UdpServer) udp_server_writer(conn net.Conn, ch chan []byte) {
 	for buff := range ch {
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, len(buff))
 		}
 		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
 	}

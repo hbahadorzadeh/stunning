@@ -1,3 +1,4 @@
+// Package udp provides UDP-based tunnel interfaces.
 package udp
 
 import (
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-type udp_client struct {
+type UdpClient struct {
 	icommon.TunnelInterfaceClient
 	address  string
 	conn     *net.UDPConn
@@ -20,8 +21,8 @@ type udp_client struct {
 	closed   bool
 }
 
-func GetUdpClient(url string) *udp_client {
-	s := &udp_client{}
+func GetUdpClient(url string) *UdpClient {
+	s := &UdpClient{}
 	s.address = url
 	udpAddr, err := net.ResolveUDPAddr("udp", s.address)
 	if err != nil {
@@ -52,26 +53,26 @@ func GetUdpClient(url string) *udp_client {
 	return s
 }
 
-func (c *udp_client) Close() {
+func (c *UdpClient) Close() {
 	c.closed = true
 }
 
-func (c *udp_client) Closed() bool {
+func (c *UdpClient) Closed() bool {
 	return c.closed
 }
 
-func (c *udp_client) WaitingForConnection() {
+func (_ *UdpClient) WaitingForConnection() {
 
 }
 
-func (c *udp_client) HandleConnection(conn net.Conn) error {
+func (c *UdpClient) HandleConnection(conn net.Conn) error {
 	log.Printf("Socket to %s handling connection \n", c.address)
 	go c.udp_client_reader(conn)
 	c.udp_client_writer(conn)
 	return nil
 }
 
-func (c *udp_client) udp_client_reader(conn net.Conn) {
+func (c *UdpClient) udp_client_reader(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, err := conn.Read(buff)
@@ -83,13 +84,12 @@ func (c *udp_client) udp_client_reader(conn net.Conn) {
 		wn, werr := c.conn.WriteToUDP(buff, addr.GetAddress())
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%s : %d bytes wrote to socket", addr.GetAddress().String(), wn)
 	}
 }
 
-func (c *udp_client) udp_client_writer(conn net.Conn) {
+func (c *UdpClient) udp_client_writer(conn net.Conn) {
 	for {
 		buff := make([]byte, 1024)
 		n, addr, err := c.conn.ReadFromUDP(buff)
@@ -110,7 +110,6 @@ func (c *udp_client) udp_client_writer(conn net.Conn) {
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {
 			log.Panicln(werr)
-			log.Printf("wn : %d, n: %d \n", wn, n)
 		}
 		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
 	}

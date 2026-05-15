@@ -1,3 +1,4 @@
+// Package socks provides SOCKS5-based tunnel interfaces.
 package socks
 
 import (

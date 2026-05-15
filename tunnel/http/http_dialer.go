@@ -1,3 +1,4 @@
+// Package http provides HTTP tunnel dialer.
 package http
 
 import (
@@ -14,10 +15,10 @@ func GetHttpDialer() HttpDialer {
 	return d
 }
 
-func (d HttpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ HttpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return tcommon.GetCilentHttpConnection("http", addr)
 }
 
-func (d HttpDialer) Protocol() tcommon.TunnelProtocol {
+func (_ HttpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

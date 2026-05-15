@@ -1,3 +1,4 @@
+// Package icmp provides ICMP tunnel dialer.
 package icmp
 
 import (
@@ -13,7 +14,7 @@ func GetIcmpDialer() IcmpDialer {
 	return IcmpDialer{}
 }
 
-func (d IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	remoteAddr, err := net.ResolveIPAddr("ip4", addr)
 	if err != nil {
 		return nil, err
@@ -30,6 +31,6 @@ func (d IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	}, nil
 }
 
-func (d IcmpDialer) Protocol() tcommon.TunnelProtocol {
+func (_ IcmpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Icmp
 }

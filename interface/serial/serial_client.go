@@ -1,3 +1,4 @@
+// Package serial provides serial port-based tunnel interfaces.
 package serial
 
 import (
@@ -39,7 +40,6 @@ func (s SerialClient) WaitingForConnection() {
 		sconn, serr := s.tun_dialer.Dial(s.tun_dialer.Protocol().String(), s.saddress)
 		if serr != nil {
 			log.Fatalln(serr)
-			continue
 		}
 		// Write 4 bytes to the port.
 		b := []byte{0x00, 0x01, 0x02, 0x03}
@@ -53,7 +53,7 @@ func (s SerialClient) WaitingForConnection() {
 	}
 }
 
-func (s SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+func (_ SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	go tcp_reader(conn, tconn)
 	tcp_writer(conn, tconn)
 	return nil

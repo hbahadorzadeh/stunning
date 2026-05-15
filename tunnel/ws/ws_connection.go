@@ -1,3 +1,4 @@
+// Package ws provides WebSocket tunnel implementation.
 package ws
 
 import (
@@ -55,14 +56,14 @@ func (w *WsConn) RemoteAddr() net.Addr {
 	return w.conn.RemoteAddr()
 }
 
-func (w *WsConn) SetDeadline(t time.Time) error {
+func (_ *WsConn) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (w *WsConn) SetReadDeadline(t time.Time) error {
+func (_ *WsConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (w *WsConn) SetWriteDeadline(t time.Time) error {
+func (_ *WsConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }

@@ -1,3 +1,4 @@
+// Package common provides common types and utilities for tunnel implementations.
 package common
 
 import (
@@ -154,14 +155,14 @@ func (c ClientHttpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (c ClientHttpConnection) SetDeadline(t time.Time) error {
+func (_ ClientHttpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (c ClientHttpConnection) SetReadDeadline(t time.Time) error {
+func (_ ClientHttpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -170,7 +171,7 @@ func (c ClientHttpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (c ClientHttpConnection) SetWriteDeadline(t time.Time) error {
+func (_ ClientHttpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
@@ -219,12 +220,12 @@ func (c *ServerHttpConnection) Close() error {
 }
 
 // LocalAddr returns the local network address.
-func (c *ServerHttpConnection) LocalAddr() net.Addr {
+func (_ *ServerHttpConnection) LocalAddr() net.Addr {
 	return nil
 }
 
 // RemoteAddr returns the remote network address.
-func (c *ServerHttpConnection) RemoteAddr() net.Addr {
+func (_ *ServerHttpConnection) RemoteAddr() net.Addr {
 	return nil
 }
 
@@ -243,14 +244,14 @@ func (c *ServerHttpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (c *ServerHttpConnection) SetDeadline(t time.Time) error {
+func (_ *ServerHttpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (c *ServerHttpConnection) SetReadDeadline(t time.Time) error {
+func (_ *ServerHttpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -259,6 +260,6 @@ func (c *ServerHttpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (c *ServerHttpConnection) SetWriteDeadline(t time.Time) error {
+func (_ *ServerHttpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

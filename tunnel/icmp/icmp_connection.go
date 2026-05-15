@@ -1,3 +1,4 @@
+// Package icmp provides ICMP tunnel implementation.
 package icmp
 
 import (
@@ -47,15 +48,15 @@ func (u *ServerIcmpConnection) RemoteAddr() net.Addr {
 	return u.addr
 }
 
-func (u *ServerIcmpConnection) SetDeadline(t time.Time) error {
+func (_ *ServerIcmpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (u *ServerIcmpConnection) SetReadDeadline(t time.Time) error {
+func (_ *ServerIcmpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (u *ServerIcmpConnection) SetWriteDeadline(t time.Time) error {
+func (_ *ServerIcmpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
@@ -64,15 +65,15 @@ type ClientIcmpConnection struct {
 	addr net.Addr
 }
 
-func (u *ClientIcmpConnection) Read(b []byte) (n int, err error) {
+func (_ *ClientIcmpConnection) Read(b []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (u *ClientIcmpConnection) Write(b []byte) (n int, err error) {
+func (_ *ClientIcmpConnection) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (u *ClientIcmpConnection) Close() error {
+func (_ *ClientIcmpConnection) Close() error {
 	return nil
 }
 
@@ -84,14 +85,14 @@ func (u *ClientIcmpConnection) RemoteAddr() net.Addr {
 	return u.addr
 }
 
-func (u *ClientIcmpConnection) SetDeadline(t time.Time) error {
+func (_ *ClientIcmpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (u *ClientIcmpConnection) SetReadDeadline(t time.Time) error {
+func (_ *ClientIcmpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (u *ClientIcmpConnection) SetWriteDeadline(t time.Time) error {
+func (_ *ClientIcmpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

@@ -1,3 +1,4 @@
+// Package dns provides DNS-over-TCP tunnel implementation.
 package dns
 
 import (

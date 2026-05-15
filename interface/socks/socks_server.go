@@ -1,3 +1,4 @@
+// Package socks provides SOCKS5 tunnel server interface.
 package socks
 
 import (
@@ -24,11 +25,11 @@ func GetSocksServer() *SocksServer {
 	return s
 }
 
-func (s *SocksServer) WaitingForConnection() {
+func (_ *SocksServer) WaitingForConnection() {
 	// No-op: WaitingForConnection is managed by the tunnel server
 }
 
-func (s *SocksServer) Close() error {
+func (_ *SocksServer) Close() error {
 	return nil
 }
 

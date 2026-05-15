@@ -1,3 +1,4 @@
+// Package common provides common types and utilities for the tunnel library.
 package common
 
 import "net"
@@ -17,6 +18,7 @@ const (
 	DoubleTagged Tagging = 8
 )
 
+// ReplacePart replaces a part of the frame between start and end indices with new bytes.
 func (f Frame) ReplacePart(start int, end int, nval []byte) {
 	tmp := append(f[:start], nval...)
 	_ = append(tmp, f[end:]...)
@@ -30,10 +32,12 @@ func (f Frame) Destination() net.HardwareAddr {
 	return net.HardwareAddr(f[:6:6])
 }
 
+// DestinationBytes returns the destination address bytes of the frame.
 func (f Frame) DestinationBytes() []byte {
 	return f[:6:6]
 }
 
+// SetDestination sets the destination address field of the frame.
 func (f Frame) SetDestination(addr []byte) {
 	f.ReplacePart(0, 6, addr)
 }
@@ -45,9 +49,13 @@ func (f Frame) SetDestination(addr []byte) {
 func (f Frame) Source() net.HardwareAddr {
 	return net.HardwareAddr(f[6:12:12])
 }
+
+// SourceBytes returns the source address bytes of the frame.
 func (f Frame) SourceBytes() []byte {
 	return f[6:12:12]
 }
+
+// SetSource sets the source address field of the frame.
 func (f Frame) SetSource(addr []byte) {
 	f.ReplacePart(6, 12, addr)
 }
@@ -64,7 +72,7 @@ func (f Frame) Tagging() Tagging {
 	return NotTagged
 }
 
-// Tag returns a slice holding the tag part of the frame, if any. Note that
+// Tags returns a slice holding the tag part of the frame, if any. Note that
 // this includes the Tag Protocol Identifier (TPID), e.g. 0x8100 or 0x88a8.
 // Upper layer should use the returned slice for both reading and writing.
 //

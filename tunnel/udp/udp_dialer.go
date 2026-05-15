@@ -1,3 +1,4 @@
+// Package udp provides UDP tunnel implementation.
 package udp
 
 import (
@@ -15,7 +16,7 @@ func GetUdpDialer() UdpDialer {
 	return d
 }
 
-func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	rudpAddr, err := net.ResolveUDPAddr(network, addr)
 	if err != nil {
 		return nil, err
@@ -36,6 +37,6 @@ func (d UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return cnn, err
 }
 
-func (d UdpDialer) Protocol() tcommon.TunnelProtocol {
+func (_ UdpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Udp
 }

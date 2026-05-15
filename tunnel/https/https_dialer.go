@@ -1,3 +1,4 @@
+// Package https provides HTTPS tunnel dialer.
 package https
 
 import (
@@ -14,10 +15,10 @@ func GetHttpsDialer() HttpsDialer {
 	return d
 }
 
-func (d HttpsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ HttpsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return tcommon.GetCilentHttpConnection("https", addr)
 }
 
-func (d HttpsDialer) Protocol() tcommon.TunnelProtocol {
+func (_ HttpsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

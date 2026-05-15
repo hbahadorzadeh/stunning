@@ -1,3 +1,4 @@
+// Package common provides common types and utilities for tunnel interfaces.
 package common
 
 import (

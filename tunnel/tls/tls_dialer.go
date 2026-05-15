@@ -1,3 +1,4 @@
+// Package tls provides TLS tunnel implementation.
 package tls
 
 import (
@@ -14,7 +15,7 @@ func GetTlsDialer() TlsDialer {
 	return TlsDialer{}
 }
 
-func (d TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conf := &tls.Config{
 		InsecureSkipVerify: false,
 	}
@@ -27,6 +28,6 @@ func GetTlsDialerWithConfig(cfg *tls.Config) TlsDialer {
 	return TlsDialer{}
 }
 
-func (d TlsDialer) Protocol() tcommon.TunnelProtocol {
+func (_ TlsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tls
 }

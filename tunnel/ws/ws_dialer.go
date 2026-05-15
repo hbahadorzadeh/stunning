@@ -1,3 +1,4 @@
+// Package ws provides WebSocket tunnel dialer.
 package ws
 
 import (
@@ -15,7 +16,7 @@ func GetWsDialer() WsDialer {
 	return WsDialer{}
 }
 
-func (d WsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (_ WsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	wsURL := "wss://" + addr + "/"
 	dialer := websocket.Dialer{
 		TLSClientConfig: &tls.Config{
@@ -29,6 +30,6 @@ func (d WsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return &WsConn{conn: conn}, nil
 }
 
-func (d WsDialer) Protocol() tcommon.TunnelProtocol {
+func (_ WsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Ws
 }

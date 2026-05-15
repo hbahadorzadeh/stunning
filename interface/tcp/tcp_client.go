@@ -1,3 +1,4 @@
+// Package tcp provides TCP-based tunnel interfaces.
 package tcp
 
 import (
