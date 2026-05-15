@@ -29,7 +29,7 @@ func TestStartTunnelJSON(t *testing.T) {
 		"ServiceMode": "client",
 		"ServerType": "http",
 		"InterfaceType": "socks",
-		"Listen": "127.0.0.1:1080",
+		"Listen": "127.0.0.1:0",
 		"Connect": "127.0.0.1:8080"
 	}`
 
@@ -39,7 +39,7 @@ func TestStartTunnelJSON(t *testing.T) {
 		ServiceMode:   "client",
 		ServerType:    "http",
 		InterfaceType: "socks",
-		Listen:        "127.0.0.1:1080",
+		Listen:        "127.0.0.1:0",
 		Connect:       "127.0.0.1:8080",
 	}
 
@@ -85,7 +85,7 @@ func TestStopTunnelJSON(t *testing.T) {
 		ServiceMode:   "client",
 		ServerType:    "http",
 		InterfaceType: "socks",
-		Listen:        "127.0.0.1:1081",
+		Listen:        "127.0.0.1:0",
 		Connect:       "127.0.0.1:8080",
 	}
 
@@ -129,7 +129,7 @@ func TestGetStatusJSON(t *testing.T) {
 		ServiceMode:   "client",
 		ServerType:    "http",
 		InterfaceType: "socks",
-		Listen:        "127.0.0.1:1082",
+		Listen:        "127.0.0.1:0",
 		Connect:       "127.0.0.1:8080",
 	}
 
@@ -172,7 +172,7 @@ func TestStartTunnel(t *testing.T) {
 		ServiceMode:   "client",
 		ServerType:    "http",
 		InterfaceType: "socks",
-		Listen:        "127.0.0.1:1083",
+		Listen:        "127.0.0.1:0",
 		Connect:       "127.0.0.1:8080",
 	}
 
