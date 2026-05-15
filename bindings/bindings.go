@@ -57,7 +57,7 @@ func Connect(serverAddr string, protocol string) string {
 		ServiceMode:   "client",
 		ServerType:    protocol,
 		InterfaceType: "socks", // Default to SOCKS for client
-		Listen:        "127.0.0.1:1080",
+		Listen:        "127.0.0.1:0", // Let OS assign available port
 		Connect:       serverAddr,
 	}
 
