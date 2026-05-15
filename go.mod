@@ -8,7 +8,7 @@ require (
 	github.com/rainycape/dl v0.0.0-20151222075243-1b01514224a1
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9
-	golang.org/x/net v0.21.0
+	golang.org/x/net v0.54.0
 )
 
 require (
