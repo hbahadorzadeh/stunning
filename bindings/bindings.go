@@ -9,11 +9,12 @@ import (
 )
 
 var (
-	mu               sync.RWMutex
-	currentTunnel    core.Tunnel
-	vpnConnected     bool
-	tunnelError      string
-	tunnelDoneFunc   func()
+	mu                  sync.RWMutex
+	currentTunnel       core.Tunnel
+	vpnConnected        bool
+	tunnelError         string
+	tunnelDoneFunc      func()
+	tunnelCancelContext chan struct{}
 )
 
 // ConnectRequest holds VPN connection parameters
@@ -42,6 +43,13 @@ func Connect(serverAddr string, protocol string) string {
 		mu.Unlock()
 		return "tunnel_already_running"
 	}
+
+	// Cancel previous tunnel goroutine if any
+	if tunnelCancelContext != nil {
+		close(tunnelCancelContext)
+	}
+	tunnelCancelContext = make(chan struct{})
+	cancelChan := tunnelCancelContext
 	mu.Unlock()
 
 	// Build tunnel config for client mode
@@ -72,12 +80,26 @@ func Connect(serverAddr string, protocol string) string {
 			}
 		}()
 
-		tunnel.ListenAndServer()
+		// Use a goroutine to run the tunnel with cancellation support
+		tunnelDone := make(chan struct{})
+		go func() {
+			defer close(tunnelDone)
+			tunnel.ListenAndServer()
+		}()
 
-		mu.Lock()
-		vpnConnected = false
-		currentTunnel = nil
-		mu.Unlock()
+		select {
+		case <-tunnelDone:
+			mu.Lock()
+			vpnConnected = false
+			currentTunnel = nil
+			mu.Unlock()
+		case <-cancelChan:
+			mu.Lock()
+			vpnConnected = false
+			currentTunnel = nil
+			mu.Unlock()
+			return
+		}
 
 		if tunnelDoneFunc != nil {
 			tunnelDoneFunc()
@@ -92,14 +114,35 @@ func Connect(serverAddr string, protocol string) string {
 //export Disconnect
 func Disconnect() string {
 	mu.Lock()
-	defer mu.Unlock()
-
 	if currentTunnel == nil {
+		// Still need to clean up cancel context if it exists
+		if tunnelCancelContext != nil {
+			select {
+			case <-tunnelCancelContext:
+				// Already closed
+			default:
+				close(tunnelCancelContext)
+			}
+			tunnelCancelContext = nil
+		}
+		mu.Unlock()
 		return "not_connected"
 	}
 
 	currentTunnel = nil
 	vpnConnected = false
+
+	// Signal the tunnel goroutine to stop
+	if tunnelCancelContext != nil {
+		select {
+		case <-tunnelCancelContext:
+			// Already closed
+		default:
+			close(tunnelCancelContext)
+		}
+		tunnelCancelContext = nil
+	}
+	mu.Unlock()
 
 	return "ok"
 }

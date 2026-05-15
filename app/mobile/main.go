@@ -16,8 +16,8 @@ var iconBytes []byte
 func main() {
 	myApp := app.New()
 
-	// Initialize VPN provider
-	vpn.SetProvider(vpn.NewStubProvider())
+	// VPN provider is initialized via build tags (vpn_stub.go, vpn_android.go, vpn_ios.go)
+	// No explicit initialization needed here
 
 	// Create main window
 	mainWindow := myApp.NewWindow("Stunning VPN")

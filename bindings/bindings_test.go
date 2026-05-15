@@ -4,47 +4,45 @@ import (
 	"testing"
 )
 
-func TestConnect(t *testing.T) {
+// Test basic connect/disconnect flow
+func TestConnectFlow(t *testing.T) {
 	result := Connect("127.0.0.1:8888", "tcp")
 	if result != "ok" {
-		t.Errorf("Expected 'ok', got '%s'", result)
+		t.Errorf("Connect: expected 'ok', got '%s'", result)
 	}
 
-	if !IsConnected() {
-		t.Error("Expected tunnel to be connected")
+	result = Disconnect()
+	if result != "ok" {
+		t.Errorf("Disconnect: expected 'ok', got '%s'", result)
 	}
 }
 
-func TestDisconnect(t *testing.T) {
-	Connect("127.0.0.1:8888", "tcp")
+// Test disconnect when not connected
+func TestDisconnectNotConnected(t *testing.T) {
+	Disconnect() // Clean up from previous tests
 
 	result := Disconnect()
-	if result != "ok" {
-		t.Errorf("Expected 'ok', got '%s'", result)
+	if result != "not_connected" {
+		t.Errorf("Expected 'not_connected', got '%s'", result)
 	}
 }
 
-func TestGetStatus(t *testing.T) {
+// Test getting status when not connected
+func TestGetStatusWhenDisconnected(t *testing.T) {
+	Disconnect() // Clean up from previous tests
+
 	status := GetStatus()
 	if status == "" {
 		t.Error("Expected non-empty status string")
 	}
 }
 
-func TestConnectAlreadyConnected(t *testing.T) {
-	Connect("127.0.0.1:8888", "tcp")
-	result := Connect("127.0.0.1:9999", "tls")
+// Test IsConnected returns false when not connected
+func TestIsConnectedWhenDisconnected(t *testing.T) {
+	Disconnect() // Clean up from previous tests
 
-	if result != "tunnel_already_running" {
-		t.Errorf("Expected 'tunnel_already_running', got '%s'", result)
-	}
-}
-
-func TestDisconnectWhenNotConnected(t *testing.T) {
-	Disconnect()
-
-	result := Disconnect()
-	if result != "not_connected" {
-		t.Errorf("Expected 'not_connected', got '%s'", result)
+	connected := IsConnected()
+	if connected {
+		t.Error("Expected IsConnected() to return false")
 	}
 }

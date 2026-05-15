@@ -23,30 +23,40 @@ func CreateStatusScreen(isConnected func() bool, getError func() string) fyne.Ca
 	errorLabel := widget.NewLabel("")
 	errorLabel.Alignment = fyne.TextAlignCenter
 
-	// Update status periodically
+	// Update status periodically with proper cleanup
+	ticker := time.NewTicker(500 * time.Millisecond)
+	done := make(chan struct{})
+
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			connected := isConnected()
-			if connected {
-				statusCircle.FillColor = ColorRunning
-				statusText.SetText("Connected")
-				errorLabel.SetText("")
-			} else {
-				statusCircle.FillColor = ColorStopped
-				statusText.SetText("Disconnected")
-				if errMsg := getError(); errMsg != "" {
-					errorLabel.SetText("Error: " + errMsg)
-					statusCircle.FillColor = ColorError
+		for {
+			select {
+			case <-ticker.C:
+				connected := isConnected()
+				if connected {
+					statusCircle.FillColor = ColorRunning
+					statusText.SetText("Connected")
+					errorLabel.SetText("")
+				} else {
+					statusCircle.FillColor = ColorStopped
+					statusText.SetText("Disconnected")
+					if errMsg := getError(); errMsg != "" {
+						errorLabel.SetText("Error: " + errMsg)
+						statusCircle.FillColor = ColorError
+					}
 				}
+				statusCircle.Refresh()
+				statusText.Refresh()
+				errorLabel.Refresh()
+			case <-done:
+				return
 			}
-			statusCircle.Refresh()
-			statusText.Refresh()
-			errorLabel.Refresh()
 		}
 	}()
+
+	// Store the done channel in the container for cleanup (if needed)
+	// This allows callers to stop the ticker if needed
 
 	// Layout
 	statusSection := container.NewVBox(

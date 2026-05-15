@@ -1,7 +1,10 @@
 // Package vpn provides platform-agnostic VPN interface abstraction
 package vpn
 
-import "errors"
+import (
+	"errors"
+	"sync"
+)
 
 var ErrNoProvider = errors.New("VPN provider not set")
 
@@ -20,41 +23,65 @@ type VPNProvider interface {
 	GetError() string
 }
 
-var provider VPNProvider
+var (
+	provider     VPNProvider
+	providerMu   sync.RWMutex
+	providerOnce sync.Once
+)
 
-// SetProvider sets the platform-specific VPN provider
+// SetProvider sets the platform-specific VPN provider (thread-safe)
 func SetProvider(p VPNProvider) {
-	provider = p
+	providerOnce.Do(func() {
+		providerMu.Lock()
+		provider = p
+		providerMu.Unlock()
+	})
 }
 
 // Connect initiates a VPN connection
 func Connect(serverAddr, protocol string) error {
-	if provider == nil {
+	providerMu.RLock()
+	p := provider
+	providerMu.RUnlock()
+
+	if p == nil {
 		return ErrNoProvider
 	}
-	return provider.Connect(serverAddr, protocol)
+	return p.Connect(serverAddr, protocol)
 }
 
 // Disconnect stops the active VPN
 func Disconnect() error {
-	if provider == nil {
+	providerMu.RLock()
+	p := provider
+	providerMu.RUnlock()
+
+	if p == nil {
 		return ErrNoProvider
 	}
-	return provider.Disconnect()
+	return p.Disconnect()
 }
 
 // IsConnected returns connection status
 func IsConnected() bool {
-	if provider == nil {
+	providerMu.RLock()
+	p := provider
+	providerMu.RUnlock()
+
+	if p == nil {
 		return false
 	}
-	return provider.IsConnected()
+	return p.IsConnected()
 }
 
 // GetError returns the last error
 func GetError() string {
-	if provider == nil {
+	providerMu.RLock()
+	p := provider
+	providerMu.RUnlock()
+
+	if p == nil {
 		return ""
 	}
-	return provider.GetError()
+	return p.GetError()
 }
