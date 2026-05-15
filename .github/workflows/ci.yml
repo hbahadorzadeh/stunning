@@ -130,7 +130,7 @@ jobs:
         run: go tool cover -func=coverage.out
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.out
           flags: unittests
