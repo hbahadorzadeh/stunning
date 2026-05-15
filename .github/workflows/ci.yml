@@ -35,8 +35,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          timeout: 5m
-          args: --issues-exit-code=1
+          args: --timeout=5m --issues-exit-code=1
 
   sast:
     name: SAST Security Scan
