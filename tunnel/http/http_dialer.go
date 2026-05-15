@@ -2,13 +2,11 @@ package http
 
 import (
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"golang.org/x/net/proxy"
 	"net"
 )
 
 type HttpDialer struct {
 	tcommon.TunnelDialer
-	dialer proxy.Dialer
 }
 
 func GetHttpDialer() HttpDialer {

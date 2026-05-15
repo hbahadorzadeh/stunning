@@ -5,7 +5,7 @@ import (
 	"github.com/hbahadorzadeh/stunning/interface/socks"
 	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	"golang.org/x/net/proxy"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -36,7 +36,7 @@ func socks_example() {
 
 	if res.StatusCode == 200 {
 		defer res.Body.Close()
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		if err != nil {
 			log.Panicln("error reading body:", err)
 		}

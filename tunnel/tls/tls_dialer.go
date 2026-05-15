@@ -3,13 +3,11 @@ package tls
 import (
 	"crypto/tls"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"golang.org/x/net/proxy"
 	"net"
 )
 
 type TlsDialer struct {
 	tcommon.TunnelDialer
-	dialer proxy.Dialer
 }
 
 func GetTlsDialer() TlsDialer {

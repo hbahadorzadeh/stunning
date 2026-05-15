@@ -14,7 +14,6 @@ type SerialClient struct {
 	tun_dialer tcommon.TunnelDialer
 	saddress   string
 	port       io.ReadWriteCloser
-	listen     net.Listener
 }
 
 func GetTcpClient(saddress, PortName string, BaudRate, DataBits, StopBits, MinimumReadSize uint, tun_dialer tcommon.TunnelDialer) SerialClient {

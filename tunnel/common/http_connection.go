@@ -108,8 +108,7 @@ func (c ClientHttpConnection) Write(b []byte) (n int, err error) {
 	log.Printf("writing Client bytes %v -> %s", b, c.ServerUrl)
 	go func() {
 		defer resp.Body.Close()
-		buff := make([]byte, 4096)
-		buff, err = io.ReadAll(resp.Body)
+		buff, err := io.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}

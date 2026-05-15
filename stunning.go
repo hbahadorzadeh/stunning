@@ -42,11 +42,9 @@ type Tunnel interface {
 }
 type TunnelCommon struct {
 	Tunnel
-	tunnelType        common.TunnelType
-	interfaceType     common.InterfaceType
-	tunnelMode        common.TunnelMode
-	inputPluginChain  common.PluginChain
-	outputPluginChain common.PluginChain
+	tunnelType    common.TunnelType
+	interfaceType common.InterfaceType
+	tunnelMode    common.TunnelMode
 }
 
 type TunnelServer struct {

@@ -45,14 +45,6 @@ func getStatisticWindow(startTime time.Time, duration time.Duration) statisticWi
 	return win
 }
 
-func (sw *statisticWindow) aggregateStatistic(statistic Statistic) {
-	if sw.startTime <= statistic.timestamp.Unix() && statistic.timestamp.Unix() < sw.endTime {
-		sw.mux.Lock()
-		sw.add(statistic)
-		sw.mux.Unlock()
-	}
-}
-
 func (sw statisticWindow) getFinalResult() aggregatedStatistic {
 	statistic := aggregatedStatistic{
 		duration: sw.duration,
@@ -126,7 +118,7 @@ func GetTunnelStatistic(name string, duration time.Duration, historyDuration tim
 			c := ts.currentWin
 			if len(ts.history) >= historySize {
 				var t int64
-				for t, _ = range ts.history {
+				for t = range ts.history {
 					break
 				}
 				delete(ts.history, t)

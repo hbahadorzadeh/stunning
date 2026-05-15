@@ -3,13 +3,11 @@ package udp
 import (
 	"bufio"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"golang.org/x/net/proxy"
 	"net"
 )
 
 type UdpDialer struct {
 	tcommon.TunnelDialer
-	dialer proxy.Dialer
 }
 
 func GetUdpDialer() UdpDialer {

@@ -19,7 +19,7 @@ const (
 
 func (f Frame) ReplacePart(start int, end int, nval []byte) {
 	tmp := append(f[:start], nval...)
-	f = append(tmp, f[end:]...)
+	_ = append(tmp, f[end:]...)
 }
 
 // Destination returns the destination address field of the frame. The address
@@ -122,13 +122,12 @@ func (f *Frame) Prepare(dst net.HardwareAddr, src net.HardwareAddr, tagging Tagg
 	}
 	(*f)[12+tagging] = ethertype[0]
 	(*f)[12+tagging+1] = ethertype[1]
-	return
 }
 
 func (f *Frame) resize(length int) {
 	if cap(*f) < length {
 		old := *f
-		*f = make(Frame, length, length)
+		*f = make(Frame, length)
 		copy(*f, old)
 	} else {
 		*f = (*f)[:length]
