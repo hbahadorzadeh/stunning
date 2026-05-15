@@ -24,7 +24,7 @@ var (
 type TunnelInstance struct {
 	config core.TunnelConfig
 	tunnel core.Tunnel
-	done   chan struct{}
+	cancel chan struct{}
 	stats  TunnelStats
 }
 
@@ -99,7 +99,7 @@ func startTunnel(name string) error {
 
 	inst := tunnels[name]
 	inst.tunnel = tunnel
-	inst.done = make(chan struct{})
+	inst.cancel = make(chan struct{})
 	inst.stats.startTime = time.Now()
 	inst.stats.rxBytes = 0
 	inst.stats.txBytes = 0
@@ -112,7 +112,6 @@ func startTunnel(name string) error {
 			tunnelsMutex.Lock()
 			inst.tunnel = nil
 			tunnelsMutex.Unlock()
-			close(inst.done)
 		}()
 		tunnel.ListenAndServer()
 	}()

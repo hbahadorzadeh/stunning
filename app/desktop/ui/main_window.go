@@ -41,6 +41,7 @@ func CreateMainWindow(myApp fyne.App, getTunnels func() []TunnelStatus, startTun
 	selectedName := ""
 	detailsContainer := container.NewVBox()
 	var statusView *StatusView
+	statusViewMu := &sync.Mutex{}
 
 	// Tunnel list - custom list
 	tunnelList := widget.NewList(
@@ -83,8 +84,11 @@ func CreateMainWindow(myApp fyne.App, getTunnels func() []TunnelStatus, startTun
 		selectedName = tunnels[id].Name
 		status := tunnels[id]
 
-		detailsContainer.Objects = nil
+		statusViewMu.Lock()
 		statusView = CreateStatusView(status)
+		statusViewMu.Unlock()
+
+		detailsContainer.Objects = nil
 		detailsContainer.Objects = append(detailsContainer.Objects, statusView.Container)
 		detailsContainer.Refresh()
 	}
@@ -149,22 +153,39 @@ func CreateMainWindow(myApp fyne.App, getTunnels func() []TunnelStatus, startTun
 	win.SetContent(mainContent)
 
 	// Periodic refresh (update stats every 500ms)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	refreshCancel := make(chan struct{})
+
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
 		defer ticker.Stop()
-		for range ticker.C {
-			tunnelList.Refresh()
-			if selectedName != "" && statusView != nil {
-				tunnels := getTunnels()
-				for i := range tunnels {
-					if tunnels[i].Name == selectedName {
-						statusView.Update(tunnels[i])
-						break
+		for {
+			select {
+			case <-ticker.C:
+				tunnelList.Refresh()
+				if selectedName != "" {
+					statusViewMu.Lock()
+					sv := statusView
+					statusViewMu.Unlock()
+
+					if sv != nil {
+						tunnels := getTunnels()
+						for i := range tunnels {
+							if tunnels[i].Name == selectedName {
+								sv.Update(tunnels[i])
+								break
+							}
+						}
 					}
 				}
+			case <-refreshCancel:
+				return
 			}
 		}
 	}()
+
+	win.SetOnClosed(func() {
+		close(refreshCancel)
+	})
 
 	return win
 }
@@ -231,7 +252,7 @@ func (sv *StatusView) rebuild() {
 func (sv *StatusView) Update(status TunnelStatus) {
 	sv.mu.Lock()
 	sv.status = status
-	sv.mu.Unlock()
 	sv.rebuild()
+	sv.mu.Unlock()
 	sv.Container.Refresh()
 }
