@@ -15,7 +15,7 @@ func GetTcpDialer() TcpDialer {
 	return d
 }
 
-func (_ TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
@@ -23,6 +23,6 @@ func (_ TcpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return conn, err
 }
 
-func (_ TcpDialer) Protocol() tcommon.TunnelProtocol {
+func (TcpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

@@ -56,14 +56,14 @@ func (w *WsConn) RemoteAddr() net.Addr {
 	return w.conn.RemoteAddr()
 }
 
-func (_ *WsConn) SetDeadline(t time.Time) error {
+func (*WsConn) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *WsConn) SetReadDeadline(t time.Time) error {
+func (*WsConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *WsConn) SetWriteDeadline(t time.Time) error {
+func (*WsConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }

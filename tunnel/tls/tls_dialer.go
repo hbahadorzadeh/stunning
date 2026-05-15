@@ -15,7 +15,7 @@ func GetTlsDialer() TlsDialer {
 	return TlsDialer{}
 }
 
-func (_ TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (TlsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conf := &tls.Config{
 		InsecureSkipVerify: false,
 	}
@@ -28,6 +28,6 @@ func GetTlsDialerWithConfig(cfg *tls.Config) TlsDialer {
 	return TlsDialer{}
 }
 
-func (_ TlsDialer) Protocol() tcommon.TunnelProtocol {
+func (TlsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tls
 }

@@ -17,11 +17,11 @@ func GetTcpServer(url string) *TcpServer {
 	return s
 }
 
-func (_ *TcpServer) WaitingForConnection() {
+func (*TcpServer) WaitingForConnection() {
 	// No-op: WaitingForConnection is managed by the tunnel server
 }
 
-func (_ *TcpServer) Close() error {
+func (*TcpServer) Close() error {
 	return nil
 }
 

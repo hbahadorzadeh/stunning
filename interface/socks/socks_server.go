@@ -25,11 +25,11 @@ func GetSocksServer() *SocksServer {
 	return s
 }
 
-func (_ *SocksServer) WaitingForConnection() {
+func (*SocksServer) WaitingForConnection() {
 	// No-op: WaitingForConnection is managed by the tunnel server
 }
 
-func (_ *SocksServer) Close() error {
+func (*SocksServer) Close() error {
 	return nil
 }
 

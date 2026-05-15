@@ -14,7 +14,7 @@ func GetDnsDialer() DnsDialer {
 	return DnsDialer{}
 }
 
-func (_ DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -22,6 +22,6 @@ func (_ DnsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return &DnsConn{conn: conn}, nil
 }
 
-func (_ DnsDialer) Protocol() tcommon.TunnelProtocol {
+func (DnsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Dns
 }

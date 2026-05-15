@@ -77,14 +77,14 @@ func (u *ServerUdpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (_ *ServerUdpConnection) SetDeadline(t time.Time) error {
+func (*ServerUdpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (_ *ServerUdpConnection) SetReadDeadline(t time.Time) error {
+func (*ServerUdpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -93,7 +93,7 @@ func (_ *ServerUdpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (_ *ServerUdpConnection) SetWriteDeadline(t time.Time) error {
+func (*ServerUdpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
@@ -149,14 +149,14 @@ func (u ClientUdpConnection) RemoteAddr() net.Addr {
 // the deadline after successful Read or Write calls.
 //
 // A zero value for t means I/O operations will not time out.
-func (_ ClientUdpConnection) SetDeadline(t time.Time) error {
+func (ClientUdpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
 // SetReadDeadline sets the deadline for future Read calls
 // and any currently-blocked Read call.
 // A zero value for t means Read will not time out.
-func (_ ClientUdpConnection) SetReadDeadline(t time.Time) error {
+func (ClientUdpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
@@ -165,6 +165,6 @@ func (_ ClientUdpConnection) SetReadDeadline(t time.Time) error {
 // Even if write times out, it may return n > 0, indicating that
 // some of the data was successfully written.
 // A zero value for t means Write will not time out.
-func (_ ClientUdpConnection) SetWriteDeadline(t time.Time) error {
+func (ClientUdpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

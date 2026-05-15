@@ -53,7 +53,7 @@ func (s SerialClient) WaitingForConnection() {
 	}
 }
 
-func (_ SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+func (SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
 	go tcp_reader(conn, tconn)
 	tcp_writer(conn, tconn)
 	return nil

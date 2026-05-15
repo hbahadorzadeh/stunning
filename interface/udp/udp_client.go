@@ -61,7 +61,7 @@ func (c *UdpClient) Closed() bool {
 	return c.closed
 }
 
-func (_ *UdpClient) WaitingForConnection() {
+func (*UdpClient) WaitingForConnection() {
 
 }
 

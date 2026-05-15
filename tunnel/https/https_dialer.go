@@ -15,10 +15,10 @@ func GetHttpsDialer() HttpsDialer {
 	return d
 }
 
-func (_ HttpsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (HttpsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return tcommon.GetCilentHttpConnection("https", addr)
 }
 
-func (_ HttpsDialer) Protocol() tcommon.TunnelProtocol {
+func (HttpsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Tcp
 }

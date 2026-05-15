@@ -88,7 +88,7 @@ func (s *UdpServer) udp_server_reader(conn net.Conn, ch chan []byte) {
 	}
 }
 
-func (_ *UdpServer) udp_server_writer(conn net.Conn, ch chan []byte) {
+func (*UdpServer) udp_server_writer(conn net.Conn, ch chan []byte) {
 	for buff := range ch {
 		wn, werr := conn.Write(buff)
 		if werr != nil || wn != len(buff) {

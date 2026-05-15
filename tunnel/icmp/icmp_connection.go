@@ -48,15 +48,15 @@ func (u *ServerIcmpConnection) RemoteAddr() net.Addr {
 	return u.addr
 }
 
-func (_ *ServerIcmpConnection) SetDeadline(t time.Time) error {
+func (*ServerIcmpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *ServerIcmpConnection) SetReadDeadline(t time.Time) error {
+func (*ServerIcmpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *ServerIcmpConnection) SetWriteDeadline(t time.Time) error {
+func (*ServerIcmpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
@@ -65,15 +65,15 @@ type ClientIcmpConnection struct {
 	addr net.Addr
 }
 
-func (_ *ClientIcmpConnection) Read(b []byte) (n int, err error) {
+func (*ClientIcmpConnection) Read(b []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (_ *ClientIcmpConnection) Write(b []byte) (n int, err error) {
+func (*ClientIcmpConnection) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (_ *ClientIcmpConnection) Close() error {
+func (*ClientIcmpConnection) Close() error {
 	return nil
 }
 
@@ -85,14 +85,14 @@ func (u *ClientIcmpConnection) RemoteAddr() net.Addr {
 	return u.addr
 }
 
-func (_ *ClientIcmpConnection) SetDeadline(t time.Time) error {
+func (*ClientIcmpConnection) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *ClientIcmpConnection) SetReadDeadline(t time.Time) error {
+func (*ClientIcmpConnection) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (_ *ClientIcmpConnection) SetWriteDeadline(t time.Time) error {
+func (*ClientIcmpConnection) SetWriteDeadline(t time.Time) error {
 	return nil
 }

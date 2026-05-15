@@ -14,10 +14,10 @@ func GetH2Dialer() H2Dialer {
 	return H2Dialer{}
 }
 
-func (_ H2Dialer) Dial(network, addr string) (c net.Conn, err error) {
+func (H2Dialer) Dial(network, addr string) (c net.Conn, err error) {
 	return tcommon.GetCilentHttpConnection("https", addr)
 }
 
-func (_ H2Dialer) Protocol() tcommon.TunnelProtocol {
+func (H2Dialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.H2
 }

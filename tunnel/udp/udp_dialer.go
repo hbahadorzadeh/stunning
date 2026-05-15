@@ -16,7 +16,7 @@ func GetUdpDialer() UdpDialer {
 	return d
 }
 
-func (_ UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	rudpAddr, err := net.ResolveUDPAddr(network, addr)
 	if err != nil {
 		return nil, err
@@ -37,6 +37,6 @@ func (_ UdpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return cnn, err
 }
 
-func (_ UdpDialer) Protocol() tcommon.TunnelProtocol {
+func (UdpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Udp
 }

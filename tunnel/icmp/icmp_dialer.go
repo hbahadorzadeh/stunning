@@ -14,7 +14,7 @@ func GetIcmpDialer() IcmpDialer {
 	return IcmpDialer{}
 }
 
-func (_ IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	remoteAddr, err := net.ResolveIPAddr("ip4", addr)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,6 @@ func (_ IcmpDialer) Dial(network, addr string) (c net.Conn, err error) {
 	}, nil
 }
 
-func (_ IcmpDialer) Protocol() tcommon.TunnelProtocol {
+func (IcmpDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Icmp
 }

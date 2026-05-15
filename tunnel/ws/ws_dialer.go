@@ -16,7 +16,7 @@ func GetWsDialer() WsDialer {
 	return WsDialer{}
 }
 
-func (_ WsDialer) Dial(network, addr string) (c net.Conn, err error) {
+func (WsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	wsURL := "wss://" + addr + "/"
 	dialer := websocket.Dialer{
 		TLSClientConfig: &tls.Config{
@@ -30,6 +30,6 @@ func (_ WsDialer) Dial(network, addr string) (c net.Conn, err error) {
 	return &WsConn{conn: conn}, nil
 }
 
-func (_ WsDialer) Protocol() tcommon.TunnelProtocol {
+func (WsDialer) Protocol() tcommon.TunnelProtocol {
 	return tcommon.Ws
 }
