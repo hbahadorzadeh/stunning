@@ -22,34 +22,28 @@ type H2Server struct {
 
 func StartH2Server(crt, key, address string) (*H2Server, error) {
 	serv := &H2Server{
-		connMap:       make(map[string]tcommon.ServerHttpConnection),
-		webserver:     &http.Server{Addr: address},
-		mux_handler:   http.NewServeMux(),
-		crt:           crt,
-		key:           key,
-		cleanupDone:   make(chan struct{}),
-		cleanupTicker: time.NewTicker(30 * time.Second),
+		connMap:     make(map[string]*tcommon.ServerHttpConnection),
+		webserver:   &http.Server{Addr: address},
+		mux_handler: http.NewServeMux(),
+		crt:         crt,
+		key:         key,
 	}
 
 	go func() {
-		defer serv.cleanupTicker.Stop()
-		for {
-			select {
-			case <-serv.cleanupTicker.C:
-				serv.mux.Lock()
-				toBeDeleted := make([]string, 0)
-				for i, conn := range serv.connMap {
-					if conn.LastUsed.Add(60*time.Second).Before(time.Now()) || conn.Closed {
-						toBeDeleted = append(toBeDeleted, i)
-					}
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			serv.mux.Lock()
+			toBeDeleted := make([]string, 0)
+			for i, conn := range serv.connMap {
+				if conn != nil && (conn.LastUsed.Add(60*time.Second).Before(time.Now()) || conn.Closed) {
+					toBeDeleted = append(toBeDeleted, i)
 				}
-				for _, i := range toBeDeleted {
-					delete(serv.connMap, i)
-				}
-				serv.mux.Unlock()
-			case <-serv.cleanupDone:
-				return
 			}
+			for _, i := range toBeDeleted {
+				delete(serv.connMap, i)
+			}
+			serv.mux.Unlock()
 		}
 	}()
 
@@ -64,23 +58,29 @@ func (s *H2Server) SetServer(server icommon.TunnelInterfaceServer) {
 func (s *H2Server) WaitingForConnection() {
 	s.mux_handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		addr := r.RemoteAddr
-		var buf [512]byte
-		n, _ := r.Body.Read(buf[:])
-		data := make([]byte, n)
-		copy(data, buf[:n])
-
 		s.mux.Lock()
 		conn, exists := s.connMap[addr]
-		if !exists || conn.Closed {
-			conn = tcommon.GetServerHttpConnection()
-			s.connMap[addr] = conn
-			connPtr := &s.connMap[addr]
+		s.mux.Unlock()
+
+		if !exists || conn == nil || conn.Closed {
+			var buf [512]byte
+			n, _ := r.Body.Read(buf[:])
+			data := make([]byte, n)
+			copy(data, buf[:n])
+
+			connVal := tcommon.GetServerHttpConnection()
+			s.mux.Lock()
+			s.connMap[addr] = &connVal
 			s.mux.Unlock()
 
-			go s.HandleConnection(connPtr)
-			connPtr.RCh <- data
+			connRef := s.connMap[addr]
+			go s.HandleConnection(connRef)
+			connRef.RCh <- data
 		} else {
-			s.mux.Unlock()
+			var buf [512]byte
+			n, _ := r.Body.Read(buf[:])
+			data := make([]byte, n)
+			copy(data, buf[:n])
 			conn.RCh <- data
 		}
 
@@ -95,19 +95,5 @@ func (s *H2Server) WaitingForConnection() {
 }
 
 func (s *H2Server) Close() error {
-	// Close the webserver first to stop accepting new connections
-	err := s.webserver.Close()
-
-	// Signal cleanup goroutine to exit
-	close(s.cleanupDone)
-
-	// Close all connection channels to unblock handlers
-	s.mux.Lock()
-	for _, conn := range s.connMap {
-		close(conn.RCh)
-		close(conn.WCh)
-	}
-	s.mux.Unlock()
-
-	return err
+	return s.webserver.Close()
 }
