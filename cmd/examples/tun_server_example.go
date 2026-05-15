@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/hbahadorzadeh/stunning/interface/tun"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/core/interface/tun"
+	tlstun "github.com/hbahadorzadeh/stunning/core/tunnel/tls"
 	"github.com/songgao/water"
 )
 

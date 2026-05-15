@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hbahadorzadeh/stunning/interface/socks"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/core/interface/socks"
+	tlstun "github.com/hbahadorzadeh/stunning/core/tunnel/tls"
 	"golang.org/x/net/proxy"
 )
 

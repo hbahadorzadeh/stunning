@@ -1,28 +1,26 @@
-// Package main provides the tunnel factory and main tunnel configuration.
-package main
+// Package core provides the tunnel factory and main tunnel configuration.
+package core
 
 import (
-	"encoding/json"
 	"log"
 	"os"
-	"time"
 
-	"github.com/hbahadorzadeh/stunning/common"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	socksiface "github.com/hbahadorzadeh/stunning/interface/socks"
-	tcpiface "github.com/hbahadorzadeh/stunning/interface/tcp"
-	tuniface "github.com/hbahadorzadeh/stunning/interface/tun"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	dnstun "github.com/hbahadorzadeh/stunning/tunnel/dns"
-	h2tun "github.com/hbahadorzadeh/stunning/tunnel/h2"
-	httptun "github.com/hbahadorzadeh/stunning/tunnel/http"
-	httpstun "github.com/hbahadorzadeh/stunning/tunnel/https"
-	icmptun "github.com/hbahadorzadeh/stunning/tunnel/icmp"
-	tcptun "github.com/hbahadorzadeh/stunning/tunnel/tcp"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
-	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
-	udpstun "github.com/hbahadorzadeh/stunning/tunnel/udps"
-	wstun "github.com/hbahadorzadeh/stunning/tunnel/ws"
+	"github.com/hbahadorzadeh/stunning/core/common"
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	socksiface "github.com/hbahadorzadeh/stunning/core/interface/socks"
+	tcpiface "github.com/hbahadorzadeh/stunning/core/interface/tcp"
+	tuniface "github.com/hbahadorzadeh/stunning/core/interface/tun"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
+	dnstun "github.com/hbahadorzadeh/stunning/core/tunnel/dns"
+	h2tun "github.com/hbahadorzadeh/stunning/core/tunnel/h2"
+	httptun "github.com/hbahadorzadeh/stunning/core/tunnel/http"
+	httpstun "github.com/hbahadorzadeh/stunning/core/tunnel/https"
+	icmptun "github.com/hbahadorzadeh/stunning/core/tunnel/icmp"
+	tcptun "github.com/hbahadorzadeh/stunning/core/tunnel/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/core/tunnel/tls"
+	udptun "github.com/hbahadorzadeh/stunning/core/tunnel/udp"
+	udpstun "github.com/hbahadorzadeh/stunning/core/tunnel/udps"
+	wstun "github.com/hbahadorzadeh/stunning/core/tunnel/ws"
 	"github.com/songgao/water"
 )
 
@@ -97,18 +95,6 @@ func (t TunnelClient) ListenAndServer() {
 	} else {
 		log.Panic("No tunnel Interface")
 	}
-}
-
-func readConfig(confFile string) map[string]TunnelConfig {
-	confStruct := make(map[string]TunnelConfig)
-	data, err := os.ReadFile(confFile)
-	if err != nil {
-		panic(err)
-	}
-	if err := json.Unmarshal(data, &confStruct); err != nil {
-		panic(err)
-	}
-	return confStruct
 }
 
 func TunnelFactory(name string, conf TunnelConfig) Tunnel {
@@ -359,50 +345,4 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 	}
 	log.Panicf("Conf `%s`: Service mode not specified.", name)
 	return nil
-}
-
-func main() {
-	var confFile string
-	for i := 1; i < len(os.Args); i++ {
-		arg := os.Args[i]
-		if len(arg) > 9 && arg[:9] == "--config=" {
-			confFile = arg[9:]
-		} else if len(arg) == 2 && arg[:2] == "-c" && i+1 <= len(os.Args) {
-			i++
-			arg := os.Args[i]
-			confFile = arg
-		} else if arg[:2] == "-c" && len(arg) > 2 {
-			confFile = arg[2:]
-		}
-	}
-	if confFile != "" {
-		confsMap := readConfig(confFile)
-		tunsMap := make(map[string]Tunnel)
-		for name, conf := range confsMap {
-			tun := TunnelFactory(name, conf)
-			tunsMap[name] = tun
-			go tun.ListenAndServer()
-		}
-
-		for {
-			for name, tun := range tunsMap {
-				if !tun.IsAlive() {
-					log.Printf("Tunnel `%s` is down!", name)
-					go func(tunnelName string) {
-						conf, exist := confsMap[tunnelName]
-						if exist {
-							tun := TunnelFactory(tunnelName, conf)
-							tunsMap[tunnelName] = tun
-							go tun.ListenAndServer()
-						} else {
-							log.Printf("config not found for tunnel `%s` for recreation!", tunnelName)
-						}
-					}(name)
-				}
-			}
-			time.Sleep(time.Second)
-		}
-	} else {
-		log.Panicf("Config file not defiend")
-	}
 }
