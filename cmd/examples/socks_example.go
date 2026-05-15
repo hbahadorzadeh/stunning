@@ -4,13 +4,14 @@ package example
 
 import (
 	"fmt"
-	"github.com/hbahadorzadeh/stunning/interface/socks"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
-	"golang.org/x/net/proxy"
 	"io"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/hbahadorzadeh/stunning/interface/socks"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"golang.org/x/net/proxy"
 )
 
 func socks_example() {

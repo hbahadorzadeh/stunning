@@ -2,10 +2,11 @@
 package socks
 
 import (
-	"github.com/getlantern/go-socks5"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
+
+	"github.com/getlantern/go-socks5"
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 )
 
 type SocksServer struct {

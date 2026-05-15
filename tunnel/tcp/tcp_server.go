@@ -1,9 +1,10 @@
 package tcp
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type TcpServer struct {

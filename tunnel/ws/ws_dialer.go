@@ -3,9 +3,10 @@ package ws
 
 import (
 	"crypto/tls"
+	"net"
+
 	"github.com/gorilla/websocket"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"net"
 )
 
 type WsDialer struct {

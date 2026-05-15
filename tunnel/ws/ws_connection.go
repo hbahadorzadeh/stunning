@@ -2,9 +2,10 @@
 package ws
 
 import (
-	"github.com/gorilla/websocket"
 	"net"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type WsConn struct {

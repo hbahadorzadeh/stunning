@@ -2,10 +2,11 @@
 package tcp
 
 import (
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
+
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type TcpClient struct {

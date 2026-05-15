@@ -1,8 +1,9 @@
 package dns
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"testing"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 func TestStartDnsServer(t *testing.T) {

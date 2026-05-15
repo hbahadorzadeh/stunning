@@ -3,8 +3,9 @@ package udp
 
 import (
 	"bufio"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"net"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type UdpDialer struct {

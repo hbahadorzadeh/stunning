@@ -1,8 +1,9 @@
 package icmp
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"testing"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 func TestStartIcmpServer(t *testing.T) {

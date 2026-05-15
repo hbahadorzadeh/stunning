@@ -2,8 +2,9 @@ package tls
 
 import (
 	"crypto/tls"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type TlsServer struct {

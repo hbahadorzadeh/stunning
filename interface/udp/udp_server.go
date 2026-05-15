@@ -1,12 +1,13 @@
 package udp
 
 import (
-	"github.com/hbahadorzadeh/stunning/common"
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	"log"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/hbahadorzadeh/stunning/common"
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 )
 
 const AddrLenght int = 8

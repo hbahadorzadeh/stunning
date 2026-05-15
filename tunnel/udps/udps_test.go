@@ -1,8 +1,9 @@
 package udps
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"testing"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 func TestStartUdpsServer(t *testing.T) {

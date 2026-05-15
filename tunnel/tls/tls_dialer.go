@@ -3,8 +3,9 @@ package tls
 
 import (
 	"crypto/tls"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"net"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type TlsDialer struct {

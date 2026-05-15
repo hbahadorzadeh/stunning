@@ -3,11 +3,12 @@
 package example
 
 import (
+	"log"
+	"os"
+
 	"github.com/hbahadorzadeh/stunning/interface/tun"
 	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	"github.com/songgao/water"
-	"log"
-	"os"
 )
 
 func tun_client_example() {

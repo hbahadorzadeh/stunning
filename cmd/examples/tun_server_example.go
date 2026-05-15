@@ -4,12 +4,13 @@ package example
 
 import (
 	"fmt"
-	"github.com/hbahadorzadeh/stunning/interface/tun"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
-	"github.com/songgao/water"
 	"log"
 	"os"
 	"time"
+
+	"github.com/hbahadorzadeh/stunning/interface/tun"
+	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"github.com/songgao/water"
 )
 
 func tun_server_example() {

@@ -2,9 +2,10 @@
 package icmp
 
 import (
-	"golang.org/x/net/icmp"
 	"net"
 	"time"
+
+	"golang.org/x/net/icmp"
 )
 
 type icmpPacket struct {

@@ -3,6 +3,10 @@ package main
 
 import (
 	"encoding/json"
+	"log"
+	"os"
+	"time"
+
 	"github.com/hbahadorzadeh/stunning/common"
 	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	socksiface "github.com/hbahadorzadeh/stunning/interface/socks"
@@ -20,9 +24,6 @@ import (
 	udpstun "github.com/hbahadorzadeh/stunning/tunnel/udps"
 	wstun "github.com/hbahadorzadeh/stunning/tunnel/ws"
 	"github.com/songgao/water"
-	"log"
-	"os"
-	"time"
 )
 
 type TunnelConfig struct {

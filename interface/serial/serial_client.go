@@ -2,12 +2,13 @@
 package serial
 
 import (
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
-	"github.com/jacobsa/go-serial/serial"
 	"io"
 	"log"
 	"net"
+
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
+	"github.com/jacobsa/go-serial/serial"
 )
 
 type SerialClient struct {

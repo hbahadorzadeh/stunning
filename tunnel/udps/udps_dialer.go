@@ -2,9 +2,10 @@
 package udps
 
 import (
+	"net"
+
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"github.com/pion/dtls/v2"
-	"net"
 )
 
 type UdpsDialer struct {

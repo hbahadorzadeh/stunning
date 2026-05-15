@@ -2,8 +2,9 @@
 package h2
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"net"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type H2Dialer struct {

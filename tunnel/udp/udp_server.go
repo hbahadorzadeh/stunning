@@ -1,12 +1,13 @@
 package udp
 
 import (
-	icommon "github.com/hbahadorzadeh/stunning/interface/common"
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
 	"sync"
 	"time"
+
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type UdpServer struct {

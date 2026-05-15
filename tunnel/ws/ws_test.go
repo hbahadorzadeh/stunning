@@ -1,8 +1,9 @@
 package ws
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"testing"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 func TestStartWsServer(t *testing.T) {

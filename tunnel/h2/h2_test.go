@@ -1,8 +1,9 @@
 package h2
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"testing"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 func TestStartH2Server(t *testing.T) {

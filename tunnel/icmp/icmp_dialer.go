@@ -2,8 +2,9 @@
 package icmp
 
 import (
-	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"net"
+
+	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 )
 
 type IcmpDialer struct {

@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/net/proxy"
 	"io"
 	"log"
 	"math"
@@ -13,6 +12,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 func GetCilentHttpConnection(proto, serverUrl string) (ClientHttpConnection, error) {
