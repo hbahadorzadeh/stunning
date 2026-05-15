@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/hbahadorzadeh/stunning/interface/tcp"
-	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
+	"github.com/hbahadorzadeh/stunning/core/interface/tcp"
+	tlstun "github.com/hbahadorzadeh/stunning/core/tunnel/tls"
 )
 
 func tcp_example() {

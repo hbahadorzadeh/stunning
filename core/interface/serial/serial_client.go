@@ -1,0 +1,69 @@
+// Package serial provides serial port-based tunnel interfaces.
+package serial
+
+import (
+	"io"
+	"log"
+	"net"
+
+	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
+	"github.com/jacobsa/go-serial/serial"
+)
+
+type SerialClient struct {
+	icommon.TunnelInterfaceClient
+	tun_dialer tcommon.TunnelDialer
+	saddress   string
+	port       io.ReadWriteCloser
+}
+
+func GetTcpClient(saddress, PortName string, BaudRate, DataBits, StopBits, MinimumReadSize uint, tun_dialer tcommon.TunnelDialer) SerialClient {
+	s := SerialClient{}
+	options := serial.OpenOptions{
+		PortName:        PortName,
+		BaudRate:        BaudRate,
+		DataBits:        DataBits,
+		StopBits:        StopBits,
+		MinimumReadSize: MinimumReadSize,
+	}
+	port, err := serial.Open(options)
+	if err != nil {
+		log.Fatalf("serial.Open: %v", err)
+	}
+	s.port = port
+	s.saddress = saddress
+	return s
+}
+
+func (s SerialClient) WaitingForConnection() {
+	for {
+		sconn, serr := s.tun_dialer.Dial(s.tun_dialer.Protocol().String(), s.saddress)
+		if serr != nil {
+			log.Fatalln(serr)
+		}
+		// Write 4 bytes to the port.
+		b := []byte{0x00, 0x01, 0x02, 0x03}
+		n, err := s.port.Write(b)
+		if err != nil {
+			log.Fatalf("port.Write: %v", err)
+		}
+		if n > 0 {
+			s.HandleConnection(nil, sconn)
+		}
+	}
+}
+
+func (SerialClient) HandleConnection(conn net.Conn, tconn net.Conn) error {
+	go tcp_reader(conn, tconn)
+	tcp_writer(conn, tconn)
+	return nil
+}
+
+func (s SerialClient) Close() {
+	s.port.Close()
+}
+
+func (s SerialClient) Closed() bool {
+	return s.port == nil
+}
