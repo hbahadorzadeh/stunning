@@ -59,7 +59,7 @@ jobs:
         run: gosec -no-fail -fmt json -out gosec-report.json ./... || true
 
       - name: Upload security report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: gosec-report
           path: gosec-report.json
@@ -98,7 +98,7 @@ jobs:
         run: go build -v -o stunning
 
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v7
         with:
           name: stunning-binary-${{ runner.os }}-${{ github.sha }}
           path: stunning
