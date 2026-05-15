@@ -8,6 +8,11 @@ const (
 	TCP_TUN   TunnelType = "tcp"
 	UDP_TUN   TunnelType = "udp"
 	TLS_TUN   TunnelType = "tls"
+	H2_TUN    TunnelType = "h2"
+	WS_TUN    TunnelType = "ws"
+	UDPS_TUN  TunnelType = "udps"
+	DNS_TUN   TunnelType = "dns"
+	ICMP_TUN  TunnelType = "icmp"
 )
 
 type InterfaceType string

@@ -4,7 +4,9 @@ go 1.24
 
 require (
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
+	github.com/gorilla/websocket v1.5.3
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
+	github.com/pion/dtls/v2 v2.2.12
 	github.com/rainycape/dl v0.0.0-20151222075243-1b01514224a1
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9
@@ -23,10 +25,13 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
+	github.com/pion/logging v0.2.2 // indirect
+	github.com/pion/transport/v2 v2.2.4 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 )

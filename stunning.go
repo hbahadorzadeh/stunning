@@ -13,6 +13,11 @@ import (
 	tcptun "github.com/hbahadorzadeh/stunning/tunnel/tcp"
 	tlstun "github.com/hbahadorzadeh/stunning/tunnel/tls"
 	udptun "github.com/hbahadorzadeh/stunning/tunnel/udp"
+	h2tun "github.com/hbahadorzadeh/stunning/tunnel/h2"
+	wstun "github.com/hbahadorzadeh/stunning/tunnel/ws"
+	udpstun "github.com/hbahadorzadeh/stunning/tunnel/udps"
+	dnstun "github.com/hbahadorzadeh/stunning/tunnel/dns"
+	icmptun "github.com/hbahadorzadeh/stunning/tunnel/icmp"
 	"github.com/songgao/water"
 	"log"
 	"os"
@@ -123,6 +128,16 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 					ttun.tunnelClient = udptun.GetUdpDialer()
 				case common.TLS_TUN:
 					ttun.tunnelClient = tlstun.GetTlsDialer()
+				case common.H2_TUN:
+					ttun.tunnelClient = h2tun.GetH2Dialer()
+				case common.WS_TUN:
+					ttun.tunnelClient = wstun.GetWsDialer()
+				case common.UDPS_TUN:
+					ttun.tunnelClient = udpstun.GetUdpsDialer()
+				case common.DNS_TUN:
+					ttun.tunnelClient = dnstun.GetDnsDialer()
+				case common.ICMP_TUN:
+					ttun.tunnelClient = icmptun.GetIcmpDialer()
 				default:
 					log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 				}
@@ -222,6 +237,73 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 						}
 
 						tServer, err := tlstun.StartTlsServer(scert, skey, saddr)
+						if err != nil {
+							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
+						}
+						ttun.tunnelServer = tServer
+					case common.H2_TUN:
+						scert := conf.Cert
+						skey := conf.Key
+						if scert == "" {
+							log.Panicf("Conf `%s`: Cert not defiend", name)
+						} else if _, err := os.Stat(scert); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Cert file not exist", name)
+						}
+						if skey == "" {
+							log.Panicf("Conf `%s`: Key not defiend", name)
+						} else if _, err := os.Stat(skey); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Key file not exist", name)
+						}
+						tServer, err := h2tun.StartH2Server(scert, skey, saddr)
+						if err != nil {
+							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
+						}
+						ttun.tunnelServer = tServer
+					case common.WS_TUN:
+						scert := conf.Cert
+						skey := conf.Key
+						if scert == "" {
+							log.Panicf("Conf `%s`: Cert not defiend", name)
+						} else if _, err := os.Stat(scert); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Cert file not exist", name)
+						}
+						if skey == "" {
+							log.Panicf("Conf `%s`: Key not defiend", name)
+						} else if _, err := os.Stat(skey); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Key file not exist", name)
+						}
+						tServer, err := wstun.StartWsServer(scert, skey, saddr)
+						if err != nil {
+							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
+						}
+						ttun.tunnelServer = tServer
+					case common.UDPS_TUN:
+						scert := conf.Cert
+						skey := conf.Key
+						if scert == "" {
+							log.Panicf("Conf `%s`: Cert not defiend", name)
+						} else if _, err := os.Stat(scert); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Cert file not exist", name)
+						}
+						if skey == "" {
+							log.Panicf("Conf `%s`: Key not defiend", name)
+						} else if _, err := os.Stat(skey); os.IsNotExist(err) {
+							log.Panicf("Conf `%s`: Key file not exist", name)
+						}
+						tServer, err := udpstun.StartUdpsServer(scert, skey, saddr)
+						if err != nil {
+							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
+						}
+						ttun.tunnelServer = tServer
+					case common.DNS_TUN:
+						tServer, err := dnstun.StartDnsServer(saddr)
+						if err != nil {
+							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
+						}
+						ttun.tunnelServer = tServer
+					case common.ICMP_TUN:
+						log.Printf("WARNING: ICMP tunnel requires root or CAP_NET_RAW privileges")
+						tServer, err := icmptun.StartIcmpServer(saddr)
 						if err != nil {
 							log.Panicf("Conf `%s`: Failed to create tunnel server.\n%v", name, err)
 						}
