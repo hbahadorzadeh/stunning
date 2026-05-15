@@ -1,6 +1,7 @@
 package dns
 
 import (
+	icommon "github.com/hbahadorzadeh/stunning/interface/common"
 	tcommon "github.com/hbahadorzadeh/stunning/tunnel/common"
 	"log"
 	"net"
@@ -19,6 +20,24 @@ func StartDnsServer(address string) (*DnsServer, error) {
 	}
 	serv.Listener = ln
 	return serv, nil
+}
+
+func (s *DnsServer) SetServer(server icommon.TunnelInterfaceServer) {
+	s.Server = server
+	go s.WaitingForConnection()
+}
+
+func (s *DnsServer) WaitingForConnection() {
+	log.Printf("listening for connection on %s\n", s.Listener.Addr().String())
+	for {
+		conn, err := s.Listener.Accept()
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		go s.HandleConnection(conn)
+	}
+	log.Printf("Listening on %s stopped\n", s.Listener.Addr().String())
 }
 
 func (s *DnsServer) HandleConnection(conn net.Conn) {

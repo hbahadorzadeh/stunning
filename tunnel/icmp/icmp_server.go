@@ -21,7 +21,7 @@ type IcmpServer struct {
 func StartIcmpServer(address string) (*IcmpServer, error) {
 	conn, err := icmp.ListenPacket("ip4:icmp", address)
 	if err != nil {
-		log.Printf("Warning: ICMP requires root or CAP_NET_RAW: %v", err)
+		log.Printf("SECURITY ERROR: ICMP requires root or CAP_NET_RAW privileges. This is a critical security requirement: %v", err)
 		return nil, err
 	}
 

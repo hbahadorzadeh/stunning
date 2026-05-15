@@ -11,39 +11,45 @@ import (
 
 type H2Server struct {
 	tcommon.TunnelServerCommon
-	connMap        map[string]tcommon.ServerHttpConnection
-	mux            sync.Mutex
-	webserver      *http.Server
-	mux_handler    *http.ServeMux
-	crt, key       string
-	cleanupDone    chan struct{}
-	cleanupTicker  *time.Ticker
+	connMap         map[string]*tcommon.ServerHttpConnection
+	mux             sync.Mutex
+	webserver       *http.Server
+	mux_handler     *http.ServeMux
+	crt, key        string
+	stopCleanup     chan struct{}
+	cleanupTicker   *time.Ticker
 }
 
 func StartH2Server(crt, key, address string) (*H2Server, error) {
 	serv := &H2Server{
-		connMap:     make(map[string]*tcommon.ServerHttpConnection),
-		webserver:   &http.Server{Addr: address},
-		mux_handler: http.NewServeMux(),
-		crt:         crt,
-		key:         key,
+		connMap:       make(map[string]*tcommon.ServerHttpConnection),
+		webserver:     &http.Server{Addr: address},
+		mux_handler:   http.NewServeMux(),
+		crt:           crt,
+		key:           key,
+		stopCleanup:   make(chan struct{}),
+		cleanupTicker: time.NewTicker(30 * time.Second),
 	}
 
 	go func() {
-		ticker := time.NewTicker(30 * time.Second)
-		defer ticker.Stop()
-		for range ticker.C {
-			serv.mux.Lock()
-			toBeDeleted := make([]string, 0)
-			for i, conn := range serv.connMap {
-				if conn != nil && (conn.LastUsed.Add(60*time.Second).Before(time.Now()) || conn.Closed) {
-					toBeDeleted = append(toBeDeleted, i)
+		defer serv.cleanupTicker.Stop()
+		for {
+			select {
+			case <-serv.cleanupTicker.C:
+				serv.mux.Lock()
+				toBeDeleted := make([]string, 0)
+				for i, conn := range serv.connMap {
+					if conn != nil && (conn.LastUsed.Add(60*time.Second).Before(time.Now()) || conn.Closed) {
+						toBeDeleted = append(toBeDeleted, i)
+					}
 				}
+				for _, i := range toBeDeleted {
+					delete(serv.connMap, i)
+				}
+				serv.mux.Unlock()
+			case <-serv.stopCleanup:
+				return
 			}
-			for _, i := range toBeDeleted {
-				delete(serv.connMap, i)
-			}
-			serv.mux.Unlock()
 		}
 	}()
 
@@ -95,5 +101,19 @@ func (s *H2Server) WaitingForConnection() {
 }
 
 func (s *H2Server) Close() error {
-	return s.webserver.Close()
+	// Stop cleanup goroutine
+	close(s.stopCleanup)
+
+	// Close webserver to stop accepting new connections
+	err := s.webserver.Close()
+
+	// Close all connection channels to unblock handlers
+	s.mux.Lock()
+	for _, conn := range s.connMap {
+		close(conn.RCh)
+		close(conn.WCh)
+	}
+	s.mux.Unlock()
+
+	return err
 }
