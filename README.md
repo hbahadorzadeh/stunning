@@ -364,31 +364,57 @@ Stunning is built and released for multiple platforms automatically via GitHub A
 ### Building for Your Platform
 
 ```bash
-# CLI tool
+# CLI tool (pure Go, no CGO required)
 go build -o stunning .
 
-# C Shared Library
-go build -buildmode=c-shared -o libstunning.so ./clib/
+# C Shared Library (Linux/macOS)
+# Note: Requires CGO_ENABLED=1 and C compiler (gcc/clang)
+CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.so ./clib/    # Linux
+CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.dylib ./clib/ # macOS
 
-# Desktop App (requires Fyne)
+# Desktop App (requires Fyne and CGO)
+# Note: Fyne requires CGO_ENABLED=1 for native platform integration
 go install fyne.io/fyne/v2/cmd/fyne@latest
-go build -o stunning-desktop ./app/desktop/
+CGO_ENABLED=1 go build -o stunning-desktop ./app/desktop/
 
 # Mobile bindings (requires gomobile)
+# Note: Android and iOS builds have platform-specific requirements
 go install golang.org/x/mobile/cmd/gomobile@latest
 gomobile init
-gomobile bind -target android -o libstunning.aar ./bindings/
+
+# Android APK (requires Android SDK)
+CGO_ENABLED=1 fyne package -os android -appID com.stunning.tunnel -name Stunning ./app/mobile/
+
+# iOS IPA (requires Xcode on macOS)
+CGO_ENABLED=1 fyne package -os ios -appID com.stunning.tunnel -name Stunning ./app/mobile/
+
+# Generate bindings for native embedding
+gomobile bind -target android -o libstunning.aar ./bindings/    # Android
+gomobile bind -target ios -o Stunning.xcframework ./bindings/   # iOS
 ```
 
 ### Automated Release Pipeline
 
-Each version tag (e.g., `v1.0.0`) triggers:
+Triggered automatically when pushing a version tag to GitHub (e.g., `v1.0.0`), the CI/CD workflow in `.github/workflows/release.yml` handles:
 
 1. **CLI Binaries** - Compiled for Linux/macOS (amd64, arm64)
-2. **Libraries** - C shared libraries and static archives
-3. **Desktop Apps** - macOS app bundles and Linux AppImages
-4. **Mobile Apps** - Android APK + AAR, iOS IPA + xcframework
-5. **GitHub Release** - Automatic release notes with all artifacts
+2. **Libraries** - C shared libraries (.so/.dylib) with auto-generated headers
+3. **Desktop Apps** - Linux binaries and macOS app bundles via Fyne
+4. **Mobile Apps** - Android APK + AAR bindings, iOS IPA + xcframework
+5. **GitHub Release** - Automatic release notes with all downloadable artifacts
+
+**To Create a Release**:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+# GitHub Actions automatically builds all platforms and publishes release
+```
+
+**Artifacts Published** (one per platform):
+- CLI: `stunning-linux-amd64`, `stunning-linux-arm64`, `stunning-darwin-amd64`, `stunning-darwin-arm64`
+- Libraries: `libstunning.so` / `libstunning.h` (Linux), `libstunning.dylib` / `libstunning.h` (macOS)
+- Desktop: `stunning-desktop` (Linux), `Stunning.app` (macOS)
+- Mobile: `Stunning.apk` + `libstunning.aar` (Android), `Stunning.ipa` + `Stunning.xcframework` (iOS)
 
 ## Performance
 
