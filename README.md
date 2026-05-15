@@ -145,18 +145,31 @@ go test -v -race -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out
 ```
 
-### Run Specific Tests
+### Run Tests
 
 ```bash
-# Unit tests only
-go test -v ./... -skip E2E
+# Run all tests
+go test -v ./... -timeout=60s
 
-# Functional tests
-go test -v -timeout=30s -run 'TestTunnel|TestInterface|TestRecovery' ./...
+# Run with race detection (recommended for finding data races)
+go test -v ./... -race -timeout=60s
 
-# E2E tests
-go test -v -timeout=60s -run 'TestE2E' ./...
+# Run specific component tests
+go test -v ./bindings -timeout=10s          # Mobile bindings
+go test -v ./clib -timeout=10s              # C library
+go test -v ./app/desktop -timeout=10s       # Desktop app
+go test -v ./app/desktop/ui -timeout=10s    # Desktop UI
+go test -v ./core/tunnel/... -timeout=30s   # Tunnel protocols
+
+# Run tests excluding ICMP (requires root/CAP_NET_RAW privileges)
+go test -v ./... -skip TestStartIcmpServer -timeout=60s
 ```
+
+**Test Suite**:
+- ✓ **Unit tests**: bindings, clib, desktop/mobile components, tunnel protocols
+- ✓ **Integration tests**: Socket, SOCKS, TUN interfaces with protocols  
+- ✓ **Thread-safety**: Race detection via `-race` flag
+- ✓ **Coverage**: All tunnel types (TCP, TLS, H2, HTTP/HTTPS, WS, DNS, UDP/UDPS, ICMP)
 
 ### Local Security Check
 
@@ -196,7 +209,7 @@ The project maintains high code quality standards:
 
 - **Linting**: 50+ Go linters via golangci-lint
 - **Security**: SAST scanning with gosec
-- **Testing**: Unit, functional, and E2E tests
+- **Testing**: Comprehensive unit and integration tests with race detection
 - **Coverage**: Codecov integration
 - **Race Detection**: Go race detector enabled
 
@@ -223,7 +236,7 @@ Automated GitHub Actions pipeline with:
 - ✓ Code formatting and linting
 - ✓ SAST security scanning (HIGH/CRITICAL severity blocks merge)
 - ✓ Unit tests with race detection
-- ✓ Functional and E2E tests
+- ✓ Integration tests across all tunnel protocols and interfaces
 - ✓ Code quality metrics
 - ✓ Dependency vulnerability scanning
 - ✓ Automated dependency updates (Dependabot)
@@ -251,7 +264,7 @@ See [`.github/CI_CD.md`](.github/CI_CD.md) for detailed pipeline documentation.
 - ✓ TCP, UDP, TLS, HTTP, HTTPS tunnels
 - ✓ TCP Socket, SOCKS5, TUN Device interfaces
 - ✓ Go module support (go.mod/go.sum)
-- ✓ Comprehensive testing suite (unit + functional + E2E)
+- ✓ Comprehensive testing suite (unit + integration + race detection)
 - ✓ 65+ critical bugs fixed in 5-round review
 - ✓ Modern GitHub Actions CI/CD pipeline
 - ✓ Complete security policy

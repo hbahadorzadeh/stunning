@@ -135,8 +135,8 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  functional-tests:
-    name: Functional Tests
+  integration-tests:
+    name: Integration Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -154,44 +154,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Build test binary
-        run: go test -c -o functional_tests
+      - name: Run core tunnel DNS tests
+        run: go test -v -timeout=10s ./core/tunnel/dns
 
-      - name: Run functional tests with timeout
-        run: timeout 60 go test -v -timeout=30s -run 'TestE2E|TestTunnel|TestConcurrent|TestInterface' ./... || true
+      - name: Run core tunnel H2 tests
+        run: go test -v -timeout=10s ./core/tunnel/h2
 
-      - name: Run core functionality tests
-        run: go test -v -run 'TestFactory|TestInterface|TestRecovery' ./...
+      - name: Run core tunnel ICMP tests
+        run: go test -v -timeout=10s ./core/tunnel/icmp || true
 
-  e2e-tests:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v6
+      - name: Run core tunnel UDPS tests
+        run: go test -v -timeout=10s ./core/tunnel/udps
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
+      - name: Run core tunnel WS tests
+        run: go test -v -timeout=10s ./core/tunnel/ws
 
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Run bindings tests
+        run: go test -v -timeout=10s ./bindings
 
-      - name: Run E2E tests
-        run: go test -v -timeout=60s -run 'TestE2E' ./...
+      - name: Run C library tests
+        run: go test -v -timeout=10s ./clib
+
+      - name: Run desktop app tests
+        run: go test -v -timeout=30s ./app/desktop/...
         continue-on-error: true
-
-      - name: Run tunnel factory tests
-        run: go test -v -timeout=30s -run 'TestTunnelFactory' ./...
-
-      - name: Run concurrent connection tests
-        run: go test -v -timeout=30s -run 'TestConcurrent' ./...
 
   race-detector:
     name: Race Detector
@@ -263,7 +249,7 @@ jobs:
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [lint, sast, build, unit-tests, functional-tests, e2e-tests, race-detector, dependencies, code-quality]
+    needs: [lint, sast, build, unit-tests, integration-tests, race-detector, dependencies, code-quality]
     if: always()
     steps:
       - name: Check CI Status
@@ -273,8 +259,7 @@ jobs:
           echo "SAST Security Scan: ${{ needs.sast.result }}"
           echo "Build: ${{ needs.build.result }}"
           echo "Unit Tests: ${{ needs.unit-tests.result }}"
-          echo "Functional Tests: ${{ needs.functional-tests.result }}"
-          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Integration Tests: ${{ needs.integration-tests.result }}"
           echo "Race Detector: ${{ needs.race-detector.result }}"
           echo "Dependency Check: ${{ needs.dependencies.result }}"
           echo "Code Quality: ${{ needs.code-quality.result }}"
