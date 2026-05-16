@@ -90,7 +90,7 @@ jobs:
           fi
 
   build:
-    name: Build
+    name: Build Core & CLI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -101,16 +101,28 @@ jobs:
       - name: Build Docker image
         run: docker build -t stunning-build:ci .
 
-      - name: Build all packages
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "go build -buildvcs=false ./..."
+      - name: Build core packages
+        # Build core library, bindings, and C library (no graphics dependencies)
+        # Desktop and mobile apps are built separately with specialized tools (fyne, gomobile)
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "
+          echo '=== Building Core Library ===' &&
+          go build -buildvcs=false ./core/... &&
+          echo '=== Building Bindings ===' &&
+          go build -buildvcs=false ./bindings/... &&
+          echo '=== Building C Library ===' &&
+          go build -buildvcs=false ./clib/...
+          "
 
-      - name: Build main binary
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=0 stunning-build:ci bash -c "go build -buildvcs=false -v -o stunning ."
+      - name: Build CLI binary
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=0 stunning-build:ci bash -c "
+          echo '=== Building CLI Tool ===' &&
+          go build -buildvcs=false -v -o stunning .
+          "
 
-      - name: Upload binary
+      - name: Upload CLI binary
         uses: actions/upload-artifact@v7
         with:
-          name: stunning-binary-linux-${{ github.sha }}
+          name: stunning-cli-linux-${{ github.sha }}
           path: ./stunning
           retention-days: 5
 
