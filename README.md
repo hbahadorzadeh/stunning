@@ -9,6 +9,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/hbahadorzadeh/stunning/releases/tag/v1.0.0-beta"><img alt="Release" src="https://img.shields.io/badge/release-v1.0.0--beta-blue.svg"></a>
+  <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <a href="https://golang.org"><img alt="Go" src="https://img.shields.io/badge/go-1.25-blue.svg"></a>
+</p>
+
+<p align="center">
   <a href="#features"><strong>Features</strong></a> •
   <a href="#installation"><strong>Installation</strong></a> •
   <a href="#quick-start"><strong>Quick Start</strong></a> •
@@ -17,6 +24,17 @@
   <a href="#monitoring"><strong>Monitoring</strong></a> •
   <a href="#platforms"><strong>Platforms</strong></a>
 </p>
+
+---
+
+## 🚀 Latest Release
+
+**v1.0.0-beta** is now available! [Download](https://github.com/hbahadorzadeh/stunning/releases/tag/v1.0.0-beta) pre-built binaries for Linux and macOS, or the C library for embedding.
+
+- ✅ 20 unit tests passing
+- ✅ Race detection enabled
+- ✅ Security scanning verified
+- ✅ Full CI/CD pipeline
 
 ---
 
@@ -85,19 +103,35 @@ Download pre-built binaries:
 
 ```bash
 # Linux
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-linux-amd64
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-linux-amd64
 chmod +x ./stunning-linux-amd64
 ./stunning-linux-amd64 help
 
 # macOS (Intel)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-darwin-amd64
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-darwin-amd64
 chmod +x ./stunning-darwin-amd64
 ./stunning-darwin-amd64 help
 
 # macOS (Apple Silicon)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-darwin-arm64
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-darwin-arm64
 chmod +x ./stunning-darwin-arm64
 ./stunning-darwin-arm64 help
+```
+
+### C Library
+
+Download the C library for embedding in C/C++ projects:
+
+```bash
+# Shared library (Linux)
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.so
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.h
+
+# Static archive (all platforms)
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.a
+
+# Compile with C library
+gcc -o myapp myapp.c -L. -lstunning
 ```
 
 ### From Source
