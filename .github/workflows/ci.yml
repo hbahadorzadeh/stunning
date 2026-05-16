@@ -37,7 +37,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: 1.25
 
       - name: Run gofmt
         run: |
@@ -68,7 +68,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: 1.25
 
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -210,7 +210,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: 1.25
 
       - name: Check for vulnerable dependencies
         run: go list -json -m all | go run github.com/sonatype-nexus-community/nancy@latest sleuth || true
@@ -232,7 +232,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 1.24
+          go-version: 1.25
 
       - name: Install tools
         run: |
