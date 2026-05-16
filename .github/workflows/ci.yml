@@ -104,13 +104,13 @@ jobs:
       - name: Build core packages
         # Build core library, bindings, and C library (no graphics dependencies)
         # Desktop and mobile apps are built separately with specialized tools (fyne, gomobile)
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
           echo '=== Building Core Library ===' &&
-          go build -buildvcs=false ./core/... &&
+          go build -buildvcs=false -v ./core/... &&
           echo '=== Building Bindings ===' &&
-          go build -buildvcs=false ./bindings/... &&
+          go build -buildvcs=false -v ./bindings/... &&
           echo '=== Building C Library ===' &&
-          go build -buildvcs=false ./clib/...
+          go build -buildvcs=false -v ./clib
           "
 
       - name: Build CLI binary
