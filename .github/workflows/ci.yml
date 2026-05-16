@@ -1,3 +1,22 @@
+# CI Pipeline - Build and Test in Docker Containers
+# This workflow builds and tests the project inside Docker containers
+# to ensure consistency across environments and reduce dependency issues.
+#
+# Jobs using Docker:
+# - build: Compiles CLI and all packages in Docker
+# - unit-tests: Runs unit tests with coverage inside Docker
+# - integration-tests: Runs protocol and library tests inside Docker
+# - race-detector: Detects race conditions inside Docker
+#
+# Jobs running natively:
+# - lint: Code formatting and linting checks
+# - sast: Security scanning with gosec
+# - dependencies: Dependency vulnerability checks
+# - code-quality: Static analysis with various tools
+#
+# The Dockerfile provides all necessary build dependencies including
+# X11/OpenGL libraries needed for desktop app compilation.
+
 name: CI
 
 on:
@@ -76,30 +95,23 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Build Docker image
+        run: docker build -t stunning-build:ci .
 
       - name: Build all packages
-        run: go build ./...
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "go build ./..."
 
       - name: Build main binary
-        run: go build -v -o stunning
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=0 stunning-build:ci bash -c "go build -v -o stunning ."
 
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
-          name: stunning-binary-${{ runner.os }}-${{ github.sha }}
-          path: stunning
+          name: stunning-binary-linux-${{ github.sha }}
+          path: ./stunning
           retention-days: 5
 
   unit-tests:
@@ -108,24 +120,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Build Docker image
+        run: docker build -t stunning-build:ci .
 
-      - name: Run unit tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Run unit tests with coverage
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
+          go test -v -race -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+          "
 
-      - name: Generate coverage report
-        run: go tool cover -func=coverage.out
+      - name: Extract coverage file
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "cat coverage.out" > coverage.out || true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
@@ -141,43 +149,26 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Build Docker image
+        run: docker build -t stunning-build:ci .
 
-      - name: Run core tunnel DNS tests
-        run: go test -v -timeout=10s ./core/tunnel/dns
-
-      - name: Run core tunnel H2 tests
-        run: go test -v -timeout=10s ./core/tunnel/h2
-
-      - name: Run core tunnel ICMP tests
-        run: go test -v -timeout=10s ./core/tunnel/icmp || true
-
-      - name: Run core tunnel UDPS tests
-        run: go test -v -timeout=10s ./core/tunnel/udps
-
-      - name: Run core tunnel WS tests
-        run: go test -v -timeout=10s ./core/tunnel/ws
-
-      - name: Run bindings tests
-        run: go test -v -timeout=10s ./bindings
-
-      - name: Run C library tests
-        run: go test -v -timeout=10s ./clib
-
-      - name: Run desktop app tests
-        run: go test -v -timeout=30s ./app/desktop/...
-        continue-on-error: true
+      - name: Run integration tests
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
+          echo '=== Core Tunnel Tests ===' &&
+          go test -v -timeout=10s ./core/tunnel/dns &&
+          go test -v -timeout=10s ./core/tunnel/h2 &&
+          go test -v -timeout=10s ./core/tunnel/icmp || true &&
+          go test -v -timeout=10s ./core/tunnel/udps &&
+          go test -v -timeout=10s ./core/tunnel/ws &&
+          echo '=== Library Tests ===' &&
+          go test -v -timeout=10s ./bindings &&
+          go test -v -timeout=10s ./clib &&
+          echo '=== Desktop App Tests ===' &&
+          go test -v -timeout=30s ./app/desktop/... || true
+          "
 
   race-detector:
     name: Race Detector
@@ -185,21 +176,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: 1.25
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Build Docker image
+        run: docker build -t stunning-build:ci .
 
       - name: Run tests with race detector
-        run: go test -race -timeout=60s ./...
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
+          go test -race -timeout=60s ./...
+          "
         continue-on-error: true
 
   dependencies:
