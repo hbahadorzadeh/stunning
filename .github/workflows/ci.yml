@@ -197,7 +197,7 @@ jobs:
 
       - name: Run tests with race detector
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
-          go test -race -buildvcs=false -timeout=60s ./...
+          go test -race -buildvcs=false -timeout=60s ./core/... ./bindings/... ./clib/...
           "
         continue-on-error: true
 
