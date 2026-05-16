@@ -3,11 +3,8 @@
 package vpn
 
 import (
-	"fmt"
+	"errors"
 	"sync"
-
-	"golang.org/x/mobile/app"
-	"golang.org/x/mobile/jni"
 )
 
 // AndroidVPNProvider implements VPN setup for Android using VpnService
@@ -28,11 +25,6 @@ func (avp *AndroidVPNProvider) Connect(serverAddr, protocol string) error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-	env := jni.NewEnv()
-	if env == nil {
-		avp.lastError = "JNI environment not available"
-		return fmt.Errorf("Android VPN error: %s", avp.lastError)
-	}
 
 	// Call Java method to start VpnService
 	// This would use reflection to call the VPN service
@@ -47,11 +39,6 @@ func (avp *AndroidVPNProvider) Disconnect() error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-	env := jni.NewEnv()
-	if env == nil {
-		avp.lastError = "JNI environment not available"
-		return fmt.Errorf("Android VPN error: %s", avp.lastError)
-	}
 
 	// Call Java method to stop VpnService
 	avp.connected = false
@@ -78,15 +65,9 @@ func (avp *AndroidVPNProvider) AddConfiguration(name, server, protocol string) e
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-	env := jni.NewEnv()
-	if env == nil {
-		avp.lastError = "JNI environment not available"
-		return fmt.Errorf("Android config error: %s", avp.lastError)
-	}
-
-	// Call Java method to save VPN configuration
+	// TODO: Call Java method to save VPN configuration via JNI
 	// This would store config in Android's VPN settings
-	return nil
+	return errors.New("AddConfiguration: native Android VPN integration not yet implemented")
 }
 
 // RemoveConfiguration removes a VPN configuration from Android settings
@@ -94,14 +75,8 @@ func (avp *AndroidVPNProvider) RemoveConfiguration(name string) error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-	env := jni.NewEnv()
-	if env == nil {
-		avp.lastError = "JNI environment not available"
-		return fmt.Errorf("Android config error: %s", avp.lastError)
-	}
-
-	// Call Java method to remove VPN configuration
-	return nil
+	// TODO: Call Java method to remove VPN configuration via JNI
+	return errors.New("RemoveConfiguration: native Android VPN integration not yet implemented")
 }
 
 // ActivateConfiguration activates a saved VPN configuration
@@ -109,17 +84,8 @@ func (avp *AndroidVPNProvider) ActivateConfiguration(name string) error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-	env := jni.NewEnv()
-	if env == nil {
-		avp.lastError = "JNI environment not available"
-		return fmt.Errorf("Android activation error: %s", avp.lastError)
-	}
-
-	// Call Java method to activate VPN configuration
-	avp.activeConfig = name
-	avp.connected = true
-	avp.lastError = ""
-	return nil
+	// TODO: Call Java method to activate VPN configuration via JNI
+	return errors.New("ActivateConfiguration: native Android VPN integration not yet implemented")
 }
 
 // SetTunFd receives the TUN file descriptor from Java VPN service
