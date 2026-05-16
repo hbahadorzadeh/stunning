@@ -56,7 +56,7 @@ func Connect(serverAddr string, protocol string) string {
 	config := core.TunnelConfig{
 		ServiceMode:   "client",
 		ServerType:    protocol,
-		InterfaceType: "socks", // Default to SOCKS for client
+		InterfaceType: "socks",       // Default to SOCKS for client
 		Listen:        "127.0.0.1:0", // Let OS assign available port
 		Connect:       serverAddr,
 	}

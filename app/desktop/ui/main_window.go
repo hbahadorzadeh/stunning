@@ -144,8 +144,8 @@ func CreateMainWindow(myApp fyne.App, getTunnels func() []TunnelStatus, startTun
 
 	// Main border layout
 	mainContent := container.NewBorder(
-		toolbar,     // top
-		statusBar,   // bottom
+		toolbar,   // top
+		statusBar, // bottom
 		nil, nil,
 		topSplit,
 	)

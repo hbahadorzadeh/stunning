@@ -71,12 +71,12 @@ func getTunnels() []ui.TunnelStatus {
 		}
 
 		result = append(result, ui.TunnelStatus{
-			Name:      name,
-			Running:   isAlive,
-			RxBytes:   rxBytes,
-			TxBytes:   txBytes,
-			Uptime:    uptime,
-			Config:    inst.config,
+			Name:    name,
+			Running: isAlive,
+			RxBytes: rxBytes,
+			TxBytes: txBytes,
+			Uptime:  uptime,
+			Config:  inst.config,
 		})
 	}
 	return result

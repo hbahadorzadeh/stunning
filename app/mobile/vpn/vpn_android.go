@@ -1,3 +1,4 @@
+//go:build android
 // +build android
 
 package vpn
@@ -25,7 +26,6 @@ func (avp *AndroidVPNProvider) Connect(serverAddr, protocol string) error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
 
-
 	// Call Java method to start VpnService
 	// This would use reflection to call the VPN service
 	// For now, we set connected flag
@@ -38,7 +38,6 @@ func (avp *AndroidVPNProvider) Connect(serverAddr, protocol string) error {
 func (avp *AndroidVPNProvider) Disconnect() error {
 	avp.mu.Lock()
 	defer avp.mu.Unlock()
-
 
 	// Call Java method to stop VpnService
 	avp.connected = false

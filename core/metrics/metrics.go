@@ -10,14 +10,14 @@ import (
 
 // Metrics tracks tunnel statistics
 type Metrics struct {
-	mu                  sync.RWMutex
-	BytesReceived       atomic.Int64
-	BytesSent           atomic.Int64
-	ConnectionsTotal    atomic.Int64
-	ConnectionsCurrent  atomic.Int64
-	ErrorsTotal         atomic.Int64
-	StartTime           time.Time
-	LastActivity        time.Time
+	mu                 sync.RWMutex
+	BytesReceived      atomic.Int64
+	BytesSent          atomic.Int64
+	ConnectionsTotal   atomic.Int64
+	ConnectionsCurrent atomic.Int64
+	ErrorsTotal        atomic.Int64
+	StartTime          time.Time
+	LastActivity       time.Time
 }
 
 // NewMetrics creates a new metrics instance
@@ -111,14 +111,14 @@ tunnel_errors_total{tunnel="%s"} %d
 // ExportJSON returns metrics in JSON format
 func (m *Metrics) ExportJSON(tunnelName string) map[string]interface{} {
 	return map[string]interface{}{
-		"tunnel":               tunnelName,
-		"uptime_seconds":       m.Uptime(),
-		"bytes_received":       m.BytesReceived.Load(),
-		"bytes_sent":           m.BytesSent.Load(),
-		"connections_total":    m.ConnectionsTotal.Load(),
-		"connections_current":  m.ConnectionsCurrent.Load(),
-		"errors_total":         m.ErrorsTotal.Load(),
-		"last_activity":        m.GetLastActivity().Unix(),
+		"tunnel":              tunnelName,
+		"uptime_seconds":      m.Uptime(),
+		"bytes_received":      m.BytesReceived.Load(),
+		"bytes_sent":          m.BytesSent.Load(),
+		"connections_total":   m.ConnectionsTotal.Load(),
+		"connections_current": m.ConnectionsCurrent.Load(),
+		"errors_total":        m.ErrorsTotal.Load(),
+		"last_activity":       m.GetLastActivity().Unix(),
 	}
 }
 

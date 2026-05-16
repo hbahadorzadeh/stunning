@@ -45,11 +45,11 @@ type JSONResponse struct {
 }
 
 type TunnelStatusJSON struct {
-	Name      string `json:"name"`
-	Running   bool   `json:"running"`
-	RxBytes   int64  `json:"rx_bytes"`
-	TxBytes   int64  `json:"tx_bytes"`
-	Error     string `json:"error,omitempty"`
+	Name    string `json:"name"`
+	Running bool   `json:"running"`
+	RxBytes int64  `json:"rx_bytes"`
+	TxBytes int64  `json:"tx_bytes"`
+	Error   string `json:"error,omitempty"`
 }
 
 // StartTunnelJSON starts a tunnel from JSON config string
@@ -284,11 +284,11 @@ func StopTunnel(name *C.char) C.int {
 func GetStatus(name *C.char) C.TunnelStatus {
 	if name == nil {
 		return C.TunnelStatus{
-			name:    C.CString(""),
-			running: 0,
+			name:     C.CString(""),
+			running:  0,
 			rx_bytes: 0,
 			tx_bytes: 0,
-			error:   C.CString("name is nil"),
+			error:    C.CString("name is nil"),
 		}
 	}
 
@@ -300,11 +300,11 @@ func GetStatus(name *C.char) C.TunnelStatus {
 
 	if !exists {
 		return C.TunnelStatus{
-			name:    C.CString(nameStr),
-			running: 0,
+			name:     C.CString(nameStr),
+			running:  0,
 			rx_bytes: 0,
 			tx_bytes: 0,
-			error:   C.CString(fmt.Sprintf("tunnel %s not found", nameStr)),
+			error:    C.CString(fmt.Sprintf("tunnel %s not found", nameStr)),
 		}
 	}
 
@@ -314,11 +314,11 @@ func GetStatus(name *C.char) C.TunnelStatus {
 	}
 
 	return C.TunnelStatus{
-		name:    C.CString(nameStr),
-		running: C.int(running),
+		name:     C.CString(nameStr),
+		running:  C.int(running),
 		rx_bytes: 0,
 		tx_bytes: 0,
-		error:   C.CString(""),
+		error:    C.CString(""),
 	}
 }
 

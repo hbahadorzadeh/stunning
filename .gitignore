@@ -30,3 +30,21 @@ server.key
 server.crt
 
 .idea/
+
+# Build artifacts
+*.apk
+*.ipa
+*.app/
+*.dmg
+build/
+dist/
+
+# Test artifacts
+coverage.out
+*.test
+test-build
+test-cli
+
+# CLI binary
+stunning
+app-mobile-stub

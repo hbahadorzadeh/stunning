@@ -1,3 +1,4 @@
+//go:build ios
 // +build ios
 
 package vpn
@@ -9,9 +10,9 @@ import (
 
 // iOSVPNProvider implements VPN setup for iOS using NetworkExtension
 type iOSVPNProvider struct {
-	mu        sync.RWMutex
-	connected bool
-	lastError string
+	mu           sync.RWMutex
+	connected    bool
+	lastError    string
 	activeConfig string
 }
 
