@@ -1,462 +1,490 @@
 <p align="center">
-  <img src="./stunning.png" width="128" alt="Stunning Logo"/>
+  <img src="./stunning.png" width="160" alt="Stunning Logo"/>
 </p>
 
-# Stunning - Network Tunneling Library
+<h1 align="center">Stunning - Network Tunneling Engine</h1>
 
-[![CI](https://github.com/hbahadorzadeh/stunning/workflows/CI/badge.svg)](https://github.com/hbahadorzadeh/stunning/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/hbahadorzadeh/stunning)](https://goreportcard.com/report/github.com/hbahadorzadeh/stunning)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <strong>Production-ready tunneling with 10 protocols, 4 interfaces, and real-time monitoring</strong>
+</p>
 
-## Downloads
+<p align="center">
+  <a href="#features"><strong>Features</strong></a> •
+  <a href="#installation"><strong>Installation</strong></a> •
+  <a href="#quick-start"><strong>Quick Start</strong></a> •
+  <a href="#cli-usage"><strong>CLI Usage</strong></a> •
+  <a href="#api-usage"><strong>API Usage</strong></a> •
+  <a href="#monitoring"><strong>Monitoring</strong></a> •
+  <a href="#platforms"><strong>Platforms</strong></a>
+</p>
 
-[![Download Linux](https://img.shields.io/badge/Download-Linux-blue?logo=linux)](https://github.com/hbahadorzadeh/stunning/releases)
-[![Download macOS](https://img.shields.io/badge/Download-macOS-black?logo=apple)](https://github.com/hbahadorzadeh/stunning/releases)
-[![Download Android](https://img.shields.io/badge/Download-Android-3DDC84?logo=android)](https://github.com/hbahadorzadeh/stunning/releases)
-[![Download iOS](https://img.shields.io/badge/Download-iOS-000000?logo=apple)](https://github.com/hbahadorzadeh/stunning/releases)
+---
 
-**Stunning** is a production-ready Go library for tunneling different types of network traffic. It's a modern alternative to stunnel, providing flexible tunneling capabilities with multiple protocols and interfaces.
+## Overview
 
-### Applications
+**Stunning** is a modern tunneling engine that securely forwards network traffic through various protocols and interfaces. It's a production-ready replacement for stunnel, providing flexible multi-protocol support with real-time metrics, process-based management, and comprehensive monitoring.
 
-- **CLI Tool** - Command-line tunnel manager with JSON configuration
-- **Desktop App** - Cross-platform GUI (Linux, macOS) with Fyne
-- **Mobile Apps** - iOS and Android VPN clients with native integration
-- **C Library** - Shared library (.so/.dylib) for embedding in other languages
-- **Go Library** - Core library for programmatic use
+### Use Cases
+
+- 🔒 Secure legacy service access with TLS/HTTPS
+- 📊 Load balancing and traffic routing
+- 🌐 Protocol translation and bridging
+- 🔐 VPN alternatives with custom protocols  
+- 📡 Private network tunneling
+- 🚀 Microservice gateway and mesh integration
+
+---
 
 ## Features
 
-### Supported Tunnel Protocols
-- ✓ **TCP** - TCP connections
-- ✓ **UDP** - UDP datagrams
-- ✓ **UDPS** - Secure UDP connections
-- ✓ **TLS** - Secure TLS connections
-- ✓ **HTTP** - HTTP tunneling
-- ✓ **HTTPS** - Secure HTTPS tunneling
-- ✓ **H2** - HTTP/2 tunneling
-- ✓ **WS** - WebSocket tunneling
-- ✓ **DNS** - DNS tunneling
-- ✓ **ICMP** - ICMP echo tunneling
+### 🔄 Tunnel Protocols (10 Types)
 
-### Supported Interfaces
-- ✓ **TCP Socket** - Standard TCP socket interface
-- ✓ **SOCKS5** - SOCKS5 proxy protocol
-- ✓ **TUN Device** - Virtual network interface (TUN)
-- 🔄 **UDP Socket** - UDP socket interface (in progress)
-- 🔄 **Serial** - Serial port communication (in progress)
+| Protocol | Type | Use Case |
+|----------|------|----------|
+| **TCP** | Standard | Direct TCP forwarding |
+| **UDP** | Datagram | DNS, VoIP, gaming |
+| **UDPS** | Secure | Encrypted UDP tunneling |
+| **TLS** | Encrypted | Secure socket layer tunneling |
+| **HTTP** | Web | HTTP transparent proxy |
+| **HTTPS** | Web | HTTPS/SSL proxy |
+| **H2** | Modern | HTTP/2 multiplexed tunneling |
+| **WS** | WebSocket | WebSocket tunneling (HTTP upgrade) |
+| **DNS** | Query | DNS over custom protocol |
+| **ICMP** | Echo | Stealth tunneling via ICMP |
+
+### 🎯 Interface Types (4 Modes)
+
+- **TCP Socket** — Standard network socket
+- **SOCKS5 Proxy** — SOCKS5 protocol support
+- **TUN Device** — Virtual network interface for VPN
+- **Serial** — Serial port communication
+
+### 🛠️ Management & Monitoring
+
+- **Process-based** — Each tunnel runs as independent background process
+- **Prometheus Metrics** — Real-time metrics in standard format
+- **HTTP API** — JSON metrics and health endpoints
+- **Uptime Tracking** — Connection count, bytes transferred, error rates
+- **Auto-restart** — Automatic tunnel recovery on failure
+
+### 📦 Multiple Distributions
+
+- **CLI Tool** — Command-line tunnel manager
+- **Desktop App** — Cross-platform GUI (Linux, macOS)
+- **Mobile Apps** — iOS and Android VPN clients
+- **C Library** — Embed tunneling in other applications
+- **Go Library** — Use as Go package
+
+---
 
 ## Installation
+
+### From Releases
+
+Download pre-built binaries:
+
+```bash
+# Linux
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-linux-amd64
+chmod +x ./stunning-linux-amd64
+./stunning-linux-amd64 help
+
+# macOS (Intel)
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-darwin-amd64
+chmod +x ./stunning-darwin-amd64
+./stunning-darwin-amd64 help
+
+# macOS (Apple Silicon)
+wget https://github.com/hbahadorzadeh/stunning/releases/download/v0.1.0/stunning-darwin-arm64
+chmod +x ./stunning-darwin-arm64
+./stunning-darwin-arm64 help
+```
+
+### From Source
+
+```bash
+git clone https://github.com/hbahadorzadeh/stunning.git
+cd stunning
+go build -o ./stunning .
+./stunning help
+```
+
+### Desktop App
+
+```bash
+# Install Fyne first
+go install fyne.io/fyne/v2/cmd/fyne@latest
+
+# Linux
+go build -o ./Stunning ./app/desktop/
+
+# macOS
+fyne package -os darwin -appID com.stunning.tunnel \
+  -name Stunning -icon app/desktop/assets/icon.png \
+  -sourceDir ./app/desktop
+```
+
+### As Go Library
 
 ```bash
 go get github.com/hbahadorzadeh/stunning
 ```
 
+---
+
 ## Quick Start
 
-### Basic TCP Tunnel
+### 1. Create Configuration
+
+Create `tunnels.json`:
+
+```json
+{
+  "secure-web": {
+    "ServiceMode": "server",
+    "ServerType": "tls",
+    "InterfaceType": "tcp",
+    "Listen": "127.0.0.1:443",
+    "Connect": "example.com:443",
+    "Cert": "/path/to/cert.pem",
+    "Key": "/path/to/key.pem"
+  },
+  
+  "http-proxy": {
+    "ServiceMode": "server",
+    "ServerType": "http",
+    "InterfaceType": "socks",
+    "Listen": "127.0.0.1:8080",
+    "Connect": "upstream-proxy.local:3128"
+  }
+}
+```
+
+### 2. Start Tunnel
+
+```bash
+# Start in background
+./stunning start secure-web
+
+# Or run in foreground (debugging)
+./stunning fg secure-web
+```
+
+### 3. Check Status
+
+```bash
+./stunning status
+```
+
+Output:
+```
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                         Tunnel Status                                          ║
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ Name                 │ Status     │ Listen                    │ PID             │
+╠════════════════════════════════════════════════════════════════════════════════╣
+║ secure-web           │ ✓ Running  │ 127.0.0.1:443             │ 12345           │
+║ http-proxy           │ ✗ Stopped  │ 127.0.0.1:8080            │ -               │
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+Metrics available at: http://localhost:9090/metrics
+```
+
+---
+
+## CLI Usage
+
+### Commands
+
+```bash
+# Start tunnel in background
+./stunning start <name>
+
+# Run tunnel in foreground (for debugging/testing)
+./stunning fg <name>
+
+# Stop a running tunnel
+./stunning stop <name>
+
+# Show status of all tunnels
+./stunning status
+
+# List all configured tunnels
+./stunning list
+
+# View Prometheus metrics
+./stunning metrics
+
+# Show help
+./stunning help
+```
+
+### Options
+
+```bash
+-config <file>       Config file (default: tunnels.json)
+-metrics-port <port> Metrics HTTP port (default: 9090)
+```
+
+### Examples
+
+```bash
+# Start tunnel from custom config
+./stunning -config tunnels-prod.json start my-tunnel
+
+# Start on different metrics port
+./stunning -metrics-port 9091 start my-tunnel
+
+# Stop tunnel
+./stunning stop my-tunnel
+
+# View metrics directly
+curl http://localhost:9090/metrics
+```
+
+---
+
+## API Usage (Go Library)
+
+### Create Tunnel Programmatically
 
 ```go
 package main
 
 import (
-    "github.com/hbahadorzadeh/stunning/tunnel/tcp"
-    "github.com/hbahadorzadeh/stunning/interface/tcp"
-    "log"
+	"github.com/hbahadorzadeh/stunning/core"
 )
 
 func main() {
-    // Create TCP tunnel server
-    server, err := tcptun.StartTcpServer("127.0.0.1:9000")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer server.Close()
+	config := core.TunnelConfig{
+		ServiceMode:   "server",
+		ServerType:    "tcp",
+		InterfaceType: "tcp",
+		Listen:        "127.0.0.1:8080",
+		Connect:       "127.0.0.1:9090",
+	}
 
-    // Set interface server
-    iface := tcpiface.GetTcpServer("127.0.0.1:8080")
-    server.SetServer(iface)
+	// Create tunnel
+	tunnel := core.TunnelFactory("my-tunnel", config)
 
-    // Start listening for connections
-    server.WaitingForConnection()
+	// Start tunnel (blocking)
+	go tunnel.ListenAndServer()
+
+	// Check if alive
+	if tunnel.IsAlive() {
+		println("Tunnel is running")
+	}
+
+	// Access metrics
+	metrics := tunnel.GetMetrics()
+	println("Bytes sent:", metrics.BytesSent.Load())
+	println("Bytes received:", metrics.BytesReceived.Load())
 }
 ```
 
-### Configuration File
+### Get Metrics
 
-Create a JSON configuration file to define tunnels:
+```go
+// Export Prometheus format
+prometheus := tunnel.GetMetrics().Export("my-tunnel")
+println(prometheus)
+
+// Export JSON format
+json := tunnel.GetMetrics().ExportJSON("my-tunnel")
+println(json)
+```
+
+---
+
+## Monitoring
+
+### Prometheus Metrics
+
+Metrics are automatically exported at `http://localhost:9090/metrics`:
+
+```prometheus
+tunnel_uptime_seconds{tunnel="my-tunnel"} 3600
+tunnel_bytes_received_total{tunnel="my-tunnel"} 1048576
+tunnel_bytes_sent_total{tunnel="my-tunnel"} 2097152
+tunnel_connections_total{tunnel="my-tunnel"} 125
+tunnel_connections_current{tunnel="my-tunnel"} 3
+tunnel_errors_total{tunnel="my-tunnel"} 2
+```
+
+### JSON API
+
+Get metrics as JSON:
+
+```bash
+curl http://localhost:9090/api/metrics
+
+curl http://localhost:9090/api/metrics/my-tunnel
+```
+
+### Health Check
+
+```bash
+curl http://localhost:9090/health
+```
+
+### Prometheus Scraping
+
+Add to Prometheus `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'stunning-tunnels'
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+---
+
+## Platforms
+
+<p align="center">
+
+| Platform | CLI | Desktop | Mobile | Library |
+|----------|:---:|:-------:|:------:|:-------:|
+| **Linux** | ✓ | ✓ | - | ✓ |
+| **macOS** | ✓ | ✓ | - | ✓ |
+| **Windows** | ✓ | - | - | ✓ |
+| **iOS** | - | - | ✓ | ✓ |
+| **Android** | - | - | ✓ | ✓ |
+
+</p>
+
+### Architecture Support
+
+- Linux: x86_64, ARM64
+- macOS: Intel, Apple Silicon (M1/M2/M3)
+- Windows: x86_64
+- iOS: ARM64
+- Android: ARM64
+
+---
+
+## Configuration Guide
+
+### TLS/HTTPS Tunnel
+
+For TLS or HTTPS protocols, provide certificate and key:
 
 ```json
 {
-  "tunnel1": {
+  "my-tls": {
     "ServiceMode": "server",
-    "ServerType": "tcp",
+    "ServerType": "tls",
     "InterfaceType": "tcp",
-    "Listen": "127.0.0.1:9000",
-    "Connect": "127.0.0.1:8080"
-  },
-  "secure_tunnel": {
-    "ServiceMode": "server",
-    "ServerType": "https",
-    "InterfaceType": "socks",
-    "Listen": "127.0.0.1:443",
-    "Cert": "/path/to/cert.pem",
-    "Key": "/path/to/key.pem"
+    "Listen": "0.0.0.0:443",
+    "Connect": "backend-server:8080",
+    "Cert": "/etc/certs/cert.pem",
+    "Key": "/etc/certs/key.pem"
   }
 }
 ```
 
-Run with configuration:
+### TUN Device Interface
+
+For VPN-like functionality, use TUN interface:
+
+```json
+{
+  "vpn": {
+    "ServiceMode": "server",
+    "ServerType": "tcp",
+    "InterfaceType": "tun",
+    "Listen": "10.0.0.1",
+    "Connect": "vpn-gateway.local",
+    "DeviceName": "tun0",
+    "Mtu": "1500"
+  }
+}
+```
+
+### SOCKS Proxy Interface
+
+For SOCKS5 proxy:
+
+```json
+{
+  "socks-proxy": {
+    "ServiceMode": "server",
+    "ServerType": "tcp",
+    "InterfaceType": "socks",
+    "Listen": "127.0.0.1:1080",
+    "Connect": "upstream-proxy.local:3128"
+  }
+}
+```
+
+---
+
+## Docker Build
+
+Build for all platforms using Docker:
 
 ```bash
-./stunning --config=config.json
-# or
-./stunning -c config.json
-```
-
-## Architecture
-
-### Visual Overview
-
-#### Core Capabilities & Roadmap
-![Architecture Overview](./docs/images/architecture-overview.png)
-
-#### Network Architecture
-![Network Architecture](./docs/images/network-architecture.png)
-
-### Two-Layer Design
-
-1. **Tunnel Layer** - Transport mechanism (TCP, UDP, UDPS, TLS, HTTP, HTTPS, H2, WS, DNS, ICMP)
-2. **Interface Layer** - User-facing endpoint (TCP Socket, SOCKS5, TUN Device)
-
-This modular architecture allows flexible combinations of any tunnel with any interface.
-
-### Data Flow
-
-```
-Client → Interface Layer → Tunnel Layer → Remote Server
-         (SOCKS5, TCP)   (TLS, HTTPS)   (Destination)
-```
-
-## Testing
-
-### Run All Tests
-
-```bash
-# Run with race detection
-go test -v -race -coverprofile=coverage.out ./...
-
-# Generate coverage report
-go tool cover -html=coverage.out
-```
-
-### Run Tests
-
-```bash
-# Run all tests
-go test -v ./... -timeout=60s
-
-# Run with race detection (recommended for finding data races)
-go test -v ./... -race -timeout=60s
-
-# Run specific component tests
-go test -v ./bindings -timeout=10s          # Mobile bindings
-go test -v ./clib -timeout=10s              # C library
-go test -v ./app/desktop -timeout=10s       # Desktop app
-go test -v ./app/desktop/ui -timeout=10s    # Desktop UI
-go test -v ./core/tunnel/... -timeout=30s   # Tunnel protocols
-
-# Run tests excluding ICMP (requires root/CAP_NET_RAW privileges)
-go test -v ./... -skip TestStartIcmpServer -timeout=60s
-```
-
-**Test Suite**:
-- ✓ **Unit tests**: bindings, clib, desktop/mobile components, tunnel protocols
-- ✓ **Integration tests**: Socket, SOCKS, TUN interfaces with protocols  
-- ✓ **Thread-safety**: Race detection via `-race` flag
-- ✓ **Coverage**: All tunnel types (TCP, TLS, H2, HTTP/HTTPS, WS, DNS, UDP/UDPS, ICMP)
-
-### Local Security Check
-
-```bash
-# SAST security scan
-gosec ./...
-
-# Dependency vulnerability check
-nancy sleuth
-
-# Code quality
-golangci-lint run
-```
-
-## Development & Contributing
-
-### Building from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/hbahadorzadeh/stunning.git
-cd stunning
-
-# Install dependencies
-go mod download
-
-# Build
-go build -o stunning
+# Build everything
+docker-compose run build-all
 
 # Run tests
-go test -v -race ./...
+docker-compose run test
+
+# Interactive shell
+docker-compose run shell
 ```
 
-### Code Quality
+See [DOCKER.md](DOCKER.md) for detailed Docker guide.
 
-The project maintains high code quality standards:
+---
 
-- **Linting**: 50+ Go linters via golangci-lint
-- **Security**: SAST scanning with gosec
-- **Testing**: Comprehensive unit and integration tests with race detection
-- **Coverage**: Codecov integration
-- **Race Detection**: Go race detector enabled
+## Project Structure
 
-Before submitting PRs:
-
-```bash
-# Format code
-gofmt -s -w .
-
-# Run linters
-golangci-lint run --fix
-
-# Run tests
-go test -race ./...
-
-# Security scan
-gosec ./...
+```
+.
+├── core/                    # Core tunneling library
+│   ├── tunnel/             # 10 tunnel protocol implementations
+│   ├── interface/          # 4 interface implementations
+│   ├── common/             # Shared utilities
+│   └── metrics/            # Prometheus metrics system
+├── app/
+│   ├── desktop/            # Fyne desktop app
+│   └── mobile/             # iOS/Android mobile apps
+├── bindings/               # Mobile language bindings (gomobile)
+├── clib/                   # C shared library wrapper
+├── main.go                 # CLI tool
+└── README.md              # This file
 ```
 
-## CI/CD Pipeline
-
-Automated GitHub Actions pipeline with:
-
-- ✓ Code formatting and linting
-- ✓ SAST security scanning (HIGH/CRITICAL severity blocks merge)
-- ✓ Unit tests with race detection
-- ✓ Integration tests across all tunnel protocols and interfaces
-- ✓ Code quality metrics
-- ✓ Dependency vulnerability scanning
-- ✓ Automated dependency updates (Dependabot)
-
-See [`.github/CI_CD.md`](.github/CI_CD.md) for detailed pipeline documentation.
-
-## Security
-
-### Security Policy
-
-- TLS certificate verification is **enabled by default**
-- For custom TLS configurations, use `GetTlsDialerWithConfig()`
-- Vulnerability reporting: See [SECURITY.md](SECURITY.md)
-
-### Secure by Default
-
-- No insecure defaults
-- SAST scanning catches common issues
-- Race condition detection
-- Dependency vulnerability scanning
-
-## Project Status
-
-### Completed
-- ✓ All 10 tunnel protocols (TCP, UDP, UDPS, TLS, HTTP, HTTPS, H2, WS, DNS, ICMP)
-- ✓ TCP Socket, SOCKS5, TUN Device interfaces
-- ✓ Go module support (go.mod/go.sum)
-- ✓ Comprehensive testing suite (unit + integration + race detection)
-- ✓ 65+ critical bugs fixed in 5-round review
-- ✓ Modern GitHub Actions CI/CD pipeline
-- ✓ Complete security policy
-- ✓ Cross-platform desktop and mobile apps (Linux, macOS, iOS, Android)
-- ✓ C shared library with JSON API
-- ✓ Production-ready codebase
-
-### In Progress / Planned
-- 🔄 UDP Socket interface
-- 🔄 Serial port interface
-- 🔄 Terminal monitoring interface
-- 🔄 Performance optimizations
-- 🔄 Extended documentation
-
-## Dependencies
-
-Core dependencies:
-- `github.com/getlantern/go-socks5` - SOCKS5 protocol
-- `github.com/jacobsa/go-serial` - Serial communication
-- `github.com/rainycape/dl` - Dynamic library loading
-- `github.com/songgao/water` - TUN/TAP interface
-- `github.com/yuin/gopher-lua` - Lua scripting
-- `golang.org/x/net` - Extended network utilities
-
-All dependencies are automatically scanned for vulnerabilities via nancy.
-
-## Documentation
-
-- **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
-- **[REVIEW_SUMMARY.md](REVIEW_SUMMARY.md)** - 5-round bug fix summary
-- **[.github/CI_CD.md](.github/CI_CD.md)** - CI/CD pipeline documentation
-- **[.github/README.md](.github/README.md)** - GitHub Actions setup guide
-
-## Examples
-
-Example applications are in the `example/` directory:
-
-- `tcp_example.go` - TCP tunnel example
-- `tun_example.go` - TUN device example
-- `socks_example.go` - SOCKS5 proxy example
-
-Run examples:
-
-```bash
-go run example/tcp_example.go
-```
+---
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License - See [LICENSE](LICENSE) file
+
+---
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Ensure tests pass: `go test -race ./...`
-5. Run linters: `golangci-lint run`
-6. Submit a pull request
+4. Run tests: `go test -race ./...`
+5. Submit a pull request
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-## Code Quality Metrics
-
-### Automated Quality Checks
-- **Linting**: golangci-lint with 50+ rules
-- **Security**: gosec SAST scanner
-- **Dependencies**: nancy vulnerability scanner
-- **Testing**: 100+ test cases
-- **Coverage**: Codecov integration
-- **Race Detection**: Go race detector
-
-### Recent Improvements (5-Round Review)
-
-#### Round 1: Module Setup & Compilation
-- Created go.mod with all dependencies
-- Fixed 9 compilation issues
-
-#### Round 2: Value-Receiver Mutations
-- Fixed systematic bug affecting 10+ files
-- Ensured proper state management
-
-#### Round 3: Concurrency Bugs
-- Eliminated 4 critical deadlocks
-- Fixed goroutine resource leaks
-- Fixed shared connection races
-
-#### Round 4: Interface Compliance
-- Added missing interface methods
-- Fixed logic bugs and divide-by-zero issues
-
-#### Round 5: Security Hardening
-- Enabled TLS verification by default
-- Isolated HTTP mux per-server
-- Fixed all resource leaks
-
-Total: **65+ bugs fixed**, production-ready code
-
-## Multi-Platform Releases
-
-Stunning is built and released for multiple platforms automatically via GitHub Actions:
-
-### Supported Platforms
-
-- **Linux** - CLI, Desktop GUI, C Library
-- **macOS** - CLI, Desktop GUI, C Library (Intel + Apple Silicon)
-- **Android** - Mobile VPN app
-- **iOS** - Mobile VPN app
-
-### Building for Your Platform
-
-```bash
-# CLI tool (pure Go, no CGO required)
-go build -o stunning .
-
-# C Shared Library (Linux/macOS)
-# Note: Requires CGO_ENABLED=1 and C compiler (gcc/clang)
-CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.so ./clib/    # Linux
-CGO_ENABLED=1 go build -buildmode=c-shared -o libstunning.dylib ./clib/ # macOS
-
-# Desktop App (requires Fyne and CGO)
-# Note: Fyne requires CGO_ENABLED=1 for native platform integration
-go install fyne.io/fyne/v2/cmd/fyne@latest
-CGO_ENABLED=1 go build -o stunning-desktop ./app/desktop/
-
-# Mobile bindings (requires gomobile)
-# Note: Android and iOS builds have platform-specific requirements
-go install golang.org/x/mobile/cmd/gomobile@latest
-gomobile init
-
-# Android APK (requires Android SDK)
-CGO_ENABLED=1 fyne package -os android -appID com.stunning.tunnel -name Stunning ./app/mobile/
-
-# iOS IPA (requires Xcode on macOS)
-CGO_ENABLED=1 fyne package -os ios -appID com.stunning.tunnel -name Stunning ./app/mobile/
-
-# Generate bindings for native embedding
-gomobile bind -target android -o libstunning.aar ./bindings/    # Android
-gomobile bind -target ios -o Stunning.xcframework ./bindings/   # iOS
-```
-
-### Automated Release Pipeline
-
-Triggered automatically when pushing a version tag to GitHub (e.g., `v1.0.0`), the CI/CD workflow in `.github/workflows/release.yml` handles:
-
-1. **CLI Binaries** - Compiled for Linux/macOS (amd64, arm64)
-2. **Libraries** - C shared libraries (.so/.dylib) with auto-generated headers
-3. **Desktop Apps** - Linux binaries and macOS app bundles via Fyne
-4. **Mobile Apps** - Android APK + AAR bindings, iOS IPA + xcframework
-5. **GitHub Release** - Automatic release notes with all downloadable artifacts
-
-**To Create a Release**:
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-# GitHub Actions automatically builds all platforms and publishes release
-```
-
-**Artifacts Published** (one per platform):
-- CLI: `stunning-linux-amd64`, `stunning-linux-arm64`, `stunning-darwin-amd64`, `stunning-darwin-arm64`
-- Libraries: `libstunning.so` / `libstunning.h` (Linux), `libstunning.dylib` / `libstunning.h` (macOS)
-- Desktop: `stunning-desktop` (Linux), `Stunning.app` (macOS)
-- Mobile: `Stunning.apk` + `libstunning.aar` (Android), `Stunning.ipa` + `Stunning.xcframework` (iOS)
-
-## Performance
-
-- **Concurrent Connections**: Fully concurrent with race detection
-- **Memory Safety**: Race detector enabled in CI
-- **Resource Management**: Proper cleanup and timeout handling
-- **Network Efficiency**: Optimized connection pooling
+---
 
 ## Support
 
 - 📧 Email: h.bahadorzadeh@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/hbahadorzadeh/stunning/issues)
-- 🔒 Security: See [SECURITY.md](SECURITY.md) for vulnerability reporting
-
-## Acknowledgments
-
-Thanks to all contributors and the Go community for tools and libraries that make this project possible.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+- 📖 Docs: Check project README and inline code comments
 
 ---
 
-**Made with ❤️ in Go**
+<p align="center">
+  <strong>Made with ❤️ in Go</strong>
+</p>
