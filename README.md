@@ -30,9 +30,14 @@
 ### Supported Tunnel Protocols
 - ✓ **TCP** - TCP connections
 - ✓ **UDP** - UDP datagrams
+- ✓ **UDPS** - Secure UDP connections
 - ✓ **TLS** - Secure TLS connections
 - ✓ **HTTP** - HTTP tunneling
 - ✓ **HTTPS** - Secure HTTPS tunneling
+- ✓ **H2** - HTTP/2 tunneling
+- ✓ **WS** - WebSocket tunneling
+- ✓ **DNS** - DNS tunneling
+- ✓ **ICMP** - ICMP echo tunneling
 
 ### Supported Interfaces
 - ✓ **TCP Socket** - Standard TCP socket interface
@@ -121,7 +126,7 @@ Run with configuration:
 
 ### Two-Layer Design
 
-1. **Tunnel Layer** - Transport mechanism (TCP, UDP, TLS, HTTP, HTTPS)
+1. **Tunnel Layer** - Transport mechanism (TCP, UDP, UDPS, TLS, HTTP, HTTPS, H2, WS, DNS, ICMP)
 2. **Interface Layer** - User-facing endpoint (TCP Socket, SOCKS5, TUN Device)
 
 This modular architecture allows flexible combinations of any tunnel with any interface.
@@ -261,13 +266,15 @@ See [`.github/CI_CD.md`](.github/CI_CD.md) for detailed pipeline documentation.
 ## Project Status
 
 ### Completed
-- ✓ TCP, UDP, TLS, HTTP, HTTPS tunnels
+- ✓ All 10 tunnel protocols (TCP, UDP, UDPS, TLS, HTTP, HTTPS, H2, WS, DNS, ICMP)
 - ✓ TCP Socket, SOCKS5, TUN Device interfaces
 - ✓ Go module support (go.mod/go.sum)
 - ✓ Comprehensive testing suite (unit + integration + race detection)
 - ✓ 65+ critical bugs fixed in 5-round review
 - ✓ Modern GitHub Actions CI/CD pipeline
 - ✓ Complete security policy
+- ✓ Cross-platform desktop and mobile apps (Linux, macOS, iOS, Android)
+- ✓ C shared library with JSON API
 - ✓ Production-ready codebase
 
 ### In Progress / Planned
