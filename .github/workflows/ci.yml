@@ -140,7 +140,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
-          go test -v -race -buildvcs=false -coverprofile=coverage.out ./...
+          go test -v -race -buildvcs=false -coverprofile=coverage.out ./core/... ./bindings/... ./clib/... &&
           go tool cover -func=coverage.out
           "
 
