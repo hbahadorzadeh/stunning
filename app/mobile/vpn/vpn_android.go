@@ -3,6 +3,7 @@
 package vpn
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -66,7 +67,7 @@ func (avp *AndroidVPNProvider) AddConfiguration(name, server, protocol string) e
 
 	// TODO: Call Java method to save VPN configuration via JNI
 	// This would store config in Android's VPN settings
-	return nil
+	return errors.New("AddConfiguration: native Android VPN integration not yet implemented")
 }
 
 // RemoveConfiguration removes a VPN configuration from Android settings
@@ -75,7 +76,7 @@ func (avp *AndroidVPNProvider) RemoveConfiguration(name string) error {
 	defer avp.mu.Unlock()
 
 	// TODO: Call Java method to remove VPN configuration via JNI
-	return nil
+	return errors.New("RemoveConfiguration: native Android VPN integration not yet implemented")
 }
 
 // ActivateConfiguration activates a saved VPN configuration
@@ -84,10 +85,7 @@ func (avp *AndroidVPNProvider) ActivateConfiguration(name string) error {
 	defer avp.mu.Unlock()
 
 	// TODO: Call Java method to activate VPN configuration via JNI
-	avp.activeConfig = name
-	avp.connected = true
-	avp.lastError = ""
-	return nil
+	return errors.New("ActivateConfiguration: native Android VPN integration not yet implemented")
 }
 
 // SetTunFd receives the TUN file descriptor from Java VPN service
