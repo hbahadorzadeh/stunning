@@ -5,20 +5,20 @@ FROM golang:1.25-bookworm
 # Install all build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    gcc \
+    ca-certificates \
     g++ \
-    pkg-config \
+    gcc \
+    git \
+    libgl1-mesa-dev \
     libx11-dev \
     libxcursor-dev \
-    libxrandr-dev \
-    libxinerama-dev \
-    libxi-dev \
     libxext-dev \
     libxfixes-dev \
-    libgl1-mesa-dev \
+    libxi-dev \
+    libxinerama-dev \
     libxkbcommon-dev \
-    git \
-    ca-certificates \
+    libxrandr-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

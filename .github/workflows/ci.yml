@@ -102,10 +102,10 @@ jobs:
         run: docker build -t stunning-build:ci .
 
       - name: Build all packages
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "go build ./..."
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app stunning-build:ci bash -c "go build -buildvcs=false ./..."
 
       - name: Build main binary
-        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=0 stunning-build:ci bash -c "go build -v -o stunning ."
+        run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=0 stunning-build:ci bash -c "go build -buildvcs=false -v -o stunning ."
 
       - name: Upload binary
         uses: actions/upload-artifact@v7
@@ -128,7 +128,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
-          go test -v -race -coverprofile=coverage.out ./...
+          go test -v -race -buildvcs=false -coverprofile=coverage.out ./...
           go tool cover -func=coverage.out
           "
 
@@ -158,16 +158,16 @@ jobs:
       - name: Run integration tests
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
           echo '=== Core Tunnel Tests ===' &&
-          go test -v -timeout=10s ./core/tunnel/dns &&
-          go test -v -timeout=10s ./core/tunnel/h2 &&
-          go test -v -timeout=10s ./core/tunnel/icmp || true &&
-          go test -v -timeout=10s ./core/tunnel/udps &&
-          go test -v -timeout=10s ./core/tunnel/ws &&
+          go test -v -buildvcs=false -timeout=10s ./core/tunnel/dns &&
+          go test -v -buildvcs=false -timeout=10s ./core/tunnel/h2 &&
+          go test -v -buildvcs=false -timeout=10s ./core/tunnel/icmp || true &&
+          go test -v -buildvcs=false -timeout=10s ./core/tunnel/udps &&
+          go test -v -buildvcs=false -timeout=10s ./core/tunnel/ws &&
           echo '=== Library Tests ===' &&
-          go test -v -timeout=10s ./bindings &&
-          go test -v -timeout=10s ./clib &&
+          go test -v -buildvcs=false -timeout=10s ./bindings &&
+          go test -v -buildvcs=false -timeout=10s ./clib &&
           echo '=== Desktop App Tests ===' &&
-          go test -v -timeout=30s ./app/desktop/... || true
+          go test -v -buildvcs=false -timeout=30s ./app/desktop/... || true
           "
 
   race-detector:
@@ -184,7 +184,7 @@ jobs:
 
       - name: Run tests with race detector
         run: docker run --rm -v ${{ github.workspace }}:/app -w /app -e CGO_ENABLED=1 stunning-build:ci bash -c "
-          go test -race -timeout=60s ./...
+          go test -race -buildvcs=false -timeout=60s ./...
           "
         continue-on-error: true
 
