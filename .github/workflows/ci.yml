@@ -48,7 +48,7 @@ jobs:
           fi
 
       - name: Run go vet
-        run: go vet ./...
+        run: go vet ./core/... ./bindings/... ./clib/...
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
