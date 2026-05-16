@@ -1,3 +1,4 @@
+// Package main provides C library bindings for the Stunning tunnel manager.
 package main
 
 /*
