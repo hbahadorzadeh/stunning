@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Build all components (CLI, C library, desktop app, and run tests)
+  build-all:
+    build: .
+    image: stunning-build:latest
+    container_name: stunning-build-all
+    volumes:
+      - .:/app
+      - go-cache:/go/pkg/mod
+    working_dir: /app
+    environment:
+      - CGO_ENABLED=1
+      - GOOS=linux
+      - GOARCH=amd64
+    command: bash -c "
+      set -e &&
+      mkdir -p ./build &&
+      echo '=== Building core library ===' &&
+      go build -v ./core/... &&
+      echo '=== Building CLI tool ===' &&
+      CGO_ENABLED=0 go build -v -o ./build/stunning . &&
+      echo '=== Building C Library ===' &&
+      CGO_ENABLED=1 go build -v -buildmode=c-shared -o ./build/libstunning.so ./clib/ &&
+      echo '=== Building desktop app ===' &&
+      go install fyne.io/fyne/v2/cmd/fyne@latest &&
+      CGO_ENABLED=1 go build -v -o ./build/stunning-desktop ./app/desktop/ &&
+      echo '=== Running tests ===' &&
+      go test -v -race ./core/... ./bindings/... ./clib/... -timeout=30s &&
+      echo '=== Build complete ===' &&
+      ls -lah ./build/
+    "
+
+  # Run tests only
+  test:
+    build: .
+    image: stunning-build:latest
+    container_name: stunning-test
+    volumes:
+      - .:/app
+      - go-cache:/go/pkg/mod
+    working_dir: /app
+    environment:
+      - CGO_ENABLED=1
+    command: bash -c "
+      go test -v -race ./core/... ./bindings/... ./clib/... -timeout=30s
+    "
+
+  # Interactive shell for development
+  shell:
+    build: .
+    image: stunning-build:latest
+    container_name: stunning-shell
+    volumes:
+      - .:/app
+      - go-cache:/go/pkg/mod
+    working_dir: /app
+    environment:
+      - CGO_ENABLED=1
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+volumes:
+  go-cache:
