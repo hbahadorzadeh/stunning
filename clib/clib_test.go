@@ -5,18 +5,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"unsafe"
 
 	"github.com/hbahadorzadeh/stunning/core"
 )
 
 // Test helpers
-
-func parseCString(cStr unsafe.Pointer) string {
-	// This is a simple approach - in real code, we'd use CGo to convert C.char*
-	// For testing purposes, we'll work directly with Go strings
-	return ""
-}
 
 func TestStartTunnelJSON(t *testing.T) {
 	// Reset tunnels for clean test

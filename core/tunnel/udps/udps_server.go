@@ -26,12 +26,10 @@ func StartUdpsServer(crt, key, address string) (*UdpsServer, error) {
 		return serv, err
 	}
 
-	config := &dtls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:   dtls.NoClientCert,
-	}
-
-	ln, err := dtls.Listen("udp", udpAddr, config)
+	// Use new options-based API
+	ln, err := dtls.ListenWithOptions("udp", udpAddr,
+		dtls.WithCertificates(cert),
+	)
 	if err != nil {
 		log.Println(err)
 		return serv, err

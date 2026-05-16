@@ -57,11 +57,11 @@ func TestStatusViewCreate(t *testing.T) {
 	sv := CreateStatusView(status)
 
 	if sv == nil {
-		t.Error("Expected status view to be created")
+		t.Fatal("Expected status view to be created")
 	}
 
 	if sv.Container == nil {
-		t.Error("Expected status view container to be created")
+		t.Fatal("Expected status view container to be created")
 	}
 
 	if len(sv.Container.Objects) == 0 {

@@ -22,11 +22,8 @@ func (UdpsDialer) Dial(network, addr string) (c net.Conn, err error) {
 		return nil, err
 	}
 
-	config := &dtls.Config{
-		InsecureSkipVerify: false,
-	}
-
-	conn, err := dtls.Dial("udp", udpAddr, config)
+	// Use default options-based API
+	conn, err := dtls.DialWithOptions("udp", udpAddr)
 	if err != nil {
 		return nil, err
 	}

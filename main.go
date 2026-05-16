@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -33,11 +32,9 @@ type TunnelProcess struct {
 }
 
 var (
-	configFile   = "tunnels.json"
-	pidDir       = ""
-	metricsPort  = 9090
-	tunnelsLock  = &sync.RWMutex{}
-	runningProcs = make(map[string]*TunnelProcess)
+	configFile  = "tunnels.json"
+	pidDir      = ""
+	metricsPort = 9090
 )
 
 func init() {
