@@ -7,6 +7,7 @@ import (
 
 	"github.com/hbahadorzadeh/stunning/core/common"
 	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	"github.com/hbahadorzadeh/stunning/core/metrics"
 	socksiface "github.com/hbahadorzadeh/stunning/core/interface/socks"
 	tcpiface "github.com/hbahadorzadeh/stunning/core/interface/tcp"
 	tuniface "github.com/hbahadorzadeh/stunning/core/interface/tun"
@@ -39,12 +40,14 @@ type TunnelConfig struct {
 type Tunnel interface {
 	ListenAndServer()
 	IsAlive() bool
+	GetMetrics() *metrics.Metrics
 }
 type TunnelCommon struct {
 	Tunnel
 	tunnelType    common.TunnelType
 	interfaceType common.InterfaceType
 	tunnelMode    common.TunnelMode
+	metrics       *metrics.Metrics
 }
 
 type TunnelServer struct {
@@ -70,6 +73,10 @@ func (t TunnelCommon) GetInterfaceType() common.InterfaceType {
 
 func (t TunnelCommon) GetTunnelMode() common.TunnelMode {
 	return t.tunnelMode
+}
+
+func (t TunnelCommon) GetMetrics() *metrics.Metrics {
+	return t.metrics
 }
 
 func (t TunnelServer) ListenAndServer() {
@@ -107,7 +114,11 @@ func (t TunnelClient) IsAlive() bool {
 func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 	if sorc := conf.ServiceMode; sorc != "" {
 		if common.TunnelMode(sorc) == common.CLIENT {
-			ttun := TunnelClient{}
+			ttun := TunnelClient{
+				TunnelCommon: TunnelCommon{
+					metrics: metrics.NewMetrics(),
+				},
+			}
 			if stype := conf.ServerType; stype != "" {
 				switch common.TunnelType(stype) {
 				case common.HTTP_TUN:
@@ -171,9 +182,14 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 					}
 				}
 			}
+			metrics.GetGlobalCollector().Register(name, ttun.GetMetrics())
 			return &ttun
 		} else if common.TunnelMode(sorc) == common.SERVER {
-			ttun := TunnelServer{}
+			ttun := TunnelServer{
+				TunnelCommon: TunnelCommon{
+					metrics: metrics.NewMetrics(),
+				},
+			}
 			if stype := conf.ServerType; stype != "" {
 				if saddr := conf.Listen; saddr != "" {
 					switch common.TunnelType(stype) {
@@ -346,6 +362,7 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 			} else {
 				log.Panicf("Conf `%s`: Server type not defined.", name)
 			}
+			metrics.GetGlobalCollector().Register(name, ttun.GetMetrics())
 			return &ttun
 		}
 		log.Panicf("Conf `%s`: Invalid service mode(%s).", name, sorc)

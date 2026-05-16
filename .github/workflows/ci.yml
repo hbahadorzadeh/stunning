@@ -110,7 +110,7 @@ jobs:
           echo '=== Building Bindings ===' &&
           go build -buildvcs=false -v ./bindings/... &&
           echo '=== Building C Library ===' &&
-          go build -buildvcs=false -v ./clib
+          go build -buildvcs=false -v -o /tmp/clib-verify ./clib
           "
 
       - name: Build CLI binary
