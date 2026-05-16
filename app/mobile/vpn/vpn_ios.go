@@ -7,25 +7,6 @@ import (
 	"sync"
 )
 
-/*
-#cgo CFLAGS: -fmodules -fblocks
-#cgo LDFLAGS: -framework NetworkExtension -framework Foundation
-
-#import <Foundation/Foundation.h>
-
-// Declare Swift functions
-void iOSStartVPN(const char *server, const char *protocol);
-void iOSStopVPN(void);
-BOOL iOSIsVPNActive(void);
-const char *iOSGetLastError(void);
-void iOSAddVPNConfiguration(const char *name, const char *server, const char *protocol);
-void iOSRemoveVPNConfiguration(const char *name);
-BOOL iOSActivateVPNConfiguration(const char *name);
-*/
-import "C"
-
-import "unsafe"
-
 // iOSVPNProvider implements VPN setup for iOS using NetworkExtension
 type iOSVPNProvider struct {
 	mu        sync.RWMutex
@@ -44,21 +25,8 @@ func (ivp *iOSVPNProvider) Connect(serverAddr, protocol string) error {
 	ivp.mu.Lock()
 	defer ivp.mu.Unlock()
 
-	cServer := C.CString(serverAddr)
-	cProto := C.CString(protocol)
-	defer C.free(unsafe.Pointer(cServer))
-	defer C.free(unsafe.Pointer(cProto))
-
-	// Start VPN through NetworkExtension
-	C.iOSStartVPN(cServer, cProto)
-
-	// Check for errors from the C call
-	errStr := C.GoString(C.iOSGetLastError())
-	if errStr != "" {
-		ivp.lastError = errStr
-		return fmt.Errorf("iOS VPN error: %s", errStr)
-	}
-
+	// TODO: Call Swift/Objective-C to start NEPacketTunnelProvider
+	// For now, simulate the connection
 	ivp.connected = true
 	ivp.lastError = ""
 	return nil
@@ -69,14 +37,8 @@ func (ivp *iOSVPNProvider) Disconnect() error {
 	ivp.mu.Lock()
 	defer ivp.mu.Unlock()
 
-	C.iOSStopVPN()
-
-	errStr := C.GoString(C.iOSGetLastError())
-	if errStr != "" {
-		ivp.lastError = errStr
-		return fmt.Errorf("iOS VPN error: %s", errStr)
-	}
-
+	// TODO: Call Swift/Objective-C to stop NEPacketTunnelProvider
+	// For now, simulate the disconnection
 	ivp.connected = false
 	ivp.lastError = ""
 	return nil
@@ -86,7 +48,7 @@ func (ivp *iOSVPNProvider) Disconnect() error {
 func (ivp *iOSVPNProvider) IsConnected() bool {
 	ivp.mu.RLock()
 	defer ivp.mu.RUnlock()
-	return C.iOSIsVPNActive() == C.BOOL(true)
+	return ivp.connected
 }
 
 // GetError returns the last error
@@ -101,19 +63,11 @@ func (ivp *iOSVPNProvider) AddConfiguration(name, server, protocol string) error
 	ivp.mu.Lock()
 	defer ivp.mu.Unlock()
 
-	cName := C.CString(name)
-	cServer := C.CString(server)
-	cProto := C.CString(protocol)
-	defer C.free(unsafe.Pointer(cName))
-	defer C.free(unsafe.Pointer(cServer))
-	defer C.free(unsafe.Pointer(cProto))
-
-	C.iOSAddVPNConfiguration(cName, cServer, cProto)
-
-	errStr := C.GoString(C.iOSGetLastError())
-	if errStr != "" {
-		ivp.lastError = errStr
-		return fmt.Errorf("iOS config error: %s", errStr)
+	// TODO: Call Swift/Objective-C to add NetworkExtension configuration
+	// For now, just validate inputs
+	if name == "" || server == "" || protocol == "" {
+		ivp.lastError = "invalid configuration parameters"
+		return fmt.Errorf("iOS config error: %s", ivp.lastError)
 	}
 
 	return nil
@@ -124,15 +78,10 @@ func (ivp *iOSVPNProvider) RemoveConfiguration(name string) error {
 	ivp.mu.Lock()
 	defer ivp.mu.Unlock()
 
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-
-	C.iOSRemoveVPNConfiguration(cName)
-
-	errStr := C.GoString(C.iOSGetLastError())
-	if errStr != "" {
-		ivp.lastError = errStr
-		return fmt.Errorf("iOS config error: %s", errStr)
+	// TODO: Call Swift/Objective-C to remove NetworkExtension configuration
+	if name == "" {
+		ivp.lastError = "invalid configuration name"
+		return fmt.Errorf("iOS config error: %s", ivp.lastError)
 	}
 
 	return nil
@@ -143,16 +92,10 @@ func (ivp *iOSVPNProvider) ActivateConfiguration(name string) error {
 	ivp.mu.Lock()
 	defer ivp.mu.Unlock()
 
-	cName := C.CString(name)
-	defer C.free(unsafe.Pointer(cName))
-
-	if C.iOSActivateVPNConfiguration(cName) == C.BOOL(false) {
-		errStr := C.GoString(C.iOSGetLastError())
-		if errStr != "" {
-			ivp.lastError = errStr
-			return fmt.Errorf("iOS activation error: %s", errStr)
-		}
-		return fmt.Errorf("failed to activate VPN configuration")
+	// TODO: Call Swift/Objective-C to activate NetworkExtension configuration
+	if name == "" {
+		ivp.lastError = "invalid configuration name"
+		return fmt.Errorf("iOS activation error: %s", ivp.lastError)
 	}
 
 	ivp.activeConfig = name
