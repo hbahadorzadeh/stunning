@@ -35,6 +35,7 @@ type TunnelConfig struct {
 	Mtu           string
 	ServerType    string
 	ServiceMode   string
+	Plugins       string
 }
 
 type Tunnel interface {
@@ -144,6 +145,7 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 				default:
 					log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 				}
+				ttun.tunnelClient = tcommon.WrapDialer(ttun.tunnelClient, conf.Plugins)
 				saddr := conf.Connect
 				if saddr == "" {
 					log.Panicf("Conf `%s`: Service connect address not specified.", name)
@@ -318,6 +320,13 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 						ttun.tunnelServer = tServer
 					default:
 						log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
+					}
+					if conf.Plugins != "" {
+						if ps, ok := ttun.tunnelServer.(interface{ SetPluginSpec(string) }); ok {
+							ps.SetPluginSpec(conf.Plugins)
+						} else {
+							log.Printf("Conf `%s`: tunnel type %s does not support plugins yet", name, stype)
+						}
 					}
 				} else {
 					log.Panicf("Conf `%s`: Service listen address not specified.", name)

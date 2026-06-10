@@ -9,6 +9,7 @@ require (
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/pion/dtls/v3 v3.1.2
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
+	golang.org/x/crypto v0.51.0
 	golang.org/x/net v0.54.0
 )
 
@@ -61,7 +62,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
-	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/image v0.40.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect

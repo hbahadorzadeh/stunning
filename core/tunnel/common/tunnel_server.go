@@ -17,9 +17,16 @@ type TunnelServer interface {
 
 type TunnelServerCommon struct {
 	TunnelServer
-	closed   bool
-	Server   icommon.TunnelInterfaceServer
-	Listener net.Listener
+	closed     bool
+	Server     icommon.TunnelInterfaceServer
+	Listener   net.Listener
+	PluginSpec string
+}
+
+// SetPluginSpec configures the per-connection plugin chain applied to accepted
+// connections. An empty spec disables plugins.
+func (s *TunnelServerCommon) SetPluginSpec(spec string) {
+	s.PluginSpec = spec
 }
 
 func (s *TunnelServerCommon) SetServer(ss icommon.TunnelInterfaceServer) {
@@ -55,5 +62,10 @@ func (s *TunnelServerCommon) Closed() bool {
 
 func (s *TunnelServerCommon) HandleConnection(conn net.Conn) {
 	defer conn.Close()
-	s.Server.HandleConnection(conn)
+	wrapped, err := wrapServerConn(conn, s.PluginSpec)
+	if err != nil {
+		log.Printf("plugin chain setup failed: %v", err)
+		return
+	}
+	s.Server.HandleConnection(wrapped)
 }
