@@ -4,7 +4,6 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"hash"
-	"sync"
 
 	"golang.org/x/crypto/blake2b"
 )
@@ -16,6 +15,10 @@ import (
 // so the tag covers the whole encoded frame and is checked before any expensive
 // inner decode work.
 //
+// The plugin is per connection and Encode/Decode run on separate (write/read)
+// goroutines, so each direction gets its own reusable hasher -- no allocation or
+// pool overhead per frame, and no shared state.
+//
 // Params:
 //
 //	key    hex secret (required).
@@ -23,9 +26,9 @@ import (
 func init() { Register("probe-guard", newProbeGuard) }
 
 type probeGuardPlugin struct {
-	key    []byte
 	taglen int
-	hpool  sync.Pool // hash.Hash keyed BLAKE2b instances
+	encH   hash.Hash
+	decH   hash.Hash
 }
 
 func newProbeGuard(p Params) (Plugin, error) {
@@ -42,30 +45,21 @@ func newProbeGuard(p Params) (Plugin, error) {
 	}
 	// blake2b keyed hashing requires key <= 64 bytes; normalize.
 	k := blake2b.Sum512(key)
-	return &probeGuardPlugin{key: k[:], taglen: taglen}, nil
-}
-
-func (g *probeGuardPlugin) tag(payload []byte) ([]byte, error) {
-	h, _ := g.hpool.Get().(hash.Hash)
-	if h == nil {
-		var err error
-		if h, err = blake2b.New(g.taglen, g.key); err != nil {
-			return nil, err
-		}
-	} else {
-		h.Reset()
-	}
-	h.Write(payload)
-	sum := h.Sum(nil)
-	g.hpool.Put(h)
-	return sum, nil
-}
-
-func (g *probeGuardPlugin) Encode(src []byte) ([]byte, error) {
-	tag, err := g.tag(src)
+	encH, err := blake2b.New(taglen, k[:])
 	if err != nil {
 		return nil, err
 	}
+	decH, err := blake2b.New(taglen, k[:])
+	if err != nil {
+		return nil, err
+	}
+	return &probeGuardPlugin{taglen: taglen, encH: encH, decH: decH}, nil
+}
+
+func (g *probeGuardPlugin) Encode(src []byte) ([]byte, error) {
+	g.encH.Reset()
+	g.encH.Write(src)
+	tag := g.encH.Sum(nil)
 	out := make([]byte, 0, len(tag)+len(src))
 	out = append(out, tag...)
 	out = append(out, src...)
@@ -77,10 +71,9 @@ func (g *probeGuardPlugin) Decode(src []byte) ([]byte, error) {
 		return nil, fmt.Errorf("probe-guard: frame shorter than tag")
 	}
 	got, payload := src[:g.taglen], src[g.taglen:]
-	want, err := g.tag(payload)
-	if err != nil {
-		return nil, err
-	}
+	g.decH.Reset()
+	g.decH.Write(payload)
+	want := g.decH.Sum(nil)
 	if subtle.ConstantTimeCompare(got, want) != 1 {
 		return nil, fmt.Errorf("probe-guard: authentication failed")
 	}

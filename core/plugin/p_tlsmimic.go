@@ -31,6 +31,7 @@ const (
 type tlsMimic struct {
 	wroteHandshake bool
 	readHandshake  bool
+	buf            []byte // reused Deframe scratch (read goroutine only)
 }
 
 func newTLSMimic(_ Params) (Plugin, error) { return &tlsMimic{}, nil }
@@ -102,7 +103,12 @@ func (t *tlsMimic) Deframe(r io.Reader) ([]byte, error) {
 		if n > tlsMaxRecord {
 			return nil, fmt.Errorf("tls-mimic: record length %d too large", n)
 		}
-		body := make([]byte, n)
+		// Reuse scratch: the caller (readFrame) decodes and copies the result
+		// into its own buffer before the next Deframe, so aliasing is safe.
+		if cap(t.buf) < n {
+			t.buf = make([]byte, n)
+		}
+		body := t.buf[:n]
 		if _, err := io.ReadFull(r, body); err != nil {
 			return nil, err
 		}

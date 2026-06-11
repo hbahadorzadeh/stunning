@@ -5,7 +5,6 @@ import (
 	"compress/flate"
 	"fmt"
 	"io"
-	"sync"
 )
 
 // flate is a size-optimization plugin using stdlib DEFLATE. It is pure Go and
@@ -13,15 +12,17 @@ import (
 // slightly; place compression first in a chain (before aead/pad) so it operates
 // on still-compressible plaintext.
 //
-// A flate.Writer/Reader carries a large (~600 KiB) internal window, so both are
-// pooled per plugin instance and reset per frame; this turns a per-frame
-// allocation into reuse, the dominant cost on the compression path.
+// A flate.Writer/Reader carries a large (~600 KiB) internal window. The plugin
+// is per connection and Encode/Decode run on separate (write/read) goroutines,
+// so the writer and reader are kept as direct fields and reset per frame --
+// guaranteeing reuse without sync.Pool overhead or GC reclaiming the window
+// between frames.
 func init() { Register("flate", newFlate) }
 
 type flatePlugin struct {
 	level int
-	wpool sync.Pool // *flate.Writer
-	rpool sync.Pool // io.ReadCloser implementing flate.Resetter
+	w     *flate.Writer
+	r     io.ReadCloser
 }
 
 func newFlate(p Params) (Plugin, error) {
@@ -34,48 +35,48 @@ func newFlate(p Params) (Plugin, error) {
 
 func (f *flatePlugin) Encode(src []byte) ([]byte, error) {
 	var buf bytes.Buffer
-	w, _ := f.wpool.Get().(*flate.Writer)
-	if w == nil {
+	if f.w == nil {
 		var err error
-		if w, err = flate.NewWriter(&buf, f.level); err != nil {
+		if f.w, err = flate.NewWriter(&buf, f.level); err != nil {
 			return nil, err
 		}
 	} else {
-		w.Reset(&buf)
+		f.w.Reset(&buf)
 	}
-	// Reset to io.Discard before pooling so the writer does not retain a
-	// reference to buf (which holds the encoded output).
+	// Reset to io.Discard on cleanup so the writer does not retain a reference to
+	// buf (which holds the encoded output).
 	defer func() {
-		w.Reset(io.Discard)
-		f.wpool.Put(w)
+		if f.w != nil {
+			f.w.Reset(io.Discard)
+		}
 	}()
-	if _, err := w.Write(src); err != nil {
+	if _, err := f.w.Write(src); err != nil {
 		return nil, err
 	}
-	if err := w.Close(); err != nil {
+	if err := f.w.Close(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
 func (f *flatePlugin) Decode(src []byte) ([]byte, error) {
-	r, _ := f.rpool.Get().(io.ReadCloser)
-	if r == nil {
-		r = flate.NewReader(bytes.NewReader(src))
-	} else if err := r.(flate.Resetter).Reset(bytes.NewReader(src), nil); err != nil {
+	if f.r == nil {
+		f.r = flate.NewReader(bytes.NewReader(src))
+	} else if err := f.r.(flate.Resetter).Reset(bytes.NewReader(src), nil); err != nil {
 		return nil, err
 	}
-	// Reset onto an empty reader before pooling so the reader does not retain a
+	// Reset onto an empty reader on cleanup so the reader does not retain a
 	// reference to src.
 	defer func() {
-		_ = r.(flate.Resetter).Reset(bytes.NewReader(nil), nil)
-		f.rpool.Put(r)
+		if f.r != nil {
+			_ = f.r.(flate.Resetter).Reset(bytes.NewReader(nil), nil)
+		}
 	}()
-	out, err := io.ReadAll(r)
+	out, err := io.ReadAll(f.r)
 	if err != nil {
 		return nil, fmt.Errorf("flate: decode: %w", err)
 	}
-	if err := r.Close(); err != nil {
+	if err := f.r.Close(); err != nil {
 		return nil, err
 	}
 	return out, nil
