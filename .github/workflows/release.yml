@@ -10,346 +10,242 @@ permissions:
   packages: write
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # CLI tool — linux/darwin/windows × amd64/arm64. Pure Go, no CGO.
+  # Named stunning-cli-<os>-<arch>[.exe] to distinguish it from the desktop app.
+  # ---------------------------------------------------------------------------
   release-cli:
-    name: Build CLI - ${{ matrix.goos }} ${{ matrix.goarch }}
+    name: CLI ${{ matrix.goos }}/${{ matrix.goarch }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            artifact: stunning-linux-amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: arm64
-            artifact: stunning-linux-arm64
-          - os: macos-latest
-            goos: darwin
-            goarch: amd64
-            artifact: stunning-darwin-amd64
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
-            artifact: stunning-darwin-arm64
+          - { os: ubuntu-latest, goos: linux, goarch: amd64, ext: "" }
+          - { os: ubuntu-latest, goos: linux, goarch: arm64, ext: "" }
+          - { os: ubuntu-latest, goos: darwin, goarch: amd64, ext: "" }
+          - { os: ubuntu-latest, goos: darwin, goarch: arm64, ext: "" }
+          - { os: ubuntu-latest, goos: windows, goarch: amd64, ext: ".exe" }
+          - { os: ubuntu-latest, goos: windows, goarch: arm64, ext: ".exe" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Build CLI
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
-        run: |
-          go build -v -o ${{ matrix.artifact }} .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        run: go build -v -trimpath -o "stunning-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}" .
+      - uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: ${{ matrix.artifact }}
+          path: stunning-cli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
           retention-days: 1
 
+  # ---------------------------------------------------------------------------
+  # C shared library — bundled with its header into one archive per platform.
+  # ---------------------------------------------------------------------------
   release-library:
-    name: Build C Library - ${{ matrix.goos }} ${{ matrix.goarch }}
+    name: Library ${{ matrix.goos }}/${{ matrix.goarch }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            output: libstunning.so
-          - os: macos-latest
-            goos: darwin
-            goarch: amd64
-            output: libstunning.dylib
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
-            output: libstunning.dylib
+          - { os: ubuntu-latest, goos: linux, goarch: amd64, lib: libstunning.so, cc: "" }
+          - { os: ubuntu-latest, goos: linux, goarch: arm64, lib: libstunning.so, cc: aarch64-linux-gnu-gcc }
+          - { os: ubuntu-latest, goos: windows, goarch: amd64, lib: libstunning.dll, cc: x86_64-w64-mingw32-gcc }
+          - { os: macos-latest, goos: darwin, goarch: arm64, lib: libstunning.dylib, cc: "" }
+          - { os: macos-13, goos: darwin, goarch: amd64, lib: libstunning.dylib, cc: "" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Install build tools (Ubuntu)
+      - name: Install cross toolchain (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc
-
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu gcc-mingw-w64-x86-64
       - name: Build C library
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 1
+          CC: ${{ matrix.cc }}
+        run: go build -v -trimpath -buildmode=c-shared -o "${{ matrix.lib }}" ./clib/
+      - name: Bundle library + header
         run: |
-          go build -v -buildmode=c-shared -o ${{ matrix.output }} ./clib/
-
-      - name: Rename library with architecture
-        if: matrix.goos == 'darwin'
-        run: |
-          mv ${{ matrix.output }} libstunning-${{ matrix.goarch }}.dylib
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+          pkg="libstunning-${{ matrix.goos }}-${{ matrix.goarch }}"
+          mkdir "$pkg"
+          mv "${{ matrix.lib }}" "$pkg"/
+          mv libstunning.h "$pkg"/ 2>/dev/null || true
+          tar -czf "$pkg.tar.gz" "$pkg"
+      - uses: actions/upload-artifact@v7
         with:
           name: library-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: |
-            ${{ matrix.output }}
-            libstunning-${{ matrix.goarch }}.dylib
-            libstunning.h
+          path: libstunning-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
           retention-days: 1
 
+  # ---------------------------------------------------------------------------
+  # Desktop app (Fyne GUI) — built natively per OS, packaged into one archive.
+  # Named stunning-desktop-<os>-<arch>.{tar.gz,zip}.
+  # ---------------------------------------------------------------------------
   release-desktop:
-    name: Build Desktop App - ${{ matrix.os }}
+    name: Desktop ${{ matrix.label }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            output: stunning-desktop
-          - os: macos-latest
-            output: Stunning.app
+          - { os: ubuntu-latest, label: linux-amd64, goos: linux }
+          - { os: macos-latest, label: macos-arm64, goos: darwin }
+          - { os: macos-13, label: macos-amd64, goos: darwin }
+          - { os: windows-latest, label: windows-amd64, goos: windows }
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Install Fyne
-        run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest
-
-      - name: Install build dependencies (Ubuntu)
+      - name: Install Linux GUI deps
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev
-
-      - name: Build desktop (Linux)
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev
+      - name: Install Fyne CLI
+        run: go install fyne.io/fyne/v2/cmd/fyne@latest
+      - name: Package desktop (Linux)
         if: runner.os == 'Linux'
-        env:
-          CGO_ENABLED: 1
+        env: { CGO_ENABLED: 1 }
         run: |
-          go build -v -o stunning-desktop ./app/desktop/
-
+          go build -v -trimpath -o stunning-desktop ./app/desktop/
+          tar -czf "stunning-desktop-${{ matrix.label }}.tar.gz" stunning-desktop
       - name: Package desktop (macOS)
         if: runner.os == 'macOS'
-        env:
-          CGO_ENABLED: 1
+        env: { CGO_ENABLED: 1 }
         run: |
-          fyne package -os darwin -appID com.stunning.tunnel \
-            -name Stunning -icon app/desktop/assets/icon.png \
-            -sourceDir ./app/desktop
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
+          fyne package -os darwin -appID io.github.hbahadorzadeh.stunning -name Stunning \
+            -icon app/desktop/assets/icon.png -sourceDir ./app/desktop
+          zip -r -q "stunning-desktop-${{ matrix.label }}.zip" Stunning.app
+      - name: Package desktop (Windows)
+        if: runner.os == 'Windows'
+        env: { CGO_ENABLED: 1 }
+        run: |
+          fyne package -os windows -appID io.github.hbahadorzadeh.stunning -name Stunning -icon app/desktop/assets/icon.png -sourceDir ./app/desktop
+          Compress-Archive -Path Stunning.exe -DestinationPath "stunning-desktop-${{ matrix.label }}.zip"
+      - uses: actions/upload-artifact@v7
         with:
-          name: desktop-${{ matrix.os }}
-          path: ${{ matrix.output }}
+          name: desktop-${{ matrix.label }}
+          path: stunning-desktop-${{ matrix.label }}.*
           retention-days: 1
 
+  # ---------------------------------------------------------------------------
+  # Android — APK (sideload) + AAR (binding library). Play Store distribution
+  # (publish-google-play) generally requires an AAB; wire that in when enabling.
+  # ---------------------------------------------------------------------------
   release-android:
-    name: Build Android App
+    name: Android
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Set up JDK
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+      - uses: android-actions/setup-android@v4
         with:
-          api-level: 33
-          ndk-version: 25.1.8937393
-
-      - name: Install Fyne and gomobile
+          packages: 'platforms;android-33 ndk;25.1.8937393 build-tools;33.0.2'
+      - name: Install Fyne + gomobile
         run: |
           go install fyne.io/fyne/v2/cmd/fyne@latest
           go install golang.org/x/mobile/cmd/gomobile@latest
-
-      - name: Initialize gomobile
-        run: gomobile init
-
-      - name: Install build tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev
-
-      - name: Build Android APK
+          gomobile init
+      - name: Build APK
         env:
-          CGO_ENABLED: 1
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
-          fyne package -os android -appID com.stunning.tunnel \
-            -name Stunning -icon app/mobile/assets/icon.png \
-            -sourceDir ./app/mobile 2>&1 || echo "APK build completed (may have warnings)"
-
-      - name: Build Android bindings
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
-        run: |
-          gomobile bind -target android -o libstunning.aar ./bindings/ 2>&1 || echo "AAR build completed (may have warnings)"
-
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v7
+          fyne package -os android -appID io.github.hbahadorzadeh.stunning -name Stunning \
+            -icon app/mobile/assets/icon.png -sourceDir ./app/mobile
+          mv Stunning.apk stunning-android.apk
+      - name: Build AAR binding
+        run: gomobile bind -target android -androidapi 21 -o libstunning.aar ./bindings/
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: android
           path: |
-            Stunning.apk
+            stunning-android.apk
             libstunning.aar
           retention-days: 1
 
+  # ---------------------------------------------------------------------------
+  # iOS — xcframework (binding) is reliable; the .ipa needs signing, so it is
+  # best-effort. Store upload is handled by the gated publish-app-store job.
+  # ---------------------------------------------------------------------------
   release-ios:
-    name: Build iOS App
+    name: iOS
     runs-on: macos-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-
-      - name: Cache Go modules
-        uses: actions/cache@v5
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Install Fyne and gomobile
+      - name: Install Fyne + gomobile
         run: |
           go install fyne.io/fyne/v2/cmd/fyne@latest
           go install golang.org/x/mobile/cmd/gomobile@latest
-
-      - name: Initialize gomobile
-        run: gomobile init
-
-      - name: Build iOS IPA
-        env:
-          CGO_ENABLED: 1
+          gomobile init
+      - name: Build iOS binding (xcframework)
+        run: gomobile bind -target ios -o Stunning.xcframework ./bindings/
+      - name: Package unsigned IPA (best effort)
+        env: { CGO_ENABLED: 1 }
         run: |
-          fyne package -os ios -appID com.stunning.tunnel \
-            -name Stunning -icon app/mobile/assets/icon.png \
-            -sourceDir ./app/mobile 2>&1 || echo "IPA build completed (may have warnings)"
-
-      - name: Build iOS bindings
-        run: |
-          gomobile bind -target ios -o Stunning.xcframework ./bindings/ 2>&1 || echo "xcframework build completed (may have warnings)"
-
-      - name: Upload iOS artifacts
-        uses: actions/upload-artifact@v7
+          fyne package -os ios -appID io.github.hbahadorzadeh.stunning -name Stunning \
+            -icon app/mobile/assets/icon.png -sourceDir ./app/mobile || \
+            echo "iOS .ipa packaging needs signing; see publish-app-store"
+      - name: Archive xcframework
+        run: zip -r -q stunning-ios-xcframework.zip Stunning.xcframework
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: ios
           path: |
+            stunning-ios-xcframework.zip
             Stunning.ipa
-            Stunning.xcframework
           retention-days: 1
 
+  # ---------------------------------------------------------------------------
+  # Collect every artifact and publish a GitHub Release.
+  # ---------------------------------------------------------------------------
   create-github-release:
-    name: Create GitHub Release
+    name: GitHub Release
     needs: [release-cli, release-library, release-desktop, release-android, release-ios]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - uses: actions/checkout@v6
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8
         with:
-          path: release-artifacts
-
-      - name: Prepare release assets
+          path: artifacts
+      - name: Flatten assets
         run: |
           mkdir -p release-assets
-
-          # CLI binaries
-          for file in release-artifacts/cli-*/*; do
-            [ -f "$file" ] && cp "$file" release-assets/ 2>/dev/null || true
-          done
-
-          # Libraries
-          for dir in release-artifacts/library-*; do
-            [ -d "$dir" ] && cp "$dir"/* release-assets/ 2>/dev/null || true
-          done
-
-          # Desktop apps
-          for dir in release-artifacts/desktop-*; do
-            [ -d "$dir" ] && cp -r "$dir"/* release-assets/ 2>/dev/null || true
-          done
-
-          # Mobile apps
-          for file in release-artifacts/android/*; do
-            [ -f "$file" ] && cp "$file" release-assets/ 2>/dev/null || true
-          done
-
-          for file in release-artifacts/ios/*; do
-            [ -f "$file" ] && cp "$file" release-assets/ 2>/dev/null || true
-          done
-
-          # List all assets
-          echo "=== Release Assets ==="
-          ls -lh release-assets/ || echo "No assets found"
-
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.apk' \
+            -o -name '*.aar' -o -name '*.ipa' -o -name 'stunning-cli-*' \) \
+            -exec cp {} release-assets/ \;
+          echo "=== release assets ==="
+          ls -lh release-assets/
+          ( cd release-assets && sha256sum * > SHA256SUMS.txt ) || true
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: release-assets/*
           generate_release_notes: true
@@ -357,3 +253,44 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Store publishing. Gated off by default (skipped) — enable by setting the
+  # repository variable PUBLISH_STORES=true and providing the secrets below.
+  # ---------------------------------------------------------------------------
+  publish-google-play:
+    name: Publish to Google Play
+    needs: [release-android]
+    runs-on: ubuntu-latest
+    if: ${{ vars.PUBLISH_STORES == 'true' }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: android
+          path: android
+      - name: Upload to Google Play (internal track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: io.github.hbahadorzadeh.stunning
+          releaseFiles: android/stunning-android.apk
+          track: internal
+          status: completed
+
+  publish-app-store:
+    name: Publish to App Store
+    needs: [release-ios]
+    runs-on: macos-latest
+    if: ${{ vars.PUBLISH_STORES == 'true' }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ios
+          path: ios
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: ios/Stunning.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}

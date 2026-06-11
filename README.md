@@ -110,8 +110,8 @@ in `tls-mimic`. See [Plugin Chains](#plugin-chains) below, the full
 
 ### 📦 Multiple Distributions
 
-- **CLI Tool** — Command-line tunnel manager
-- **Desktop App** — Cross-platform GUI (Linux, macOS)
+- **CLI Tool** — Command-line tunnel manager (Linux, macOS, Windows)
+- **Desktop App** — Cross-platform GUI (Linux, macOS, Windows)
 - **Mobile Apps** — iOS and Android VPN clients
 - **C Library** — Embed tunneling in other applications
 - **Go Library** — Use as Go package
@@ -122,39 +122,39 @@ in `tls-mimic`. See [Plugin Chains](#plugin-chains) below, the full
 
 ### From Releases
 
-Download pre-built binaries:
+Each release publishes, per platform:
+
+- **CLI tool** — `stunning-cli-<os>-<arch>` (linux/macos/windows, amd64/arm64)
+- **Desktop app** — `stunning-desktop-<os>-<arch>.{tar.gz,zip}` (Fyne GUI)
+- **C library** — `libstunning-<os>-<arch>.tar.gz` (shared lib + header)
+- **Mobile** — `stunning-android.apk`, `libstunning.aar`, `stunning-ios-xcframework.zip`
+- `SHA256SUMS.txt` for verification
 
 ```bash
-# Linux
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-linux-amd64
-chmod +x ./stunning-linux-amd64
-./stunning-linux-amd64 help
-
-# macOS (Intel)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-darwin-amd64
-chmod +x ./stunning-darwin-amd64
-./stunning-darwin-amd64 help
+# CLI — Linux (amd64)
+wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/stunning-cli-linux-amd64
+chmod +x ./stunning-cli-linux-amd64
+./stunning-cli-linux-amd64 help
 
 # macOS (Apple Silicon)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/stunning-darwin-arm64
-chmod +x ./stunning-darwin-arm64
-./stunning-darwin-arm64 help
+wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/stunning-cli-darwin-arm64
+chmod +x ./stunning-cli-darwin-arm64
+
+# Windows (amd64): download stunning-cli-windows-amd64.exe
 ```
 
 ### C Library
 
-Download the C library for embedding in C/C++ projects:
+Each `libstunning-<os>-<arch>.tar.gz` contains the shared library and its header:
 
 ```bash
-# Shared library (Linux)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.so
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.h
+# Linux (amd64)
+wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/libstunning-linux-amd64.tar.gz
+tar -xzf libstunning-linux-amd64.tar.gz
+# -> libstunning-linux-amd64/{libstunning.so, libstunning.h}
 
-# Static archive (all platforms)
-wget https://github.com/hbahadorzadeh/stunning/releases/download/v1.0.0-beta/libstunning.a
-
-# Compile with C library
-gcc -o myapp myapp.c -L. -lstunning
+# Compile against it
+gcc -o myapp myapp.c -L./libstunning-linux-amd64 -lstunning
 ```
 
 ### From Source
@@ -176,7 +176,7 @@ go install fyne.io/fyne/v2/cmd/fyne@latest
 go build -o ./Stunning ./app/desktop/
 
 # macOS
-fyne package -os darwin -appID com.stunning.tunnel \
+fyne package -os darwin -appID io.github.hbahadorzadeh.stunning \
   -name Stunning -icon app/desktop/assets/icon.png \
   -sourceDir ./app/desktop
 ```
