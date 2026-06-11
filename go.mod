@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	fyne.io/fyne/v2 v2.7.4
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
+	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/gorilla/websocket v1.5.3
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/pion/dtls/v3 v3.1.2
@@ -15,6 +16,7 @@ require (
 
 require (
 	fyne.io/systray v1.12.1 // indirect
+	github.com/Azure/go-ntlmssp v0.1.0 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -31,6 +33,7 @@ require (
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770 // indirect
 	github.com/getlantern/netx v0.0.0-20251021221514-279deb2cfd40 // indirect
 	github.com/getlantern/ops v0.0.0-20230519221840-1283e026181c // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 // indirect
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20240506104042-037f3cc74f2a // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -39,6 +42,7 @@ require (
 	github.com/go-text/render v0.2.1 // indirect
 	github.com/go-text/typesetting v0.3.4 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
 	github.com/hack-pad/safejs v0.1.1 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade // indirect

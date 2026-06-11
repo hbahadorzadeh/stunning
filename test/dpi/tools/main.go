@@ -16,6 +16,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 )
@@ -31,9 +32,35 @@ func main() {
 		runGen(os.Args[2:])
 	case "probe":
 		runProbe(os.Args[2:])
+	case "introspect":
+		runIntrospect(os.Args[2:])
 	default:
 		log.Fatalf("unknown subcommand %q", os.Args[1])
 	}
+}
+
+// runIntrospect is a minimal RFC 7662 OAuth introspection endpoint used as a mock
+// IdP in the harness: the configured token is reported active, anything else
+// inactive.
+func runIntrospect(argv []string) {
+	fs := flag.NewFlagSet("introspect", flag.ExitOnError)
+	listen := fs.String("listen", ":8080", "listen address")
+	token := fs.String("token", "valid-token", "the token to report active")
+	sub := fs.String("sub", "tunnel-user", "subject returned for the active token")
+	scope := fs.String("scope", "tunnel", "scope returned for the active token")
+	fs.Parse(argv)
+
+	http.HandleFunc("/introspect", func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		w.Header().Set("Content-Type", "application/json")
+		if r.PostForm.Get("token") == *token {
+			fmt.Fprintf(w, `{"active":true,"sub":%q,"scope":%q}`, *sub, *scope)
+		} else {
+			fmt.Fprint(w, `{"active":false}`)
+		}
+	})
+	log.Printf("mock IdP introspection on %s (active token=%q)", *listen, *token)
+	log.Fatal(http.ListenAndServe(*listen, nil))
 }
 
 // runProbe just checks that a TCP listener is accepting, independent of any

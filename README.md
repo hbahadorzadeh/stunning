@@ -341,6 +341,8 @@ it is disguised too) and rejects unauthorized clients:
 | `psk` | HMAC challenge-response with a shared key |
 | `jwt` | verify a presented JWT (HS256 secret / RS256 public key); identity = `sub` |
 | `mtls` | mutual-TLS client certificate; identity = cert Common Name |
+| `oauth` | validate an OAuth 2.0 token via RFC 7662 introspection |
+| `ldap` | verify username/password by an LDAP bind |
 
 ```json
 "Auth": "jwt?alg=HS256&secret=<hex>"
@@ -358,8 +360,8 @@ scanner sees nothing on the tunnel port:
 ```
 
 Gates compose with the chain — a tunnel can require a knock, look like TLS,
-encrypt with `aead`, and authenticate clients by JWT all at once. OAuth/LDAP
-authenticators are planned. Full reference: [docs/PLUGINS.md](docs/PLUGINS.md#gates).
+encrypt with `aead`, and authenticate clients by JWT all at once. Full reference:
+[docs/PLUGINS.md](docs/PLUGINS.md#gates).
 
 ---
 

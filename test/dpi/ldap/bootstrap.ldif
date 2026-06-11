@@ -1,0 +1,10 @@
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: uid=alice,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+cn: Alice
+sn: Alice
+uid: alice
+userPassword: s3cret

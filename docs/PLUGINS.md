@@ -79,10 +79,14 @@ verifies and records the identity.
 | `psk` | `key` (hex, both peers) | HMAC-SHA256 challenge-response; the server sends a fresh per-connection challenge, the client returns `HMAC(key, challenge)` |
 | `jwt` | client: `token`; server: `alg` (`HS256`\|`RS256`), `secret` (hex, HS256) or `pubkey` (PEM path, RS256) | Client presents a signed JWT; server verifies signature + `exp`/`nbf`; identity = `sub` claim |
 | `mtls` | client: `cert`, `key`, `ca`, `servername`; server: `cert`, `key`, `clientca` | Mutual-TLS handshake over the conn; identity = client cert Common Name |
+| `oauth` | client: `token`; server: `introspect` (URL), `client_id`, `client_secret`, `scope` | Client presents an OAuth 2.0 access token; server validates it via an RFC 7662 introspection endpoint; identity = `sub`/`username` |
+| `ldap` | client: `user`, `password`; server: `url`, `userdn` (DN template with `%s`) | Client sends credentials; server verifies by binding to the directory as the user's DN; identity = username. Run behind `aead`/`ldaps` since the password crosses the connection |
 
 Auth config is asymmetric: the client carries its credential (`token`, client
-cert), the server carries the verification material (`secret`, `pubkey`,
-`clientca`). OAuth and LDAP authenticators are planned for a later phase.
+cert, password), the server carries the verification material (`secret`,
+`pubkey`, `clientca`, `introspect`, `url`). The `oauth`/`ldap` end-to-end tests
+run against a mock OIDC IdP and an OpenLDAP directory in the harness
+(`test/dpi/scenarios-auth.sh`).
 
 ### Port knocking (`Knock`)
 
