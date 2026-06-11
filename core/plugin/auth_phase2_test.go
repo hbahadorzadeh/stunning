@@ -129,3 +129,18 @@ func TestLDAPUserDNValidation(t *testing.T) {
 		t.Fatalf("valid userdn rejected: %v", err)
 	}
 }
+
+func TestLDAPEmptyPasswordRejected(t *testing.T) {
+	orig := ldapBind
+	defer func() { ldapBind = orig }()
+	bound := false
+	ldapBind = func(_, _, _ string) error { bound = true; return nil }
+	server := "ldap?url=ldap://x&userdn=uid=%s,ou=users,dc=x"
+	_, _, sErr := runAuth(t, "ldap?user=alice&password=", server)
+	if sErr == nil {
+		t.Fatal("empty password must be rejected (avoids unauthenticated bind)")
+	}
+	if bound {
+		t.Fatal("must not attempt a bind with an empty password")
+	}
+}

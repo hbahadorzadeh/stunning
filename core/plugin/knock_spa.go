@@ -120,14 +120,14 @@ func (s *spaKnocker) Start() error {
 		return fmt.Errorf("spa: listen knock port: %w", err)
 	}
 	s.pc = pc
-	go s.serve()
+	go s.serve(pc) // pass the conn so the loop never reads the mutable s.pc field
 	return nil
 }
 
-func (s *spaKnocker) serve() {
+func (s *spaKnocker) serve(pc net.PacketConn) {
 	buf := make([]byte, spaPacketLen)
 	for {
-		n, addr, err := s.pc.ReadFrom(buf)
+		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
 			return // listener closed
 		}
@@ -197,6 +197,7 @@ func (s *spaKnocker) sweep(now time.Time) {
 func (s *spaKnocker) Close() error {
 	s.mu.Lock()
 	pc := s.pc
+	s.pc = nil // allow Start to rebind after Close
 	s.mu.Unlock()
 	if pc != nil {
 		return pc.Close()

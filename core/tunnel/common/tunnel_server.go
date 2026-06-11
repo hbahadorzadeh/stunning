@@ -97,11 +97,14 @@ func (s *TunnelServerCommon) Closed() bool {
 }
 
 func (s *TunnelServerCommon) HandleConnection(conn net.Conn) {
-	defer conn.Close()
 	wrapped, err := wrapServerConn(conn, s.PluginSpec, s.AuthSpec)
 	if err != nil {
 		log.Printf("plugin chain setup failed: %v", err)
+		conn.Close()
 		return
 	}
+	// Close the wrapper, not the raw conn, so the plugin chain and chaff
+	// goroutine are also torn down.
+	defer wrapped.Close()
 	s.Server.HandleConnection(wrapped)
 }

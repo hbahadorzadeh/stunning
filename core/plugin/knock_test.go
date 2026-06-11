@@ -139,3 +139,19 @@ func TestSPAParamErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestSPAStartCloseRestart(t *testing.T) {
+	port := freeUDPPort(t)
+	k := mustSPA(t, fmt.Sprintf("spa?key=00112233&port=%d", port))
+	if err := k.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if err := k.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// Start must rebind after Close (pc reset to nil), not silently no-op.
+	if err := k.Start(); err != nil {
+		t.Fatalf("restart after close should succeed: %v", err)
+	}
+	k.Close()
+}

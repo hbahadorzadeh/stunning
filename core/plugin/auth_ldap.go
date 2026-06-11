@@ -100,6 +100,12 @@ func (a *ldapAuth) ServerHandshake(conn net.Conn) (net.Conn, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+	// An empty password triggers an LDAP unauthenticated/anonymous bind on many
+	// servers, which would bypass authentication. Reject it before binding.
+	if len(passB) == 0 {
+		_ = writeMsg(conn, []byte("NO"))
+		return nil, "", fmt.Errorf("ldap: empty password")
+	}
 	user := string(userB)
 	if !safeLDAPUser(user) {
 		_ = writeMsg(conn, []byte("NO"))
