@@ -1,0 +1,68 @@
+# 3-node anti-DPI test bed:
+#   client (client-net) --> dpi-router (both nets, GFW sim) --> server + dest (server-net)
+# The client points its tunnel at the router, which inspects the stream and either
+# blocks it or relays to the real server.
+
+networks:
+  client-net:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+  server-net:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+
+services:
+  dest:
+    build:
+      context: ../..
+      dockerfile: test/dpi/Dockerfile.stunning
+    image: stunning-dpi-node:latest
+    command: ["tools", "echo", "-listen", ":9000"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks:
+      server-net:
+        ipv4_address: 172.31.0.30
+
+  server:
+    image: stunning-dpi-node:latest
+    depends_on: [dest]
+    command: ["stunning", "-config", "/cfg/server.json", "fg", "server"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks:
+      server-net:
+        ipv4_address: 172.31.0.20
+
+  dpi-router:
+    build:
+      context: ../..
+      dockerfile: test/dpi/Dockerfile.router
+    image: stunning-dpi-router:latest
+    depends_on: [server]
+    environment:
+      LISTEN_PORT: "8443"
+      UPSTREAM: "172.31.0.20:8443"
+      MODE: "${MODE:-enforce}"
+      ENTROPY_THRESHOLD: "${ENTROPY_THRESHOLD:-7.4}"
+      MARKERS: "${MARKERS:-}"
+    volumes:
+      - ./gen/dpi-log:/var/log/dpi
+      - ./dpi:/opt/dpi:ro
+    networks:
+      client-net:
+        ipv4_address: 172.30.0.10
+      server-net:
+        ipv4_address: 172.31.0.10
+
+  client:
+    image: stunning-dpi-node:latest
+    depends_on: [dpi-router]
+    command: ["stunning", "-config", "/cfg/client.json", "fg", "client"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks:
+      client-net:
+        ipv4_address: 172.30.0.20

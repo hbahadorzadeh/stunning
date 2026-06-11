@@ -99,7 +99,10 @@ func (t TunnelServer) IsAlive() bool {
 func (t TunnelClient) ListenAndServer() {
 	if t.interfaceClient != nil {
 		defer t.interfaceClient.Close()
-		t.tunnelClient.Dial("", t.serverAddress)
+		// The interface client owns the local listener and the tunnel dialer;
+		// its accept loop dials the tunnel (and thus the plugin chain) per
+		// accepted connection.
+		t.interfaceClient.WaitingForConnection()
 	} else {
 		log.Panic("No tunnel Interface")
 	}
@@ -366,6 +369,9 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 					case common.SERIAL_IFACE:
 					default:
 						log.Panicf("Conf `%s`: Invalid interface type (%s)", name, itype)
+					}
+					if ttun.tunnelServer != nil && ttun.interfaceServer != nil {
+						ttun.tunnelServer.SetServer(ttun.interfaceServer)
 					}
 				}
 			} else {
