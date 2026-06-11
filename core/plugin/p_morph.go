@@ -45,8 +45,8 @@ func (j *jitterPlugin) Encode(src []byte) ([]byte, error) {
 	return src, nil
 }
 
-func (j *jitterPlugin) Decode(src []byte) ([]byte, error) { return src, nil }
-func (j *jitterPlugin) Close() error                      { return nil }
+func (*jitterPlugin) Decode(src []byte) ([]byte, error) { return src, nil }
+func (*jitterPlugin) Close() error                      { return nil }
 
 // bucket normalizes frame sizes to a fixed quantum so every frame on the wire is
 // one of a few sizes, defeating exact size fingerprinting (a deterministic cousin
@@ -80,7 +80,7 @@ func (b *bucketPlugin) Encode(src []byte) ([]byte, error) {
 	return out, nil
 }
 
-func (b *bucketPlugin) Decode(src []byte) ([]byte, error) {
+func (*bucketPlugin) Decode(src []byte) ([]byte, error) {
 	if len(src) < 2 {
 		return nil, fmt.Errorf("bucket: frame too short for trailer")
 	}
@@ -91,4 +91,4 @@ func (b *bucketPlugin) Decode(src []byte) ([]byte, error) {
 	return src[:len(src)-2-pad], nil
 }
 
-func (b *bucketPlugin) Close() error { return nil }
+func (*bucketPlugin) Close() error { return nil }

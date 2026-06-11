@@ -73,4 +73,4 @@ func (f *flatePlugin) Decode(src []byte) ([]byte, error) {
 	return out, nil
 }
 
-func (f *flatePlugin) Close() error { return nil }
+func (*flatePlugin) Close() error { return nil }

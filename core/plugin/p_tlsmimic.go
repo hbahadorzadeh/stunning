@@ -35,9 +35,9 @@ type tlsMimic struct {
 
 func newTLSMimic(_ Params) (Plugin, error) { return &tlsMimic{}, nil }
 
-func (t *tlsMimic) Encode(src []byte) ([]byte, error) { return src, nil }
-func (t *tlsMimic) Decode(src []byte) ([]byte, error) { return src, nil }
-func (t *tlsMimic) Close() error                      { return nil }
+func (*tlsMimic) Encode(src []byte) ([]byte, error) { return src, nil }
+func (*tlsMimic) Decode(src []byte) ([]byte, error) { return src, nil }
+func (*tlsMimic) Close() error                      { return nil }
 
 func tlsRecord(typ byte, body []byte) []byte {
 	out := make([]byte, 5+len(body))

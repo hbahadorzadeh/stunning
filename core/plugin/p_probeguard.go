@@ -87,4 +87,4 @@ func (g *probeGuardPlugin) Decode(src []byte) ([]byte, error) {
 	return payload, nil
 }
 
-func (g *probeGuardPlugin) Close() error { return nil }
+func (*probeGuardPlugin) Close() error { return nil }

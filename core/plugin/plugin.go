@@ -161,4 +161,4 @@ func NewStateless(enc, dec func([]byte) ([]byte, error)) *Stateless {
 
 func (s *Stateless) Encode(src []byte) ([]byte, error) { return s.enc(src) }
 func (s *Stateless) Decode(src []byte) ([]byte, error) { return s.dec(src) }
-func (s *Stateless) Close() error                      { return nil }
+func (*Stateless) Close() error                        { return nil }

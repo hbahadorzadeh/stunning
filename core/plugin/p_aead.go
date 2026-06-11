@@ -80,4 +80,4 @@ func (a *aeadPlugin) Decode(src []byte) ([]byte, error) {
 	return out, nil
 }
 
-func (a *aeadPlugin) Close() error { return nil }
+func (*aeadPlugin) Close() error { return nil }

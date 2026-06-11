@@ -59,7 +59,6 @@ type TunnelServer struct {
 
 type TunnelClient struct {
 	TunnelCommon
-	serverAddress   string
 	tunnelClient    tcommon.TunnelDialer
 	interfaceClient icommon.TunnelInterfaceClient
 }

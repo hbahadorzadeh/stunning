@@ -35,9 +35,9 @@ type httpMimic struct {
 
 func newHTTPMimic(_ Params) (Plugin, error) { return &httpMimic{}, nil }
 
-func (h *httpMimic) Encode(src []byte) ([]byte, error) { return src, nil }
-func (h *httpMimic) Decode(src []byte) ([]byte, error) { return src, nil }
-func (h *httpMimic) Close() error                      { return nil }
+func (*httpMimic) Encode(src []byte) ([]byte, error) { return src, nil }
+func (*httpMimic) Decode(src []byte) ([]byte, error) { return src, nil }
+func (*httpMimic) Close() error                      { return nil }
 
 func (h *httpMimic) Frame(payload []byte) ([]byte, error) {
 	chunk := []byte(fmt.Sprintf("%x\r\n", len(payload)))

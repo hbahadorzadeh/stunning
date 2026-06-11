@@ -57,7 +57,7 @@ func (pp *padPlugin) Encode(src []byte) ([]byte, error) {
 	return out, nil
 }
 
-func (pp *padPlugin) Decode(src []byte) ([]byte, error) {
+func (*padPlugin) Decode(src []byte) ([]byte, error) {
 	if len(src) < 2 {
 		return nil, fmt.Errorf("pad: frame too short for trailer")
 	}
@@ -68,4 +68,4 @@ func (pp *padPlugin) Decode(src []byte) ([]byte, error) {
 	return src[:len(src)-2-n], nil
 }
 
-func (pp *padPlugin) Close() error { return nil }
+func (*padPlugin) Close() error { return nil }
