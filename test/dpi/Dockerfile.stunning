@@ -1,0 +1,11 @@
+# Static runtime node for the DPI harness. The stunning + tools binaries are
+# cross-compiled on the host and mounted in at /cfg/bin (see build.sh), so this
+# image is built once and never needs rebuilding when Go code changes -- only the
+# host binaries change. iproute2 is kept for optional static routing.
+FROM debian:bookworm-slim
+RUN apt-get -o Acquire::Check-Date=false -o Acquire::Check-Valid-Until=false update && \
+    apt-get install -y --no-install-recommends iproute2 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY test/dpi/entrypoint-node.sh /usr/local/bin/entrypoint-node.sh
+RUN chmod +x /usr/local/bin/entrypoint-node.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint-node.sh"]

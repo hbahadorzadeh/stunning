@@ -1,0 +1,11 @@
+BenchmarkFlate-8             	   15505	     37745 ns/op	 108.52 MB/s	   10647 B/op	      13 allocs/op
+BenchmarkAEADChaCha-8        	   60921	      9755 ns/op	 419.90 MB/s	    8960 B/op	       2 allocs/op
+BenchmarkAEADAESGCM-8        	  291378	      2063 ns/op	1985.93 MB/s	    8960 B/op	       2 allocs/op
+BenchmarkPad-8               	  958178	       658.4 ns/op	6220.94 MB/s	    4866 B/op	       2 allocs/op
+BenchmarkProbeGuard-8        	   56540	     10564 ns/op	 387.71 MB/s	    4896 B/op	       3 allocs/op
+BenchmarkFullChain-8         	   14829	     40468 ns/op	 101.22 MB/s	   11440 B/op	      20 allocs/op
+BenchmarkFullChain64K-8      	    3868	    155612 ns/op	 421.15 MB/s	  140767 B/op	      28 allocs/op
+BenchmarkFramedTLSMimic-8    	   37113	     16154 ns/op	 253.56 MB/s	   13879 B/op	       5 allocs/op
+BenchmarkFramedHTTPMimic-8   	   35769	     16793 ns/op	 243.91 MB/s	   18777 B/op	      10 allocs/op
+BenchmarkFramedFullMimic-8   	   10000	     52289 ns/op	  78.33 MB/s	   11979 B/op	      19 allocs/op
+BenchmarkFramedBaseline-8    	   37624	     15935 ns/op	 257.05 MB/s	    9082 B/op	       6 allocs/op

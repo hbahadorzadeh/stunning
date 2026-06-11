@@ -35,6 +35,9 @@ type TunnelConfig struct {
 	Mtu           string
 	ServerType    string
 	ServiceMode   string
+	Plugins       string
+	Auth          string
+	Knock         string
 }
 
 type Tunnel interface {
@@ -58,7 +61,6 @@ type TunnelServer struct {
 
 type TunnelClient struct {
 	TunnelCommon
-	serverAddress   string
 	tunnelClient    tcommon.TunnelDialer
 	interfaceClient icommon.TunnelInterfaceClient
 }
@@ -98,7 +100,10 @@ func (t TunnelServer) IsAlive() bool {
 func (t TunnelClient) ListenAndServer() {
 	if t.interfaceClient != nil {
 		defer t.interfaceClient.Close()
-		t.tunnelClient.Dial("", t.serverAddress)
+		// The interface client owns the local listener and the tunnel dialer;
+		// its accept loop dials the tunnel (and thus the plugin chain) per
+		// accepted connection.
+		t.interfaceClient.WaitingForConnection()
 	} else {
 		log.Panic("No tunnel Interface")
 	}
@@ -144,6 +149,7 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 				default:
 					log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 				}
+				ttun.tunnelClient = tcommon.WrapDialer(ttun.tunnelClient, conf.Plugins, conf.Auth, conf.Knock)
 				saddr := conf.Connect
 				if saddr == "" {
 					log.Panicf("Conf `%s`: Service connect address not specified.", name)
@@ -319,6 +325,27 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 					default:
 						log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 					}
+					if conf.Plugins != "" {
+						if ps, ok := ttun.tunnelServer.(interface{ SetPluginSpec(string) }); ok {
+							ps.SetPluginSpec(conf.Plugins)
+						} else {
+							log.Printf("Conf `%s`: tunnel type %s does not support plugins yet", name, stype)
+						}
+					}
+					if conf.Auth != "" {
+						if as, ok := ttun.tunnelServer.(interface{ SetAuthSpec(string) }); ok {
+							as.SetAuthSpec(conf.Auth)
+						} else {
+							log.Printf("Conf `%s`: tunnel type %s does not support auth yet", name, stype)
+						}
+					}
+					if conf.Knock != "" {
+						if ks, ok := ttun.tunnelServer.(interface{ SetKnockSpec(string) }); ok {
+							ks.SetKnockSpec(conf.Knock)
+						} else {
+							log.Printf("Conf `%s`: tunnel type %s does not support knock yet", name, stype)
+						}
+					}
 				} else {
 					log.Panicf("Conf `%s`: Service listen address not specified.", name)
 				}
@@ -357,6 +384,9 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 					case common.SERIAL_IFACE:
 					default:
 						log.Panicf("Conf `%s`: Invalid interface type (%s)", name, itype)
+					}
+					if ttun.tunnelServer != nil && ttun.interfaceServer != nil {
+						ttun.tunnelServer.SetServer(ttun.interfaceServer)
 					}
 				}
 			} else {

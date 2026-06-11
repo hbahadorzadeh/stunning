@@ -1,0 +1,11 @@
+# GFW-style DPI middlebox: a transparent TCP relay that inspects the tunnel
+# stream and blocks flows that look like an unknown encrypted proxy. The engine
+# script is mounted at /opt/dpi (see compose), so this image is built once and
+# never needs rebuilding when the engine changes. Stdlib Python only.
+FROM debian:bookworm-slim
+RUN apt-get -o Acquire::Check-Date=false -o Acquire::Check-Valid-Until=false update && \
+    apt-get install -y --no-install-recommends python3 ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY test/dpi/entrypoint-router.sh /usr/local/bin/entrypoint-router.sh
+RUN chmod +x /usr/local/bin/entrypoint-router.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint-router.sh"]

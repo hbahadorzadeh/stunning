@@ -1,0 +1,4 @@
+BenchmarkFlate-8             	   13591	     25334 ns/op	 161.68 MB/s	   11020 B/op	      12 allocs/op
+BenchmarkFullChain-8         	   12692	     28102 ns/op	 145.75 MB/s	   12549 B/op	      21 allocs/op
+BenchmarkFullChain64K-8      	    2428	    144892 ns/op	 452.31 MB/s	  153752 B/op	      29 allocs/op
+BenchmarkFramedFullMimic-8   	    9276	     40136 ns/op	 102.05 MB/s	   14557 B/op	      19 allocs/op

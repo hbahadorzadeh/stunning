@@ -1,0 +1,2 @@
+BenchmarkProbeGuard-8   	   30114	     10586 ns/op	 386.92 MB/s	    4899 B/op	       3 allocs/op
+BenchmarkFullChain-8    	   12096	     28164 ns/op	 145.43 MB/s	   11973 B/op	      19 allocs/op

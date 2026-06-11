@@ -1,0 +1,52 @@
+# Auth e2e test bed: client -> server -> dest, with a mock OIDC IdP (introspection)
+# and an OpenLDAP directory the server authenticates against.
+#
+# The server/client configs (including the Auth spec) are generated per scenario
+# into ./gen by run-auth.sh.
+
+networks:
+  auth-net: {}
+
+services:
+  dest:
+    image: stunning-dpi-node:latest
+    command: ["tools", "echo", "-listen", ":9000"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks: [auth-net]
+
+  idp:
+    image: stunning-dpi-node:latest
+    command: ["tools", "introspect", "-listen", ":8080", "-token", "valid-token", "-sub", "tunnel-user"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks: [auth-net]
+
+  ldap:
+    image: osixia/openldap:1.5.0
+    command: ["--copy-service"]
+    environment:
+      LDAP_ORGANISATION: "Example"
+      LDAP_DOMAIN: "example.org"
+      LDAP_ADMIN_PASSWORD: "adminpass"
+    # osixia listens on 389; the server's userdn uses ldap://ldap:1389, so map it.
+    expose: ["389"]
+    volumes:
+      - ./ldap/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/01-users.ldif:ro
+    networks: [auth-net]
+
+  server:
+    image: stunning-dpi-node:latest
+    depends_on: [dest]
+    command: ["stunning", "-config", "/cfg/server.json", "fg", "server"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks: [auth-net]
+
+  client:
+    image: stunning-dpi-node:latest
+    depends_on: [server]
+    command: ["stunning", "-config", "/cfg/client.json", "fg", "client"]
+    volumes:
+      - ./gen:/cfg:ro
+    networks: [auth-net]

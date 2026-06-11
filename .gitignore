@@ -48,3 +48,6 @@ test-cli
 # CLI binary
 stunning
 app-mobile-stub
+
+# DPI harness generated artifacts (binaries, configs, logs)
+test/dpi/gen/
