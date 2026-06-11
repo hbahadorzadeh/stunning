@@ -55,6 +55,7 @@ type FramedConn struct {
 	rmu   sync.Mutex
 	rMask cipher.Stream
 	rbuf  bytes.Buffer
+	rdata []byte // reused frame-read scratch (single reader goroutine)
 	hdr   [2]byte
 }
 
@@ -87,36 +88,60 @@ func newMask(key []byte, label string) (cipher.Stream, error) {
 	return chacha20.NewUnauthenticatedCipher(sub[:chacha20.KeySize], nonce[:])
 }
 
-// Write encodes p as a single frame. It returns len(p) on success so callers see
-// their whole message accepted.
+// WriteChunk bounds the plaintext carried per frame. It is well under both the
+// default max frame and the TLS record limit, leaving headroom for plugin
+// overhead (aead tag/nonce, padding) so an encoded frame never exceeds maxFrame.
+// Larger writes are split across frames; the reader reassembles a byte stream, so
+// splitting is transparent.
+const WriteChunk = 8192
+
+// Write encodes p across one or more frames and reports how many plaintext bytes
+// were accepted. Splitting keeps each encoded frame within maxFrame regardless of
+// the caller's write size.
 func (f *FramedConn) Write(p []byte) (int, error) {
+	total := 0
+	for len(p) > 0 {
+		n := len(p)
+		if n > WriteChunk {
+			n = WriteChunk
+		}
+		if err := f.writeFrame(p[:n]); err != nil {
+			return total, err
+		}
+		p = p[n:]
+		total += n
+	}
+	return total, nil
+}
+
+func (f *FramedConn) writeFrame(p []byte) error {
 	enc, err := f.chain.Encode(p)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	if len(enc) > f.maxFrame {
-		return 0, ErrFrameTooLarge
+		return ErrFrameTooLarge
 	}
 	f.wmu.Lock()
 	defer f.wmu.Unlock()
 	if f.framer != nil {
 		wire, err := f.framer.Frame(enc)
 		if err != nil {
-			return 0, err
+			return err
 		}
 		if _, err := f.Conn.Write(wire); err != nil {
-			return 0, err
+			return err
 		}
-		return len(p), nil
+		return nil
 	}
-	out := make([]byte, 2+len(enc))
-	binary.BigEndian.PutUint16(out[:2], uint16(len(enc)))
-	f.wMask.XORKeyStream(out[:2], out[:2])
-	copy(out[2:], enc)
-	if _, err := f.Conn.Write(out); err != nil {
-		return 0, err
+	var lenbuf [2]byte
+	binary.BigEndian.PutUint16(lenbuf[:], uint16(len(enc)))
+	f.wMask.XORKeyStream(lenbuf[:], lenbuf[:])
+	// Vectored write: header + payload in one syscall, no concatenation copy.
+	if _, err := (&net.Buffers{lenbuf[:], enc}).WriteTo(f.Conn); err != nil {
+		return err
 	}
-	return len(p), nil
+	return nil
 }
 
 // Read serves decoded payload bytes, reading and decoding the next frame when the
@@ -152,7 +177,12 @@ func (f *FramedConn) readFrame() error {
 		if n > f.maxFrame {
 			return fmt.Errorf("%w: %d", ErrFrameTooLarge, n)
 		}
-		buf = make([]byte, n)
+		// Reuse scratch across frames; only one goroutine reads, and Decode's
+		// result is copied into rbuf below so the scratch is free afterwards.
+		if cap(f.rdata) < n {
+			f.rdata = make([]byte, n)
+		}
+		buf = f.rdata[:n]
 		if _, err := io.ReadFull(f.Conn, buf); err != nil {
 			return err
 		}

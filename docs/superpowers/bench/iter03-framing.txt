@@ -1,0 +1,4 @@
+BenchmarkFramedTLSMimic-8    	   19431	     17403 ns/op	 235.36 MB/s	   18754 B/op	       6 allocs/op
+BenchmarkFramedHTTPMimic-8   	   20385	     17595 ns/op	 232.79 MB/s	   18794 B/op	      10 allocs/op
+BenchmarkFramedFullMimic-8   	    9066	     39949 ns/op	 102.53 MB/s	   14289 B/op	      19 allocs/op
+BenchmarkFramedBaseline-8    	   21714	     16615 ns/op	 246.53 MB/s	    9090 B/op	       6 allocs/op

@@ -89,6 +89,9 @@ GEN_RC=$?
 set -e
 echo "metrics: $RESULT"
 
+# Let the DPI engine flush its async verdict line before we read it.
+sleep 1
+
 # Summarize the censor's view.
 VERDICT="none"
 if [ -s gen/dpi-log/verdicts.jsonl ]; then

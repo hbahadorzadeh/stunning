@@ -129,14 +129,14 @@ func TestProbeGuardRejectsUnauthenticated(t *testing.T) {
 
 func TestChainErrors(t *testing.T) {
 	cases := []string{
-		"nope",                       // unknown plugin
-		"aead",                       // missing key
-		"probe-guard",                // missing key
-		"pad?min=10&max=2",           // bad bounds
-		"aead?key=zz",                // bad hex
+		"nope",                        // unknown plugin
+		"aead",                        // missing key
+		"probe-guard",                 // missing key
+		"pad?min=10&max=2",            // bad bounds
+		"aead?key=zz",                 // bad hex
 		"probe-guard?key=ab&taglen=4", // taglen too small
-		"flate?level=99",             // bad level
-		"aead?key=ab&algo=bogus",     // bad algo
+		"flate?level=99",              // bad level
+		"aead?key=ab&algo=bogus",      // bad algo
 	}
 	for _, spec := range cases {
 		if _, err := ParseChain(spec); err == nil {

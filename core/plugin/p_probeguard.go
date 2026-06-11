@@ -3,6 +3,8 @@ package plugin
 import (
 	"crypto/subtle"
 	"fmt"
+	"hash"
+	"sync"
 
 	"golang.org/x/crypto/blake2b"
 )
@@ -23,6 +25,7 @@ func init() { Register("probe-guard", newProbeGuard) }
 type probeGuardPlugin struct {
 	key    []byte
 	taglen int
+	hpool  sync.Pool // hash.Hash keyed BLAKE2b instances
 }
 
 func newProbeGuard(p Params) (Plugin, error) {
@@ -43,12 +46,19 @@ func newProbeGuard(p Params) (Plugin, error) {
 }
 
 func (g *probeGuardPlugin) tag(payload []byte) ([]byte, error) {
-	h, err := blake2b.New(g.taglen, g.key)
-	if err != nil {
-		return nil, err
+	h, _ := g.hpool.Get().(hash.Hash)
+	if h == nil {
+		var err error
+		if h, err = blake2b.New(g.taglen, g.key); err != nil {
+			return nil, err
+		}
+	} else {
+		h.Reset()
 	}
 	h.Write(payload)
-	return h.Sum(nil), nil
+	sum := h.Sum(nil)
+	g.hpool.Put(h)
+	return sum, nil
 }
 
 func (g *probeGuardPlugin) Encode(src []byte) ([]byte, error) {

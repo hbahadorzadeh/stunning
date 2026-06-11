@@ -2,12 +2,16 @@
 package socks
 
 import (
+	"io"
 	"log"
 	"net"
 
 	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
 	tcommon "github.com/hbahadorzadeh/stunning/core/tunnel/common"
 )
+
+// copyBufSize is the relay copy-buffer size; see tcp interface for rationale.
+const copyBufSize = 32 * 1024
 
 type SocksClient struct {
 	icommon.TunnelInterfaceClient
@@ -68,39 +72,17 @@ func (t *SocksClient) Closed() bool {
 func tcp_reader(conn net.Conn, tconn net.Conn) {
 	defer conn.Close()
 	defer tconn.Close()
-	for {
-		buff := make([]byte, 1024)
-		n, err := conn.Read(buff)
-		if err != nil {
-			log.Printf("Error reading from conn: %v", err)
-			return
-		}
-		buff = buff[:n]
-		wn, werr := tconn.Write(buff)
-		if werr != nil || wn != len(buff) {
-			log.Printf("Error writing to tconn: %v", werr)
-			return
-		}
-		log.Printf("%s : %d bytes wrote to socket", tconn.RemoteAddr().String(), wn)
+	buf := make([]byte, copyBufSize)
+	if _, err := io.CopyBuffer(tconn, conn, buf); err != nil {
+		log.Printf("relay conn->tunnel closed: %v", err)
 	}
 }
 
 func tcp_writer(conn net.Conn, tconn net.Conn) {
 	defer conn.Close()
 	defer tconn.Close()
-	for {
-		buff := make([]byte, 1024)
-		n, err := tconn.Read(buff)
-		if err != nil {
-			log.Printf("Error reading from tconn: %v", err)
-			return
-		}
-		buff = buff[:n]
-		wn, werr := conn.Write(buff)
-		if werr != nil || wn != len(buff) {
-			log.Printf("Error writing to conn: %v", werr)
-			return
-		}
-		log.Printf("%s : %d bytes wrote to socket", conn.RemoteAddr().String(), wn)
+	buf := make([]byte, copyBufSize)
+	if _, err := io.CopyBuffer(conn, tconn, buf); err != nil {
+		log.Printf("relay tunnel->conn closed: %v", err)
 	}
 }

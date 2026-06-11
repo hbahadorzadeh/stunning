@@ -106,11 +106,12 @@ def pipe(src, dst):
     except OSError:
         pass
     finally:
-        for s in (src, dst):
-            try:
-                s.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
+        # Half-close only: signal EOF to the peer's write side so the opposite
+        # direction can still drain in-flight data instead of being truncated.
+        try:
+            dst.shutdown(socket.SHUT_WR)
+        except OSError:
+            pass
 
 
 def handle(client, peer):

@@ -1,0 +1,7 @@
+BenchmarkFlate-8             	   13459	     25183 ns/op	 162.65 MB/s	   10840 B/op	      12 allocs/op
+BenchmarkFullChain-8         	   12723	     28057 ns/op	 145.99 MB/s	   12341 B/op	      19 allocs/op
+BenchmarkFullChain64K-8      	    2493	    143830 ns/op	 455.65 MB/s	  151733 B/op	      27 allocs/op
+BenchmarkFramedTLSMimic-8    	   20415	     17739 ns/op	 230.91 MB/s	   18756 B/op	       6 allocs/op
+BenchmarkFramedHTTPMimic-8   	   19986	     17924 ns/op	 228.52 MB/s	   18800 B/op	      10 allocs/op
+BenchmarkFramedFullMimic-8   	    9163	     39358 ns/op	 104.07 MB/s	   14836 B/op	      19 allocs/op
+BenchmarkFramedBaseline-8    	   21082	     16986 ns/op	 241.14 MB/s	    9090 B/op	       6 allocs/op
