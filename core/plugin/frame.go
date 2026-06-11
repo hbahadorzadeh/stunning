@@ -18,6 +18,19 @@ import (
 // rejects corrupt/probe traffic that claims an absurd length.
 const DefaultMaxFrame = 16 * 1024
 
+// Framer is an optional capability a plugin can implement to provide its own
+// wire framing instead of FramedConn's default masked length prefix. Protocol
+// mimicry plugins (TLS, HTTP) implement it so the bytes on the wire begin with a
+// convincing protocol header and carry the protocol's native length fields,
+// rather than a giveaway random length prefix. When the outermost plugin in a
+// chain is a Framer, FramedConn delegates all framing to it.
+type Framer interface {
+	// Frame wraps one already-encoded message in protocol framing for the wire.
+	Frame(payload []byte) ([]byte, error)
+	// Deframe reads exactly one message back off the wire.
+	Deframe(r io.Reader) ([]byte, error)
+}
+
 // ErrFrameTooLarge is returned when a frame exceeds the configured cap.
 var ErrFrameTooLarge = errors.New("plugin: frame exceeds max size")
 
@@ -34,6 +47,7 @@ type FramedConn struct {
 	net.Conn
 	chain    *Chain
 	maxFrame int
+	framer   Framer // non-nil when the chain provides protocol-native framing
 
 	wmu   sync.Mutex
 	wMask cipher.Stream
@@ -58,7 +72,7 @@ func NewFramedConn(conn net.Conn, chain *Chain, isClient bool, maxFrame int) (*F
 	if err != nil {
 		return nil, err
 	}
-	fc := &FramedConn{Conn: conn, chain: chain, maxFrame: maxFrame}
+	fc := &FramedConn{Conn: conn, chain: chain, maxFrame: maxFrame, framer: chain.Framer()}
 	if isClient {
 		fc.wMask, fc.rMask = c2s, s2c
 	} else {
@@ -85,6 +99,16 @@ func (f *FramedConn) Write(p []byte) (int, error) {
 	}
 	f.wmu.Lock()
 	defer f.wmu.Unlock()
+	if f.framer != nil {
+		wire, err := f.framer.Frame(enc)
+		if err != nil {
+			return 0, err
+		}
+		if _, err := f.Conn.Write(wire); err != nil {
+			return 0, err
+		}
+		return len(p), nil
+	}
 	out := make([]byte, 2+len(enc))
 	binary.BigEndian.PutUint16(out[:2], uint16(len(enc)))
 	f.wMask.XORKeyStream(out[:2], out[:2])
@@ -109,17 +133,29 @@ func (f *FramedConn) Read(p []byte) (int, error) {
 }
 
 func (f *FramedConn) readFrame() error {
-	if _, err := io.ReadFull(f.Conn, f.hdr[:]); err != nil {
-		return err
-	}
-	f.rMask.XORKeyStream(f.hdr[:], f.hdr[:])
-	n := int(binary.BigEndian.Uint16(f.hdr[:]))
-	if n > f.maxFrame {
-		return fmt.Errorf("%w: %d", ErrFrameTooLarge, n)
-	}
-	buf := make([]byte, n)
-	if _, err := io.ReadFull(f.Conn, buf); err != nil {
-		return err
+	var buf []byte
+	if f.framer != nil {
+		raw, err := f.framer.Deframe(f.Conn)
+		if err != nil {
+			return err
+		}
+		if len(raw) > f.maxFrame {
+			return fmt.Errorf("%w: %d", ErrFrameTooLarge, len(raw))
+		}
+		buf = raw
+	} else {
+		if _, err := io.ReadFull(f.Conn, f.hdr[:]); err != nil {
+			return err
+		}
+		f.rMask.XORKeyStream(f.hdr[:], f.hdr[:])
+		n := int(binary.BigEndian.Uint16(f.hdr[:]))
+		if n > f.maxFrame {
+			return fmt.Errorf("%w: %d", ErrFrameTooLarge, n)
+		}
+		buf = make([]byte, n)
+		if _, err := io.ReadFull(f.Conn, buf); err != nil {
+			return err
+		}
 	}
 	dec, err := f.chain.Decode(buf)
 	if err != nil {

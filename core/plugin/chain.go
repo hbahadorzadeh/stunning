@@ -103,6 +103,20 @@ func (c *Chain) Decode(src []byte) ([]byte, error) {
 // Len reports the number of plugins in the chain.
 func (c *Chain) Len() int { return len(c.plugins) }
 
+// Framer returns the outermost plugin's protocol framing if it provides one.
+// FramedConn uses it in place of the default masked-length framing so the wire
+// carries a convincing protocol header. Only the last (outermost) plugin is
+// consulted; an inner Framer would be hidden behind later transforms.
+func (c *Chain) Framer() Framer {
+	if len(c.plugins) == 0 {
+		return nil
+	}
+	if fr, ok := c.plugins[len(c.plugins)-1].(Framer); ok {
+		return fr
+	}
+	return nil
+}
+
 // Spec returns the original spec string.
 func (c *Chain) Spec() string { return c.spec }
 
