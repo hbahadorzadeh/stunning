@@ -7,18 +7,23 @@ import (
 )
 
 // WrapDialer decorates a TunnelDialer so every dialed connection is wrapped in a
-// per-connection plugin chain (client role). An empty spec returns the dialer
-// unchanged, so plugins are zero-cost when unconfigured.
-func WrapDialer(inner TunnelDialer, spec string) TunnelDialer {
-	if spec == "" {
+// per-connection plugin chain (client role) and then runs the client side of an
+// optional authentication handshake. Empty specs are zero-cost: an empty plugin
+// and auth spec returns the dialer unchanged.
+//
+// The auth handshake runs after the plugin framing so it is carried inside the
+// obfuscated/disguised channel.
+func WrapDialer(inner TunnelDialer, pluginSpec, authSpec string) TunnelDialer {
+	if pluginSpec == "" && authSpec == "" {
 		return inner
 	}
-	return &pluginDialer{inner: inner, spec: spec}
+	return &pluginDialer{inner: inner, pluginSpec: pluginSpec, authSpec: authSpec}
 }
 
 type pluginDialer struct {
-	inner TunnelDialer
-	spec  string
+	inner      TunnelDialer
+	pluginSpec string
+	authSpec   string
 }
 
 func (d *pluginDialer) Dial(network, addr string) (net.Conn, error) {
@@ -26,30 +31,62 @@ func (d *pluginDialer) Dial(network, addr string) (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	ch, err := plugin.ParseChain(d.spec)
-	if err != nil {
-		conn.Close()
-		return nil, err
+	if d.pluginSpec != "" {
+		ch, err := plugin.ParseChain(d.pluginSpec)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+		fc, err := plugin.NewFramedConn(conn, ch, true, 0)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+		conn = fc
 	}
-	fc, err := plugin.NewFramedConn(conn, ch, true, 0)
-	if err != nil {
-		conn.Close()
-		return nil, err
+	if d.authSpec != "" {
+		auth, err := plugin.ParseAuth(d.authSpec)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+		authed, err := auth.ClientHandshake(conn)
+		if err != nil {
+			conn.Close()
+			return nil, err
+		}
+		conn = authed
 	}
-	return fc, nil
+	return conn, nil
 }
 
 func (d *pluginDialer) Protocol() TunnelProtocol { return d.inner.Protocol() }
 
-// wrapServerConn applies the server-side plugin chain to an accepted connection.
-// It returns the original conn unchanged when spec is empty.
-func wrapServerConn(conn net.Conn, spec string) (net.Conn, error) {
-	if spec == "" {
-		return conn, nil
+// wrapServerConn applies the server-side plugin chain then the server side of the
+// optional auth handshake to an accepted connection. It returns the conn to use
+// for subsequent data, or an error to drop the connection.
+func wrapServerConn(conn net.Conn, pluginSpec, authSpec string) (net.Conn, error) {
+	if pluginSpec != "" {
+		ch, err := plugin.ParseChain(pluginSpec)
+		if err != nil {
+			return nil, err
+		}
+		fc, err := plugin.NewFramedConn(conn, ch, false, 0)
+		if err != nil {
+			return nil, err
+		}
+		conn = fc
 	}
-	ch, err := plugin.ParseChain(spec)
-	if err != nil {
-		return nil, err
+	if authSpec != "" {
+		auth, err := plugin.ParseAuth(authSpec)
+		if err != nil {
+			return nil, err
+		}
+		authed, _, err := auth.ServerHandshake(conn)
+		if err != nil {
+			return nil, err
+		}
+		conn = authed
 	}
-	return plugin.NewFramedConn(conn, ch, false, 0)
+	return conn, nil
 }
