@@ -100,10 +100,8 @@ func startTunnel(name string, conf core.TunnelConfig, foreground bool) error {
 		return cmd.Run()
 	}
 
-	// Background mode
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
+	// Background mode: detach the daemon (platform-specific, see procattr_*.go).
+	cmd.SysProcAttr = detachSysProcAttr()
 
 	if err := cmd.Start(); err != nil {
 		return err

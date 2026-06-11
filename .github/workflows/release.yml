@@ -1,9 +1,15 @@
 name: Release
 
+# Releases are driven by the version in main.go. On a push to main (or a manual
+# dispatch) the prepare job reads that version and, if the matching tag does not
+# yet exist, creates it and runs the full build/release in the SAME run (a tag
+# pushed by GITHUB_TOKEN cannot trigger a separate workflow, so everything stays
+# in one run). Pushing a v*.*.* tag by hand also works.
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,22 +17,66 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # Determine the version, auto-create the tag, and decide whether to release.
+  # ---------------------------------------------------------------------------
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      do_release: ${{ steps.v.outputs.do_release }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - id: v
+        name: Resolve version + tag
+        run: |
+          set -e
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            version="${GITHUB_REF_NAME#v}"
+            do_release=true
+          else
+            version=$(grep -oE 'version = "[^"]+"' main.go | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ -z "$version" ]; then echo "could not read version from main.go" >&2; exit 1; fi
+            if git rev-parse "v$version" >/dev/null 2>&1; then
+              echo "tag v$version already exists -- nothing to release"
+              do_release=false
+            else
+              do_release=true
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "do_release=$do_release" >> "$GITHUB_OUTPUT"
+          echo "version=$version do_release=$do_release"
+      - name: Create and push tag
+        if: github.ref_type != 'tag' && steps.v.outputs.do_release == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.v.outputs.version }}" -m "Release v${{ steps.v.outputs.version }}"
+          git push origin "v${{ steps.v.outputs.version }}"
+
+  # ---------------------------------------------------------------------------
   # CLI tool — linux/darwin/windows × amd64/arm64. Pure Go, no CGO.
   # Named stunning-cli-<os>-<arch>[.exe] to distinguish it from the desktop app.
   # ---------------------------------------------------------------------------
   release-cli:
     name: CLI ${{ matrix.goos }}/${{ matrix.goarch }}
+    needs: prepare
+    if: ${{ needs.prepare.outputs.do_release == 'true' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, goos: linux, goarch: amd64, ext: "" }
-          - { os: ubuntu-latest, goos: linux, goarch: arm64, ext: "" }
-          - { os: ubuntu-latest, goos: darwin, goarch: amd64, ext: "" }
-          - { os: ubuntu-latest, goos: darwin, goarch: arm64, ext: "" }
-          - { os: ubuntu-latest, goos: windows, goarch: amd64, ext: ".exe" }
-          - { os: ubuntu-latest, goos: windows, goarch: arm64, ext: ".exe" }
-    runs-on: ${{ matrix.os }}
+          - { goos: linux, goarch: amd64, ext: "" }
+          - { goos: linux, goarch: arm64, ext: "" }
+          - { goos: darwin, goarch: amd64, ext: "" }
+          - { goos: darwin, goarch: arm64, ext: "" }
+          - { goos: windows, goarch: amd64, ext: ".exe" }
+          - { goos: windows, goarch: arm64, ext: ".exe" }
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
@@ -49,6 +99,8 @@ jobs:
   # ---------------------------------------------------------------------------
   release-library:
     name: Library ${{ matrix.goos }}/${{ matrix.goarch }}
+    needs: prepare
+    if: ${{ needs.prepare.outputs.do_release == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -91,18 +143,19 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Desktop app (Fyne GUI) — built natively per OS, packaged into one archive.
-  # Named stunning-desktop-<os>-<arch>.{tar.gz,zip}.
   # ---------------------------------------------------------------------------
   release-desktop:
     name: Desktop ${{ matrix.label }}
+    needs: prepare
+    if: ${{ needs.prepare.outputs.do_release == 'true' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, label: linux-amd64, goos: linux }
-          - { os: macos-latest, label: macos-arm64, goos: darwin }
-          - { os: macos-13, label: macos-amd64, goos: darwin }
-          - { os: windows-latest, label: windows-amd64, goos: windows }
+          - { os: ubuntu-latest, label: linux-amd64 }
+          - { os: macos-latest, label: macos-arm64 }
+          - { os: macos-13, label: macos-amd64 }
+          - { os: windows-latest, label: windows-amd64 }
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
@@ -148,6 +201,8 @@ jobs:
   # ---------------------------------------------------------------------------
   release-android:
     name: Android
+    needs: prepare
+    if: ${{ needs.prepare.outputs.do_release == 'true' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -186,11 +241,12 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # iOS — xcframework (binding) is reliable; the .ipa needs signing, so it is
-  # best-effort. Store upload is handled by the gated publish-app-store job.
+  # iOS — xcframework (binding) is reliable; the .ipa needs signing.
   # ---------------------------------------------------------------------------
   release-ios:
     name: iOS
+    needs: prepare
+    if: ${{ needs.prepare.outputs.do_release == 'true' }}
     runs-on: macos-latest
     continue-on-error: true
     steps:
@@ -223,13 +279,13 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # Collect every artifact and publish a GitHub Release.
+  # Collect every artifact and publish a GitHub Release for v<version>.
   # ---------------------------------------------------------------------------
   create-github-release:
     name: GitHub Release
-    needs: [release-cli, release-library, release-desktop, release-android, release-ios]
+    needs: [prepare, release-cli, release-library, release-desktop, release-android, release-ios]
+    if: ${{ always() && needs.prepare.outputs.do_release == 'true' }}
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v8
@@ -247,6 +303,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          name: v${{ needs.prepare.outputs.version }}
           files: release-assets/*
           generate_release_notes: true
           draft: false
@@ -260,9 +318,9 @@ jobs:
   # ---------------------------------------------------------------------------
   publish-google-play:
     name: Publish to Google Play
-    needs: [release-android]
+    needs: [prepare, release-android]
+    if: ${{ needs.prepare.outputs.do_release == 'true' && vars.PUBLISH_STORES == 'true' }}
     runs-on: ubuntu-latest
-    if: ${{ vars.PUBLISH_STORES == 'true' }}
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -279,9 +337,9 @@ jobs:
 
   publish-app-store:
     name: Publish to App Store
-    needs: [release-ios]
+    needs: [prepare, release-ios]
+    if: ${{ needs.prepare.outputs.do_release == 'true' && vars.PUBLISH_STORES == 'true' }}
     runs-on: macos-latest
-    if: ${{ vars.PUBLISH_STORES == 'true' }}
     steps:
       - uses: actions/download-artifact@v8
         with:
