@@ -117,3 +117,15 @@ func TestSafeLDAPUser(t *testing.T) {
 		}
 	}
 }
+
+func TestLDAPUserDNValidation(t *testing.T) {
+	// A userdn without exactly one %s would yield a static DN (auth bypass).
+	for _, bad := range []string{"ldap?url=ldap://x&userdn=cn=admin,dc=x", "ldap?url=ldap://x&userdn=uid=%s%s,dc=x"} {
+		if _, err := ParseAuth(bad); err == nil {
+			t.Errorf("ParseAuth(%q) should error", bad)
+		}
+	}
+	if _, err := ParseAuth("ldap?url=ldap://x&userdn=uid=%s,ou=users,dc=x"); err != nil {
+		t.Fatalf("valid userdn rejected: %v", err)
+	}
+}

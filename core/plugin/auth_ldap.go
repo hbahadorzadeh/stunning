@@ -48,11 +48,19 @@ type ldapAuth struct {
 }
 
 func newLDAPAuth(p Params) (Authenticator, error) {
+	userDN := p.String("userdn", "")
+	// A userdn without exactly one %s would ignore the username (static DN), so
+	// anyone with that DN's password could authenticate as it. Reject it.
+	if userDN != "" {
+		if !strings.Contains(userDN, "%s") || strings.Count(userDN, "%") != 1 {
+			return nil, fmt.Errorf("ldap: userdn must contain exactly one %%s placeholder")
+		}
+	}
 	return &ldapAuth{
 		user:     p.String("user", ""),
 		password: p.String("password", ""),
 		url:      p.String("url", ""),
-		userDN:   p.String("userdn", ""),
+		userDN:   userDN,
 	}, nil
 }
 

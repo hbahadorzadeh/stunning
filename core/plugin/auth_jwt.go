@@ -142,6 +142,9 @@ func (a *jwtAuth) verify(token string) (string, error) {
 
 	switch a.alg {
 	case "HS256":
+		if len(a.secret) == 0 {
+			return "", fmt.Errorf("jwt: no secret configured")
+		}
 		h := hmac.New(sha256.New, a.secret)
 		h.Write([]byte(signingInput))
 		if subtle.ConstantTimeCompare(sig, h.Sum(nil)) != 1 {

@@ -235,14 +235,17 @@ func (f *FramedConn) readFrame() error {
 	return nil
 }
 
-// Close stops chaff injection, closes the chain, then the underlying connection.
+// Close closes the underlying connection first so any write blocked under wmu is
+// aborted and the chaff goroutine can acquire the lock and exit; then it stops
+// chaff, waits, and closes the chain. Closing the conn first avoids a deadlock
+// between a blocked write holding wmu and chaffLoop waiting on wmu.
 func (f *FramedConn) Close() error {
+	nerr := f.Conn.Close()
 	if f.chaffStop != nil {
 		f.chaffOnce.Do(func() { close(f.chaffStop) })
 		f.chaffWG.Wait()
 	}
 	cerr := f.chain.Close()
-	nerr := f.Conn.Close()
 	if nerr != nil {
 		return nerr
 	}

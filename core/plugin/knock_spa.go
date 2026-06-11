@@ -48,7 +48,6 @@ type spaKnocker struct {
 	seen      map[string]time.Time // nonce(hex) -> expiry (replay defense)
 	lastSweep time.Time
 	pc        net.PacketConn
-	once      sync.Once
 }
 
 // sweepInterval bounds how often the O(N) map eviction runs, so a flood of knock
@@ -109,17 +108,20 @@ func (s *spaKnocker) Knock(host string) error {
 }
 
 func (s *spaKnocker) Start() error {
-	var startErr error
-	s.once.Do(func() {
-		pc, err := net.ListenPacket("udp", fmt.Sprintf(":%d", s.port))
-		if err != nil {
-			startErr = fmt.Errorf("spa: listen knock port: %w", err)
-			return
-		}
-		s.pc = pc
-		go s.serve()
-	})
-	return startErr
+	// Mutex-guarded (not sync.Once) so a failed bind can be retried rather than
+	// permanently latching the knocker into a broken, no-listener state.
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.pc != nil {
+		return nil
+	}
+	pc, err := net.ListenPacket("udp", fmt.Sprintf(":%d", s.port))
+	if err != nil {
+		return fmt.Errorf("spa: listen knock port: %w", err)
+	}
+	s.pc = pc
+	go s.serve()
+	return nil
 }
 
 func (s *spaKnocker) serve() {
@@ -193,8 +195,11 @@ func (s *spaKnocker) sweep(now time.Time) {
 }
 
 func (s *spaKnocker) Close() error {
-	if s.pc != nil {
-		return s.pc.Close()
+	s.mu.Lock()
+	pc := s.pc
+	s.mu.Unlock()
+	if pc != nil {
+		return pc.Close()
 	}
 	return nil
 }

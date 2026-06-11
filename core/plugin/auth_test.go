@@ -230,3 +230,13 @@ func writePEM(t *testing.T, dir, file, typ string, der []byte) string {
 	}
 	return path
 }
+
+func TestJWTAuthHS256EmptySecretRejected(t *testing.T) {
+	// A token forged with an empty key must not be accepted when the server has
+	// no secret configured.
+	tok := mintHS256(t, []byte{}, map[string]any{"sub": "attacker"})
+	_, cErr, sErr := runAuth(t, "jwt?token="+tok, "jwt?alg=HS256")
+	if sErr == nil || cErr == nil {
+		t.Fatal("server with no HS256 secret must reject all tokens")
+	}
+}
