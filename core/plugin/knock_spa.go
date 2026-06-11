@@ -43,12 +43,17 @@ type spaKnocker struct {
 	window time.Duration
 	delay  time.Duration
 
-	mu    sync.Mutex
-	allow map[string]time.Time // ip -> expiry
-	seen  map[string]time.Time // nonce(hex) -> expiry (replay defense)
-	pc    net.PacketConn
-	once  sync.Once
+	mu        sync.Mutex
+	allow     map[string]time.Time // ip -> expiry
+	seen      map[string]time.Time // nonce(hex) -> expiry (replay defense)
+	lastSweep time.Time
+	pc        net.PacketConn
+	once      sync.Once
 }
+
+// sweepInterval bounds how often the O(N) map eviction runs, so a flood of knock
+// packets cannot turn verification into a per-packet full-map scan under the lock.
+const sweepInterval = 2 * time.Second
 
 func newSPA(p Params) (Knocker, error) {
 	key, err := p.Bytes("key", nil)
@@ -148,11 +153,15 @@ func (s *spaKnocker) verify(pkt []byte) bool {
 	key := hex.EncodeToString(nonce)
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.sweep(time.Now())
+	tnow := time.Now()
+	if tnow.Sub(s.lastSweep) > sweepInterval {
+		s.sweep(tnow)
+		s.lastSweep = tnow
+	}
 	if _, replay := s.seen[key]; replay {
 		return false
 	}
-	s.seen[key] = time.Now().Add(s.window)
+	s.seen[key] = tnow.Add(s.window)
 	return true
 }
 

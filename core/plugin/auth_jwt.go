@@ -68,6 +68,10 @@ func loadRSAPublicKey(path string) (*rsa.PublicKey, error) {
 	}
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
+		// Fall back to PKCS#1 (BEGIN RSA PUBLIC KEY).
+		if rp, err2 := x509.ParsePKCS1PublicKey(block.Bytes); err2 == nil {
+			return rp, nil
+		}
 		return nil, fmt.Errorf("jwt: parse pubkey: %w", err)
 	}
 	rp, ok := pub.(*rsa.PublicKey)
@@ -162,10 +166,11 @@ func (a *jwtAuth) verify(token string) (string, error) {
 		return "", fmt.Errorf("jwt: bad claims: %w", err)
 	}
 	now := time.Now().Unix()
-	if claims.Exp != 0 && now >= claims.Exp {
+	const leeway = 60 // seconds of clock-skew tolerance
+	if claims.Exp != 0 && now >= claims.Exp+leeway {
 		return "", fmt.Errorf("jwt: token expired")
 	}
-	if claims.Nbf != 0 && now < claims.Nbf {
+	if claims.Nbf != 0 && now < claims.Nbf-leeway {
 		return "", fmt.Errorf("jwt: token not yet valid")
 	}
 	return claims.Sub, nil

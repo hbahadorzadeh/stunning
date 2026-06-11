@@ -11,11 +11,15 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-// aead authenticates and encrypts each frame. It defaults to XChaCha20-Poly1305
-// with a fresh random 24-byte nonce prepended to every frame, so the same key is
-// safe in both tunnel directions without any counter synchronization, and a
-// single instance is its own inverse (Decode(Encode(x)) == x). algo=aesgcm
-// selects AES-256-GCM (12-byte random nonce) instead.
+// aead authenticates and encrypts each frame. It defaults to XChaCha20-Poly1305;
+// algo=aesgcm selects AES-256-GCM (hardware-accelerated).
+//
+// Nonces use a per-connection random base XORed with a monotonic counter, so
+// every frame on a connection gets a unique nonce (no birthday-bound collision
+// risk even for AES-GCM's 96-bit nonce after many frames), and the two tunnel
+// directions draw independent random bases so they never collide. The full nonce
+// is prepended to each frame, so a single instance is its own inverse
+// (Decode(Encode(x)) == x).
 //
 // Params:
 //
@@ -27,6 +31,8 @@ func init() { Register("aead", newAEAD) }
 type aeadPlugin struct {
 	aead      cipher.AEAD
 	nonceSize int
+	base      []byte // per-connection random nonce base
+	counter   uint64 // monotonic, XORed into the base per frame
 }
 
 func newAEAD(p Params) (Plugin, error) {
@@ -57,13 +63,21 @@ func newAEAD(p Params) (Plugin, error) {
 	if err != nil {
 		return nil, fmt.Errorf("aead: %w", err)
 	}
-	return &aeadPlugin{aead: aead, nonceSize: aead.NonceSize()}, nil
+	base := make([]byte, aead.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, base); err != nil {
+		return nil, fmt.Errorf("aead: nonce base: %w", err)
+	}
+	return &aeadPlugin{aead: aead, nonceSize: aead.NonceSize(), base: base}, nil
 }
 
 func (a *aeadPlugin) Encode(src []byte) ([]byte, error) {
 	nonce := make([]byte, a.nonceSize, a.nonceSize+len(src)+a.aead.Overhead())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("aead: nonce: %w", err)
+	copy(nonce, a.base)
+	c := a.counter
+	a.counter++
+	// XOR the counter into the trailing 8 bytes of the base: unique per frame.
+	for i := 0; i < 8 && i < a.nonceSize; i++ {
+		nonce[a.nonceSize-1-i] ^= byte(c >> (8 * i))
 	}
 	return a.aead.Seal(nonce, nonce, src, nil), nil
 }

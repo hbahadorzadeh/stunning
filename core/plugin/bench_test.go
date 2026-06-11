@@ -60,8 +60,16 @@ func benchFramed(b *testing.B, spec string, size int) {
 	out := make([]byte, size)
 	b.SetBytes(int64(size))
 	b.ResetTimer()
+	// A single persistent writer goroutine avoids per-iteration goroutine churn
+	// in the measured loop.
+	go func() {
+		for i := 0; i < b.N; i++ {
+			if _, err := client.Write(in); err != nil {
+				return
+			}
+		}
+	}()
 	for i := 0; i < b.N; i++ {
-		go client.Write(in)
 		if _, err := io.ReadFull(server, out); err != nil {
 			b.Fatal(err)
 		}
