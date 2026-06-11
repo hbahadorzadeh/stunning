@@ -40,11 +40,11 @@ func (pp *padPlugin) Encode(src []byte) ([]byte, error) {
 	span := pp.max - pp.min + 1
 	n := pp.min
 	if span > 1 {
-		b := make([]byte, 2)
-		if _, err := io.ReadFull(rand.Reader, b); err != nil {
+		var b [2]byte
+		if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
 			return nil, fmt.Errorf("pad: rand: %w", err)
 		}
-		n = pp.min + int(binary.LittleEndian.Uint16(b))%span
+		n = pp.min + int(binary.LittleEndian.Uint16(b[:]))%span
 	}
 	out := make([]byte, len(src)+n+2)
 	copy(out, src)

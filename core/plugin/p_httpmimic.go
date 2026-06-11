@@ -64,7 +64,8 @@ func (h *httpMimic) Deframe(r io.Reader) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			if string(line) == "\r\n" || string(line) == "\n" {
+			// Byte check avoids a string allocation per header line.
+			if len(line) == 2 && line[0] == '\r' && line[1] == '\n' || len(line) == 1 && line[0] == '\n' {
 				break
 			}
 		}
@@ -75,12 +76,19 @@ func (h *httpMimic) Deframe(r io.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	sizeLine := strings.TrimRight(string(sizeLineBuf), "\r\n")
-	// A chunk extension (";...") may follow the size; ignore it.
-	if i := strings.IndexByte(sizeLine, ';'); i >= 0 {
-		sizeLine = sizeLine[:i]
+	// Trim CRLF and any chunk extension on the byte slice, converting to string
+	// only once for parsing, to avoid per-frame allocations on the hot path.
+	for len(sizeLineBuf) > 0 && (sizeLineBuf[len(sizeLineBuf)-1] == '\r' || sizeLineBuf[len(sizeLineBuf)-1] == '\n') {
+		sizeLineBuf = sizeLineBuf[:len(sizeLineBuf)-1]
 	}
-	n, err := strconv.ParseInt(strings.TrimSpace(sizeLine), 16, 32)
+	for i, b := range sizeLineBuf {
+		if b == ';' {
+			sizeLineBuf = sizeLineBuf[:i]
+			break
+		}
+	}
+	sizeLine := strings.TrimSpace(string(sizeLineBuf))
+	n, err := strconv.ParseInt(sizeLine, 16, 32)
 	if err != nil {
 		return nil, fmt.Errorf("http-mimic: bad chunk size %q: %w", sizeLine, err)
 	}
