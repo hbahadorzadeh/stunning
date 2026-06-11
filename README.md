@@ -77,6 +77,27 @@
 - **TUN Device** — Virtual network interface for VPN
 - **Serial** — Serial port communication
 
+### 🧩 Plugin Chains (Anti-DPI)
+
+Composable, per-connection transforms that obfuscate, encrypt, compress, and
+disguise tunnel traffic to defeat deep-packet-inspection firewalls. Compiled in
+(no `.so`, no CGO) and combinable in any order.
+
+| Plugin | Category | Purpose |
+|--------|----------|---------|
+| `flate` | size | DEFLATE compression |
+| `aead` | security | ChaCha20-Poly1305 / AES-GCM authenticated encryption |
+| `pad` | anti-DPI | random length padding |
+| `probe-guard` | active-probe | keyed tag; silently drops censor probes |
+| `tls-mimic` | mimicry | disguises the wire as TLS |
+| `http-mimic` | mimicry | disguises the wire as HTTP/1.1 chunked |
+| `jitter` | morphing | random per-frame timing delay |
+| `bucket` | morphing | normalize frame sizes to a fixed quantum |
+
+A high-entropy encrypted tunnel that a censor blocks passes cleanly once wrapped
+in `tls-mimic`. See [Plugin Chains](#plugin-chains) below, the full
+[plugin reference](docs/PLUGINS.md), and [benchmarks](docs/BENCHMARKS.md).
+
 ### 🛠️ Management & Monitoring
 
 - **Process-based** — Each tunnel runs as independent background process
@@ -223,6 +244,89 @@ Output:
 
 Metrics available at: http://localhost:9090/metrics
 ```
+
+---
+
+## Plugin Chains
+
+Plugin chains transform tunnel payloads to evade deep-packet inspection (DPI) and
+to add security or size optimization. Plugins are stateful per connection,
+compiled into the binary (no `.so`, no CGO — works on every platform), and
+combine in any order.
+
+### Enabling a chain
+
+Add a `Plugins` field to a tunnel config. **The same chain string must be set on
+both the client and the server** — the client's encode is the exact inverse of
+the server's decode.
+
+```json
+{
+  "secure-tunnel": {
+    "ServiceMode": "client",
+    "ServerType": "tcp",
+    "InterfaceType": "socks",
+    "Listen": "127.0.0.1:1080",
+    "Connect": "vps.example.com:8443",
+    "Plugins": "flate,aead?key=0123456789abcdef0123456789abcdef,tls-mimic"
+  }
+}
+```
+
+### Chain grammar
+
+```
+name?k=v&k2=v2,name2,name3?k=v
+```
+
+Comma-separated plugins, each with optional `?`-prefixed `&`-joined params.
+`Encode` runs left→right on the way out; the peer's `Decode` runs right→left.
+
+### Available plugins
+
+| Plugin | Category | Params | Purpose |
+|--------|----------|--------|---------|
+| `flate` | size | `level` (0–9) | DEFLATE compression |
+| `aead` | security | `key` (hex, **required**), `algo` (`chacha`\|`aesgcm`) | authenticated encryption, random nonce |
+| `pad` | anti-DPI | `min`, `max` | random length padding |
+| `probe-guard` | active-probe | `key` (hex, **required**), `taglen` (8–32) | keyed tag; drops unauthenticated probes |
+| `tls-mimic` | mimicry | — | disguise the wire as TLS |
+| `http-mimic` | mimicry | — | disguise the wire as HTTP/1.1 chunked |
+| `jitter` | morphing | `min`, `max` (durations) | random per-frame timing delay |
+| `bucket` | morphing | `size` | pad frames to a fixed size quantum |
+
+### Ordering rules
+
+- **Compress before encrypt** — `flate` must come before `aead` (ciphertext does
+  not compress).
+- **Mimicry goes last** — `tls-mimic` / `http-mimic` provide the wire framing and
+  must be the rightmost plugin, or the length prefix would precede the protocol
+  header and break the disguise.
+
+### Recommended chains
+
+```text
+# fast, strong, looks like TLS
+flate,aead?key=<hex>,tls-mimic
+
+# add size-fingerprint resistance, look like HTTP
+flate,aead?key=<hex>,bucket?size=512,http-mimic
+
+# minimal obfuscation without crypto
+flate,pad?min=16&max=256
+```
+
+### Why it beats DPI
+
+A passive entropy detector flags high-entropy unknown protocols — exactly what a
+naive encrypted proxy looks like. Wrapping the chain in `tls-mimic` makes the wire
+open with a convincing TLS handshake, so a protocol allowlist passes it while the
+body stays encrypted. `probe-guard` drops active probes (no distinguishing
+response), and `pad` / `bucket` defeat packet-size fingerprinting.
+
+The [`test/dpi/`](test/dpi/) harness demonstrates this end to end against a
+simulated GFW middlebox. See the [plugin reference](docs/PLUGINS.md) and
+[benchmarks](docs/BENCHMARKS.md) for details.
 
 ---
 
@@ -480,6 +584,7 @@ See [DOCKER.md](DOCKER.md) for detailed Docker guide.
 ├── core/                    # Core tunneling library
 │   ├── tunnel/             # 10 tunnel protocol implementations
 │   ├── interface/          # 4 interface implementations
+│   ├── plugin/             # Anti-DPI plugin chain system
 │   ├── common/             # Shared utilities
 │   └── metrics/            # Prometheus metrics system
 ├── app/
@@ -487,6 +592,8 @@ See [DOCKER.md](DOCKER.md) for detailed Docker guide.
 │   └── mobile/             # iOS/Android mobile apps
 ├── bindings/               # Mobile language bindings (gomobile)
 ├── clib/                   # C shared library wrapper
+├── test/dpi/               # 3-node docker DPI evasion harness
+├── docs/                   # PLUGINS.md, BENCHMARKS.md, design specs
 ├── main.go                 # CLI tool
 └── README.md              # This file
 ```

@@ -5,7 +5,7 @@ This directory contains the GitHub Actions CI/CD pipeline configuration for the 
 ## Files Overview
 
 ### Workflows
-- **`workflows/ci.yml`** - Main CI pipeline with 12 jobs covering linting, security, testing, and reporting
+- **`workflows/ci.yml`** - Main CI pipeline covering linting, security, testing, plugin benchmarks, DPI evasion e2e, and reporting
 
 ### Configuration
 - **`dependabot.yml`** - Automated dependency and GitHub Actions updates
@@ -45,12 +45,14 @@ See `.github/CI_CD.md` for detailed local testing commands.
 3. **Build** - Compilation verification
 4. **Unit Tests** - Test coverage and race detection
 5. **Code Quality** - Advanced static analysis
+6. **DPI Evasion E2E** - 3-node docker harness asserting plugin chains evade a simulated firewall (`test/dpi/scenarios.sh`)
 
 ### Informational Jobs (Non-Blocking)
 1. **Functional Tests** - Component tests
 2. **E2E Tests** - End-to-end workflows
 3. **Race Detector** - Concurrency verification
 4. **Dependency Check** - Vulnerable packages
+5. **Plugin Benchmarks** - `core/plugin` micro-benchmarks (results uploaded as an artifact)
 
 ## Automated Dependency Updates
 
@@ -76,6 +78,8 @@ Generated and stored:
 - **Compiled binaries** (5 days retention)
 - **Security reports** (30 days retention)
 - **Coverage data** (uploaded to Codecov)
+- **Plugin benchmark results** (14 days retention)
+- **DPI verdict log** from the evasion e2e (14 days retention)
 
 ## Status Badges
 
