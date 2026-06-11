@@ -4,9 +4,9 @@
 // tunnel traffic so it is harder for deep-packet-inspection firewalls to
 // classify or block.
 //
-// Unlike the legacy .so loader in core/common, plugins here are compiled into
-// the binary and self-register via init(), so they cross-compile to every
-// supported platform (mobile, desktop, Windows) with no CGO.
+// Plugins are compiled into the binary and self-register via init(), so they
+// cross-compile to every supported platform (mobile, desktop, Windows) with no
+// CGO and no dynamic .so loading.
 package plugin
 
 import (

@@ -25,13 +25,6 @@ const (
 	SERIAL_IFACE InterfaceType = "serial"
 )
 
-type PluginMode string
-
-const (
-	ENC PluginMode = "encoder"
-	DEC PluginMode = "decoder"
-)
-
 type TunnelMode string
 
 const (
