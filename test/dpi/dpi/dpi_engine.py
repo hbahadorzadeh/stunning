@@ -157,6 +157,13 @@ def handle(client, peer):
 
     threading.Thread(target=pipe, args=(client, upstream), daemon=True).start()
     pipe(upstream, client)
+    # Explicitly close both sockets rather than relying on GC, to avoid fd leaks
+    # under concurrent streams.
+    for s in (client, upstream):
+        try:
+            s.close()
+        except OSError:
+            pass
 
 
 def main():

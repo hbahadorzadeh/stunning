@@ -43,15 +43,18 @@ func (f *flatePlugin) Encode(src []byte) ([]byte, error) {
 	} else {
 		w.Reset(&buf)
 	}
-	if _, err := w.Write(src); err != nil {
+	// Reset to io.Discard before pooling so the writer does not retain a
+	// reference to buf (which holds the encoded output).
+	defer func() {
+		w.Reset(io.Discard)
 		f.wpool.Put(w)
+	}()
+	if _, err := w.Write(src); err != nil {
 		return nil, err
 	}
 	if err := w.Close(); err != nil {
-		f.wpool.Put(w)
 		return nil, err
 	}
-	f.wpool.Put(w)
 	return buf.Bytes(), nil
 }
 
@@ -62,6 +65,12 @@ func (f *flatePlugin) Decode(src []byte) ([]byte, error) {
 	} else if err := r.(flate.Resetter).Reset(bytes.NewReader(src), nil); err != nil {
 		return nil, err
 	}
+	// Reset onto an empty reader before pooling so the reader does not retain a
+	// reference to src.
+	defer func() {
+		_ = r.(flate.Resetter).Reset(bytes.NewReader(nil), nil)
+		f.rpool.Put(r)
+	}()
 	out, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("flate: decode: %w", err)
@@ -69,7 +78,6 @@ func (f *flatePlugin) Decode(src []byte) ([]byte, error) {
 	if err := r.Close(); err != nil {
 		return nil, err
 	}
-	f.rpool.Put(r)
 	return out, nil
 }
 

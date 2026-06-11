@@ -149,7 +149,10 @@ func (f *FramedConn) writeFrame(p []byte) error {
 func (f *FramedConn) Read(p []byte) (int, error) {
 	f.rmu.Lock()
 	defer f.rmu.Unlock()
-	if f.rbuf.Len() == 0 {
+	// Loop, not if: an empty (or keep-alive) frame leaves rbuf empty, and
+	// rbuf.Read on an empty buffer returns io.EOF -- we must not signal EOF to
+	// the caller on a stream, so keep reading frames until we have bytes.
+	for f.rbuf.Len() == 0 {
 		if err := f.readFrame(); err != nil {
 			return 0, err
 		}

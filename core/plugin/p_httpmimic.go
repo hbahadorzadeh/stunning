@@ -56,23 +56,26 @@ func (h *httpMimic) Deframe(r io.Reader) ([]byte, error) {
 	}
 	if !h.readHeader {
 		// Consume header lines up to the blank line terminating the headers.
+		// ReadSlice (not ReadString) bounds the line to the bufio buffer, so a
+		// peer that never sends a newline gets bufio.ErrBufferFull instead of an
+		// unbounded allocation (OOM DoS).
 		for {
-			line, err := h.rd.ReadString('\n')
+			line, err := h.rd.ReadSlice('\n')
 			if err != nil {
 				return nil, err
 			}
-			if line == "\r\n" || line == "\n" {
+			if string(line) == "\r\n" || string(line) == "\n" {
 				break
 			}
 		}
 		h.readHeader = true
 	}
 
-	sizeLine, err := h.rd.ReadString('\n')
+	sizeLineBuf, err := h.rd.ReadSlice('\n')
 	if err != nil {
 		return nil, err
 	}
-	sizeLine = strings.TrimRight(sizeLine, "\r\n")
+	sizeLine := strings.TrimRight(string(sizeLineBuf), "\r\n")
 	// A chunk extension (";...") may follow the size; ignore it.
 	if i := strings.IndexByte(sizeLine, ';'); i >= 0 {
 		sizeLine = sizeLine[:i]
