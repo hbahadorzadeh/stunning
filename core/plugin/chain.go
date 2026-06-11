@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/blake2b"
 )
@@ -102,6 +103,45 @@ func (c *Chain) Decode(src []byte) ([]byte, error) {
 
 // Len reports the number of plugins in the chain.
 func (c *Chain) Len() int { return len(c.plugins) }
+
+// Chaffer is an optional capability of the innermost (first) plugin: it lets
+// FramedConn inject independent decoy frames. The chaff plugin tags real vs decoy
+// frames; ChaffPayload returns a fresh, already-tagged decoy inner payload and
+// NextDelay paces injection.
+type Chaffer interface {
+	ChaffPayload() []byte
+	NextDelay() time.Duration
+}
+
+// Chaffer returns the chaff capability if the innermost plugin provides one.
+func (c *Chain) Chaffer() Chaffer {
+	if len(c.plugins) == 0 {
+		return nil
+	}
+	if ch, ok := c.plugins[0].(Chaffer); ok {
+		return ch
+	}
+	return nil
+}
+
+// EncodeChaff builds one decoy frame: it takes a tagged chaff payload from the
+// innermost chaff plugin and runs it through the remaining (outer) plugins, so
+// the decoy is encrypted/disguised exactly like real traffic. The peer's Decode
+// reconstructs it and the chaff plugin drops it (returns empty).
+func (c *Chain) EncodeChaff() ([]byte, error) {
+	ch := c.Chaffer()
+	if ch == nil {
+		return nil, fmt.Errorf("plugin: chain has no chaffer")
+	}
+	p := ch.ChaffPayload()
+	var err error
+	for i := 1; i < len(c.plugins); i++ {
+		if p, err = c.plugins[i].Encode(p); err != nil {
+			return nil, err
+		}
+	}
+	return p, nil
+}
 
 // Framer returns the outermost plugin's protocol framing if it provides one.
 // FramedConn uses it in place of the default masked-length framing so the wire

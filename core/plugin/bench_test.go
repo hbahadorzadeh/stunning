@@ -80,3 +80,8 @@ func BenchmarkFramedFullMimic(b *testing.B) {
 func BenchmarkFramedBaseline(b *testing.B) {
 	benchFramed(b, "aead?key=0123456789abcdef", 4096)
 }
+func BenchmarkProfile(b *testing.B) { benchChain(b, "profile?name=web&min=0&max=0", 4096) }
+func BenchmarkFramedChaff(b *testing.B) {
+	// Long interval so decoy injection doesn't dominate the per-frame measurement.
+	benchFramed(b, "chaff?interval=10s&min=8&max=64,aead?key=0123456789abcdef,tls-mimic", 4096)
+}

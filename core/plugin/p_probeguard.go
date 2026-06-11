@@ -59,10 +59,11 @@ func newProbeGuard(p Params) (Plugin, error) {
 func (g *probeGuardPlugin) Encode(src []byte) ([]byte, error) {
 	g.encH.Reset()
 	g.encH.Write(src)
-	tag := g.encH.Sum(nil)
-	out := make([]byte, 0, len(tag)+len(src))
-	out = append(out, tag...)
-	out = append(out, src...)
+	// Single allocation: write the tag straight into the front of out, then the
+	// payload after it (Sum appends into out[:0] without growing).
+	out := make([]byte, g.taglen+len(src))
+	g.encH.Sum(out[:0])
+	copy(out[g.taglen:], src)
 	return out, nil
 }
 
@@ -73,7 +74,8 @@ func (g *probeGuardPlugin) Decode(src []byte) ([]byte, error) {
 	got, payload := src[:g.taglen], src[g.taglen:]
 	g.decH.Reset()
 	g.decH.Write(payload)
-	want := g.decH.Sum(nil)
+	var wbuf [32]byte // taglen <= 32; stack buffer avoids an allocation
+	want := g.decH.Sum(wbuf[:0])
 	if subtle.ConstantTimeCompare(got, want) != 1 {
 		return nil, fmt.Errorf("probe-guard: authentication failed")
 	}

@@ -93,6 +93,8 @@ disguise tunnel traffic to defeat deep-packet-inspection firewalls. Compiled in
 | `http-mimic` | mimicry | disguises the wire as HTTP/1.1 chunked |
 | `jitter` | morphing | random per-frame timing delay |
 | `bucket` | morphing | normalize frame sizes to a fixed quantum |
+| `profile` | morphing | mimic a real protocol's size/timing distribution |
+| `chaff` | morphing | inject decoy/cover traffic to mask volume & timing |
 
 A high-entropy encrypted tunnel that a censor blocks passes cleanly once wrapped
 in `tls-mimic`. See [Plugin Chains](#plugin-chains) below, the full
@@ -294,6 +296,8 @@ Comma-separated plugins, each with optional `?`-prefixed `&`-joined params.
 | `http-mimic` | mimicry | — | disguise the wire as HTTP/1.1 chunked |
 | `jitter` | morphing | `min`, `max` (durations) | random per-frame timing delay |
 | `bucket` | morphing | `size` | pad frames to a fixed size quantum |
+| `profile` | morphing | `name` (`web`\|`video`\|`voip`\|`custom`), … | mimic a real protocol's size/timing distribution |
+| `chaff` | morphing | `min`, `max`, `interval`, `jitter` | inject decoy frames to mask volume/timing (place first) |
 
 ### Ordering rules
 

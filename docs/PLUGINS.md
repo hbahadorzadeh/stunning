@@ -35,6 +35,8 @@ right→left, so the same string on both ends is a mutual inverse.
 | `http-mimic` | mimicry | — | disguises the wire as HTTP/1.1 chunked transfer |
 | `jitter` | morphing | `min`, `max` (durations) | random per-frame timing delay |
 | `bucket` | morphing | `size` | pad frames to a fixed size quantum |
+| `profile` | morphing | `name` (`web`\|`video`\|`voip`\|`custom`), `quantum`, `min`, `max` | mimic a real protocol's size/timing distribution (quantize size + sampled delay) to defeat statistical classifiers |
+| `chaff` | morphing | `min`, `max` (decoy size), `interval`, `jitter` | inject decoy/cover frames on a timer to mask volume and timing; the peer drops them. Must be the **innermost** (first) plugin |
 
 ## Ordering
 
@@ -45,7 +47,11 @@ right→left, so the same string on both ends is a mutual inverse.
 - **Mimicry goes last**: `tls-mimic`/`http-mimic` provide the wire framing and
   must be the outermost (rightmost) plugin, or the framing length prefix would
   precede the protocol header and break the disguise.
-- **Recommended full chain**: `flate,aead?key=…,bucket?size=512,tls-mimic`.
+- **Chaff goes first**: `chaff` tags real vs decoy frames and must be the
+  innermost (leftmost) plugin so its type byte is covered by the outer
+  encryption/disguise.
+- **Recommended full chain**: `flate,aead?key=…,bucket?size=512,tls-mimic`, or
+  with cover traffic: `chaff,flate,aead?key=…,profile?name=web,tls-mimic`.
 
 ## How it defeats DPI
 

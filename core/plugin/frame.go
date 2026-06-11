@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/chacha20"
@@ -57,6 +58,11 @@ type FramedConn struct {
 	rbuf  bytes.Buffer
 	rdata []byte // reused frame-read scratch (single reader goroutine)
 	hdr   [2]byte
+
+	chaffer   Chaffer // non-nil when the chain injects decoy frames
+	chaffStop chan struct{}
+	chaffOnce sync.Once
+	chaffWG   sync.WaitGroup
 }
 
 // NewFramedConn wraps conn. chain holds live per-connection plugin state and is
@@ -78,6 +84,12 @@ func NewFramedConn(conn net.Conn, chain *Chain, isClient bool, maxFrame int) (*F
 		fc.wMask, fc.rMask = c2s, s2c
 	} else {
 		fc.wMask, fc.rMask = s2c, c2s
+	}
+	if ch := chain.Chaffer(); ch != nil {
+		fc.chaffer = ch
+		fc.chaffStop = make(chan struct{})
+		fc.chaffWG.Add(1)
+		go fc.chaffLoop()
 	}
 	return fc, nil
 }
@@ -115,33 +127,58 @@ func (f *FramedConn) Write(p []byte) (int, error) {
 }
 
 func (f *FramedConn) writeFrame(p []byte) error {
+	// Hold wmu across Encode + emit so a concurrent chaff injector never runs a
+	// plugin's Encode at the same time (plugins keep per-direction state).
+	f.wmu.Lock()
+	defer f.wmu.Unlock()
 	enc, err := f.chain.Encode(p)
 	if err != nil {
 		return err
 	}
+	return f.emitLocked(enc)
+}
+
+// emitLocked frames and writes one already-encoded frame. Caller holds wmu.
+func (f *FramedConn) emitLocked(enc []byte) error {
 	if len(enc) > f.maxFrame {
 		return ErrFrameTooLarge
 	}
-	f.wmu.Lock()
-	defer f.wmu.Unlock()
 	if f.framer != nil {
 		wire, err := f.framer.Frame(enc)
 		if err != nil {
 			return err
 		}
-		if _, err := f.Conn.Write(wire); err != nil {
-			return err
-		}
-		return nil
+		_, err = f.Conn.Write(wire)
+		return err
 	}
 	var lenbuf [2]byte
 	binary.BigEndian.PutUint16(lenbuf[:], uint16(len(enc)))
 	f.wMask.XORKeyStream(lenbuf[:], lenbuf[:])
 	// Vectored write: header + payload in one syscall, no concatenation copy.
-	if _, err := (&net.Buffers{lenbuf[:], enc}).WriteTo(f.Conn); err != nil {
-		return err
+	_, err := (&net.Buffers{lenbuf[:], enc}).WriteTo(f.Conn)
+	return err
+}
+
+// chaffLoop periodically injects decoy frames until the conn is closed.
+func (f *FramedConn) chaffLoop() {
+	defer f.chaffWG.Done()
+	stop := f.chaffStop // captured once; field is not mutated after start
+	for {
+		select {
+		case <-stop:
+			return
+		case <-time.After(f.chaffer.NextDelay()):
+		}
+		f.wmu.Lock()
+		enc, err := f.chain.EncodeChaff()
+		if err == nil {
+			err = f.emitLocked(enc)
+		}
+		f.wmu.Unlock()
+		if err != nil {
+			return // conn broken; stop injecting
+		}
 	}
-	return nil
 }
 
 // Read serves decoded payload bytes, reading and decoding the next frame when the
@@ -198,8 +235,12 @@ func (f *FramedConn) readFrame() error {
 	return nil
 }
 
-// Close closes the chain then the underlying connection.
+// Close stops chaff injection, closes the chain, then the underlying connection.
 func (f *FramedConn) Close() error {
+	if f.chaffStop != nil {
+		f.chaffOnce.Do(func() { close(f.chaffStop) })
+		f.chaffWG.Wait()
+	}
 	cerr := f.chain.Close()
 	nerr := f.Conn.Close()
 	if nerr != nil {
