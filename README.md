@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hbahadorzadeh/stunning/releases/tag/v1.0.0-beta"><img alt="Release" src="https://img.shields.io/badge/release-v1.0.0--beta-blue.svg"></a>
+  <a href="https://github.com/hbahadorzadeh/stunning/releases/tag/v1.1.0"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.0-blue.svg"></a>
   <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <a href="https://golang.org"><img alt="Go" src="https://img.shields.io/badge/go-1.25-blue.svg"></a>
@@ -29,12 +29,11 @@
 
 ## 🚀 Latest Release
 
-**v1.0.0-beta** is now available! [Download](https://github.com/hbahadorzadeh/stunning/releases/tag/v1.0.0-beta) pre-built binaries for Linux and macOS, or the C library for embedding.
+**v1.1.0** is now available! [Download](https://github.com/hbahadorzadeh/stunning/releases/tag/v1.1.0) CLI, desktop, mobile, and C-library builds for Linux, macOS, and Windows.
 
-- ✅ 20 unit tests passing
-- ✅ Race detection enabled
-- ✅ Security scanning verified
-- ✅ Full CI/CD pipeline
+- 🧩 Anti-DPI plugin chains + authentication & port-knock gates
+- ✅ Full test suite (unit, race, e2e, DPI evasion, auth) in CI
+- ✅ Multi-platform release pipeline
 
 ---
 
@@ -154,7 +153,7 @@ tar -xzf libstunning-linux-amd64.tar.gz
 # -> libstunning-linux-amd64/{libstunning.so, libstunning.h}
 
 # Compile against it
-gcc -o myapp myapp.c -L./libstunning-linux-amd64 -lstunning
+gcc -o myapp myapp.c -I./libstunning-linux-amd64 -L./libstunning-linux-amd64 -lstunning
 ```
 
 ### From Source
@@ -544,7 +543,7 @@ scrape_configs:
 |----------|:---:|:-------:|:------:|:-------:|
 | **Linux** | ✓ | ✓ | - | ✓ |
 | **macOS** | ✓ | ✓ | - | ✓ |
-| **Windows** | ✓ | - | - | ✓ |
+| **Windows** | ✓ | ✓ | - | ✓ |
 | **iOS** | - | - | ✓ | ✓ |
 | **Android** | - | - | ✓ | ✓ |
 
@@ -554,7 +553,7 @@ scrape_configs:
 
 - Linux: x86_64, ARM64
 - macOS: Intel, Apple Silicon (M1/M2/M3)
-- Windows: x86_64
+- Windows: x86_64, ARM64 (CLI)
 - iOS: ARM64
 - Android: ARM64
 
