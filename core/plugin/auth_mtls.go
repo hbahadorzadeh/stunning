@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"time"
@@ -32,6 +33,9 @@ type mtlsAuth struct {
 
 func newMTLSAuth(p Params) (Authenticator, error) {
 	a := &mtlsAuth{insecure: p.Bool("insecure", false), serverName: p.String("servername", "")}
+	if a.insecure {
+		log.Printf("WARNING: mtls insecure=true disables server certificate verification (testing only)")
+	}
 	if c, k := p.String("cert", ""), p.String("key", ""); c != "" && k != "" {
 		pair, err := tls.LoadX509KeyPair(c, k)
 		if err != nil {

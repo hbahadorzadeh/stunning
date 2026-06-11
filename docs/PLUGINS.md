@@ -117,3 +117,28 @@ server:  knock listener authorizes IP ──▶ accept (gated) ──▶ chain �
 Gates compose with the byte-transform chain: e.g. a tunnel can require a knock,
 disguise itself as TLS, encrypt with `aead`, and authenticate clients by JWT all
 at once.
+
+## Security considerations
+
+- **Use `aead` for confidentiality and integrity.** Without it the chain is
+  obfuscation only — a network attacker can read, modify, or replay traffic. Add
+  `probe-guard` for an outer authenticated gate. The recommended baseline is
+  `…,aead?key=…,…`.
+- **Gates send credentials over the chain.** `psk`/`jwt`/`oauth`/`ldap` exchange
+  secrets during the handshake, so run them behind `aead` (the handshake is
+  carried inside the chain framing) — or use `mtls`, which encrypts itself, and
+  `ldaps` for the directory connection. Never run `ldap` over an unencrypted
+  chain.
+- **Bearer tokens are replayable until expiry.** A captured `jwt`/`oauth` token
+  works until it expires; use short lifetimes, and prefer `mtls` (bound to a
+  private key) where possible.
+- **`psk` authenticates the client to the server only**, not the reverse; the
+  shared `aead` key provides the mutual binding.
+- **`mtls insecure=true` disables server verification** — testing only; it logs a
+  warning at startup.
+- **Keep the chain/auth/knock specs secret.** They embed key material (`key=`,
+  `secret=`, `password=`); treat config files as secrets and keep them out of
+  logs and shared repos.
+- **Port knocking authorizes by source IP** for `ttl`; behind NAT, other hosts
+  sharing that IP are also allowed during the window. Pair it with `auth` for
+  per-client identity.

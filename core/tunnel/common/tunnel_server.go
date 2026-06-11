@@ -61,7 +61,8 @@ func (s *TunnelServerCommon) WaitingForConnection() {
 		}
 		s.knocker = k
 		defer k.Close()
-		log.Printf("port-knock gate active (%s)\n", s.KnockSpec)
+		// Do not log s.KnockSpec: it contains the knock secret key.
+		log.Printf("port-knock gate active\n")
 	}
 	log.Printf("listening for connection on %s\n", s.Listener.Addr().String())
 	for {

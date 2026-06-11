@@ -25,7 +25,10 @@ const httpPreamble = "POST /api/v2/upload HTTP/1.1\r\n" +
 	"Content-Type: application/octet-stream\r\n" +
 	"Transfer-Encoding: chunked\r\n\r\n"
 
-const httpMaxChunk = 1 << 20
+// httpMaxChunk bounds a single chunk so a peer cannot force a large allocation
+// in Deframe before the FramedConn frame-size cap is applied. It comfortably
+// exceeds an encoded frame (write chunks are 8 KiB) while staying small.
+const httpMaxChunk = 64 * 1024
 
 type httpMimic struct {
 	wroteHeader bool
