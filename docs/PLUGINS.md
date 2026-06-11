@@ -57,3 +57,53 @@ gets no distinguishing response), and `pad`/`bucket` defeat size fingerprinting.
 
 See `test/dpi/` for an end-to-end harness that demonstrates this against a
 simulated firewall.
+
+## Gates
+
+Gates are connection-level controls that run *around* the byte-transform chain,
+not as payload transforms. There are two kinds, each configured by its own field.
+
+### Authentication (`Auth`)
+
+An authenticator runs a handshake right after the connection is established —
+**inside** the plugin framing, so the handshake itself is disguised — and either
+lets the connection proceed or rejects it. The client proves identity; the server
+verifies and records the identity.
+
+```json
+"Auth": "psk?key=0123456789abcdef"
+```
+
+| Authenticator | Params | Behavior |
+|---------------|--------|----------|
+| `psk` | `key` (hex, both peers) | HMAC-SHA256 challenge-response; the server sends a fresh per-connection challenge, the client returns `HMAC(key, challenge)` |
+| `jwt` | client: `token`; server: `alg` (`HS256`\|`RS256`), `secret` (hex, HS256) or `pubkey` (PEM path, RS256) | Client presents a signed JWT; server verifies signature + `exp`/`nbf`; identity = `sub` claim |
+| `mtls` | client: `cert`, `key`, `ca`, `servername`; server: `cert`, `key`, `clientca` | Mutual-TLS handshake over the conn; identity = client cert Common Name |
+
+Auth config is asymmetric: the client carries its credential (`token`, client
+cert), the server carries the verification material (`secret`, `pubkey`,
+`clientca`). OAuth and LDAP authenticators are planned for a later phase.
+
+### Port knocking (`Knock`)
+
+Port knocking authorizes a source IP *before* it may connect to the tunnel port,
+so an unauthenticated scanner/prober sees nothing on the tunnel port at all.
+
+```json
+"Knock": "spa?key=0123456789abcdef&port=62201&ttl=10s"
+```
+
+| Knocker | Params | Behavior |
+|---------|--------|----------|
+| `spa` | `key` (hex, required), `port` (UDP knock port, required), `ttl` (authorized window, default 10s), `window` (timestamp tolerance, default 30s), `delay` (client settle, default 100ms) | Single-packet authorization: the client sends one authenticated UDP packet (`nonce ‖ timestamp ‖ HMAC`); the server verifies it (with replay + timestamp checks) and authorizes the source IP for `ttl`. The tunnel server drops connections from un-knocked IPs. |
+
+### Order of operations
+
+```
+client:  knock (SPA/UDP) ──▶ dial ──▶ plugin chain framing ──▶ auth handshake ──▶ data
+server:  knock listener authorizes IP ──▶ accept (gated) ──▶ chain ──▶ auth verify ──▶ data
+```
+
+Gates compose with the byte-transform chain: e.g. a tunnel can require a knock,
+disguise itself as TLS, encrypt with `aead`, and authenticate clients by JWT all
+at once.

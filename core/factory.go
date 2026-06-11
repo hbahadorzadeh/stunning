@@ -37,6 +37,7 @@ type TunnelConfig struct {
 	ServiceMode   string
 	Plugins       string
 	Auth          string
+	Knock         string
 }
 
 type Tunnel interface {
@@ -148,7 +149,7 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 				default:
 					log.Panicf("Conf `%s`: Invalid server type(%s).", name, stype)
 				}
-				ttun.tunnelClient = tcommon.WrapDialer(ttun.tunnelClient, conf.Plugins, conf.Auth)
+				ttun.tunnelClient = tcommon.WrapDialer(ttun.tunnelClient, conf.Plugins, conf.Auth, conf.Knock)
 				saddr := conf.Connect
 				if saddr == "" {
 					log.Panicf("Conf `%s`: Service connect address not specified.", name)
@@ -336,6 +337,13 @@ func TunnelFactory(name string, conf TunnelConfig) Tunnel {
 							as.SetAuthSpec(conf.Auth)
 						} else {
 							log.Printf("Conf `%s`: tunnel type %s does not support auth yet", name, stype)
+						}
+					}
+					if conf.Knock != "" {
+						if ks, ok := ttun.tunnelServer.(interface{ SetKnockSpec(string) }); ok {
+							ks.SetKnockSpec(conf.Knock)
+						} else {
+							log.Printf("Conf `%s`: tunnel type %s does not support knock yet", name, stype)
 						}
 					}
 				} else {

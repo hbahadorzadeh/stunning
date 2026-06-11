@@ -328,6 +328,39 @@ The [`test/dpi/`](test/dpi/) harness demonstrates this end to end against a
 simulated GFW middlebox. See the [plugin reference](docs/PLUGINS.md) and
 [benchmarks](docs/BENCHMARKS.md) for details.
 
+### Gates: authentication & port knocking
+
+Beyond the byte-transform chain, two **connection gates** control *who* may use a
+tunnel. Each has its own config field.
+
+**Authentication** (`Auth`) — a handshake that runs inside the chain framing (so
+it is disguised too) and rejects unauthorized clients:
+
+| Authenticator | Purpose |
+|---------------|---------|
+| `psk` | HMAC challenge-response with a shared key |
+| `jwt` | verify a presented JWT (HS256 secret / RS256 public key); identity = `sub` |
+| `mtls` | mutual-TLS client certificate; identity = cert Common Name |
+
+```json
+"Auth": "jwt?alg=HS256&secret=<hex>"
+```
+
+**Port knocking** (`Knock`) — authorizes a source IP *before* it may connect, so a
+scanner sees nothing on the tunnel port:
+
+| Knocker | Purpose |
+|---------|---------|
+| `spa` | single encrypted UDP packet (HMAC + timestamp + nonce, anti-replay) authorizes the IP for a TTL |
+
+```json
+"Knock": "spa?key=<hex>&port=62201&ttl=10s"
+```
+
+Gates compose with the chain — a tunnel can require a knock, look like TLS,
+encrypt with `aead`, and authenticate clients by JWT all at once. OAuth/LDAP
+authenticators are planned. Full reference: [docs/PLUGINS.md](docs/PLUGINS.md#gates).
+
 ---
 
 ## CLI Usage

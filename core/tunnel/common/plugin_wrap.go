@@ -13,20 +13,35 @@ import (
 //
 // The auth handshake runs after the plugin framing so it is carried inside the
 // obfuscated/disguised channel.
-func WrapDialer(inner TunnelDialer, pluginSpec, authSpec string) TunnelDialer {
-	if pluginSpec == "" && authSpec == "" {
+func WrapDialer(inner TunnelDialer, pluginSpec, authSpec, knockSpec string) TunnelDialer {
+	if pluginSpec == "" && authSpec == "" && knockSpec == "" {
 		return inner
 	}
-	return &pluginDialer{inner: inner, pluginSpec: pluginSpec, authSpec: authSpec}
+	return &pluginDialer{inner: inner, pluginSpec: pluginSpec, authSpec: authSpec, knockSpec: knockSpec}
 }
 
 type pluginDialer struct {
 	inner      TunnelDialer
 	pluginSpec string
 	authSpec   string
+	knockSpec  string
 }
 
 func (d *pluginDialer) Dial(network, addr string) (net.Conn, error) {
+	// Port-knock before dialing so the server's tunnel port accepts us.
+	if d.knockSpec != "" {
+		k, err := plugin.ParseKnock(d.knockSpec)
+		if err != nil {
+			return nil, err
+		}
+		host, _, herr := net.SplitHostPort(addr)
+		if herr != nil {
+			host = addr
+		}
+		if err := k.Knock(host); err != nil {
+			return nil, err
+		}
+	}
 	conn, err := d.inner.Dial(network, addr)
 	if err != nil {
 		return nil, err

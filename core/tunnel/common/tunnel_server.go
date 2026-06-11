@@ -5,6 +5,7 @@ import (
 	"net"
 
 	icommon "github.com/hbahadorzadeh/stunning/core/interface/common"
+	"github.com/hbahadorzadeh/stunning/core/plugin"
 )
 
 type TunnelServer interface {
@@ -22,6 +23,14 @@ type TunnelServerCommon struct {
 	Listener   net.Listener
 	PluginSpec string
 	AuthSpec   string
+	KnockSpec  string
+	knocker    plugin.Knocker
+}
+
+// SetKnockSpec configures port-knocking: the server only accepts connections from
+// source IPs that have recently sent a valid knock. An empty spec disables it.
+func (s *TunnelServerCommon) SetKnockSpec(spec string) {
+	s.KnockSpec = spec
 }
 
 // SetPluginSpec configures the per-connection plugin chain applied to accepted
@@ -42,14 +51,34 @@ func (s *TunnelServerCommon) SetServer(ss icommon.TunnelInterfaceServer) {
 
 func (s *TunnelServerCommon) WaitingForConnection() {
 	s.closed = false
+	if s.KnockSpec != "" {
+		k, err := plugin.ParseKnock(s.KnockSpec)
+		if err != nil {
+			log.Panicf("knock setup failed: %v", err)
+		}
+		if err := k.Start(); err != nil {
+			log.Panicf("knock listener failed: %v", err)
+		}
+		s.knocker = k
+		defer k.Close()
+		log.Printf("port-knock gate active (%s)\n", s.KnockSpec)
+	}
 	log.Printf("listening for connection on %s\n", s.Listener.Addr().String())
 	for {
 		conn, err := s.Listener.Accept()
-		log.Println("new connection")
 		if err != nil {
 			log.Println(err)
 			break
 		}
+		if s.knocker != nil {
+			host, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+			if !s.knocker.Authorized(host) {
+				log.Printf("dropping unauthorized (un-knocked) connection from %s", host)
+				conn.Close()
+				continue
+			}
+		}
+		log.Println("new connection")
 		go s.HandleConnection(conn)
 	}
 	s.closed = true
