@@ -367,6 +367,25 @@ Gates compose with the chain — a tunnel can require a knock, look like TLS,
 encrypt with `aead`, and authenticate clients by JWT all at once. Full reference:
 [docs/PLUGINS.md](docs/PLUGINS.md#gates).
 
+### Performance at a glance
+
+Plugins are cheap; the chain runs at hundreds of MB/s to multiple GB/s with ≤2
+allocations per frame on the crypto path (4 KiB frames, Apple M-series):
+
+| Plugin / chain | Throughput | allocs/op |
+|----------------|-----------:|----------:|
+| `aead` (AES-GCM, hardware) | ~1.9 GB/s | 2 |
+| `aead` (ChaCha20) | ~420 MB/s | 2 |
+| `profile` / `pad` (size shaping) | ~6 GB/s | 1–2 |
+| `flate` (compression — the heavy one) | ~110 MB/s | 13 |
+| `aead,tls-mimic` (framed, disguised) | ~250 MB/s | 5 |
+
+End-to-end through the simulated firewall, the payoff scenario: a high-entropy
+`aead` tunnel the censor **blocks** passes cleanly at **136 MB/s** once wrapped in
+`tls-mimic`. Gates (`auth`/`knock`) run once at setup, off the data path. Full
+methodology, per-chain tables, and the optimization history are in
+[docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+
 ---
 
 ## CLI Usage
