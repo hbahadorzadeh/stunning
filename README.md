@@ -11,8 +11,9 @@
 <p align="center">
   <a href="https://github.com/hbahadorzadeh/stunning/releases/tag/v1.1.0"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.0-blue.svg"></a>
   <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
-  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-GPLv3-green.svg"></a>
   <a href="https://golang.org"><img alt="Go" src="https://img.shields.io/badge/go-1.25-blue.svg"></a>
+  <a href="https://github.com/sponsors/hbahadorzadeh"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-%E2%9D%A4-ff69b4.svg"></a>
 </p>
 
 <p align="center">
@@ -659,19 +660,51 @@ See [DOCKER.md](DOCKER.md) for detailed Docker guide.
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file
+GNU General Public License v3.0 - See [LICENSE](LICENSE) file
 
 ---
 
 ## Contributing
 
-Contributions welcome! Please:
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Run tests: `go test -race ./...`
 5. Submit a pull request
+
+> **Note:** all contributions require agreement to the
+> [Contributor License Agreement (CLA)](CLA.md). Opening a pull request confirms
+> your agreement.
+
+---
+
+## Sponsor
+
+**Stunning** is built and maintained in the open under the GPLv3 license — free for
+everyone, including people who rely on it to reach an uncensored internet.
+Sponsorship pays for the work that keeps it that way: anti-DPI protocol research,
+mobile (iOS/Android) clients, multi-platform release infrastructure, and ongoing
+security review.
+
+If Stunning is useful to you or your organization, please consider sponsoring:
+
+<p align="center">
+  <a href="https://github.com/sponsors/hbahadorzadeh">
+    <img alt="Sponsor on GitHub" src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%20GitHub%20Sponsors-ff69b4?style=for-the-badge">
+  </a>
+</p>
+
+Where the money goes:
+
+- 🧩 New anti-DPI plugins and morphing strategies as censorship techniques evolve
+- 📱 iOS and Android VPN clients (App Store / Play Store / F-Droid distribution)
+- 🔐 Independent security audits of the crypto and gate code paths
+- 🚀 Multi-platform CI/release pipeline and signed builds
+- 📖 Documentation, benchmarks, and the DPI-evasion test harness
+
+Every tier keeps the project GPLv3-licensed and free. Thank you. ❤️
 
 ---
 
