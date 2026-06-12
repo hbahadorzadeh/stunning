@@ -177,13 +177,37 @@ See the [Configuration guide](#configuration) and
 ./stunning list              # list configured tunnels
 ./stunning metrics           # print Prometheus metrics
 ./stunning version           # version
-./stunning help              # help
+./stunning help              # help (also: -h, --help)
 ```
 
 | Flag | Default | Purpose |
 | ---- | ------- | ------- |
 | `-config <file>` | `tunnels.json` | config file |
 | `-metrics-port <port>` | `9090` | metrics HTTP port |
+
+`fg`/`start` don't require a config file — pass the tunnel definition directly
+as flags (or use them to override individual fields from a `tunnels.json`
+entry):
+
+| Flag | Maps to | Example |
+| ---- | ------- | ------- |
+| `-mode` | `ServiceMode` | `server` / `client` |
+| `-protocol` | `ServerType` | `tcp`, `udp`, `tls`, `h2`, `ws`, `udps`, `dns`, `icmp`, `http`, `https` |
+| `-iface` | `InterfaceType` | `tcp`, `udp`, `socks`, `tun`, `serial` |
+| `-listen` | `Listen` | `:8443` |
+| `-connect` | `Connect` | `127.0.0.1:9000` |
+| `-plugins` | `Plugins` | `aead?key=...,tls-mimic` |
+| `-auth` | `Auth` | `psk?secret=...` |
+| `-knock` | `Knock` | `spa?...` |
+| `-cert` / `-key` | `Cert` / `Key` | TLS cert/key files |
+| `-device` / `-mtu` | `DeviceName` / `Mtu` | TUN options |
+
+```bash
+# no tunnels.json needed
+./stunning -mode server -protocol tcp -iface tcp \
+  -listen :8443 -connect 127.0.0.1:9000 \
+  -plugins "aead?key=...,tls-mimic" fg edge
+```
 
 ---
 
