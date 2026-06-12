@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hbahadorzadeh/stunning/releases/latest"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.0-blue.svg"></a>
+  <a href="https://github.com/hbahadorzadeh/stunning/releases/latest"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.1-blue.svg"></a>
   <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-GPLv3-green.svg"></a>
   <a href="https://golang.org"><img alt="Go" src="https://img.shields.io/badge/go-1.25-blue.svg"></a>
@@ -95,7 +95,7 @@ chmod +x ./stunning-cli-linux-amd64
 A multi-arch (amd64/arm64) CLI image is published to GHCR each release:
 
 ```bash
-docker pull ghcr.io/hbahadorzadeh/stunning:latest    # or :v1.1.0
+docker pull ghcr.io/hbahadorzadeh/stunning:latest    # or :v1.1.1
 docker run --rm -v "$PWD/tunnels.json:/tunnels.json" \
   ghcr.io/hbahadorzadeh/stunning -config /tunnels.json fg my-tunnel
 ```
