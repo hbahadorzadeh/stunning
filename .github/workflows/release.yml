@@ -212,13 +212,13 @@ jobs:
         env: { CGO_ENABLED: 1 }
         run: |
           fyne package -os darwin -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon "$GITHUB_WORKSPACE/app/desktop/assets/icon.png" -sourceDir ./app/desktop
+            -icon "$GITHUB_WORKSPACE/app/desktop/assets/icon.png" --src ./app/desktop
           zip -r -q "stunning-desktop-${{ matrix.label }}.zip" Stunning.app
       - name: Package desktop (Windows)
         if: runner.os == 'Windows'
         env: { CGO_ENABLED: 1 }
         run: |
-          fyne package -os windows -appID io.github.hbahadorzadeh.stunning -name Stunning -icon "$env:GITHUB_WORKSPACE\app\desktop\assets\icon.png" -sourceDir ./app/desktop
+          fyne package -os windows -appID io.github.hbahadorzadeh.stunning -name Stunning -icon "$env:GITHUB_WORKSPACE\app\desktop\assets\icon.png" --src ./app/desktop
           Compress-Archive -Path Stunning.exe -DestinationPath "stunning-desktop-${{ matrix.label }}.zip"
       - uses: actions/upload-artifact@v7
         with:
@@ -257,7 +257,7 @@ jobs:
       - name: Build APK
         run: |
           fyne package -os android -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" -sourceDir ./app/mobile
+            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" --src ./app/mobile
           mv Stunning.apk stunning-android.apk
       - name: Build AAR binding
         run: gomobile bind -target android -androidapi 21 -o libstunning.aar ./bindings/
@@ -296,7 +296,7 @@ jobs:
         env: { CGO_ENABLED: 1 }
         run: |
           fyne package -os ios -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" -sourceDir ./app/mobile || \
+            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" --src ./app/mobile || \
             echo "iOS .ipa packaging needs signing; see publish-app-store"
       - name: Archive xcframework
         run: zip -r -q stunning-ios-xcframework.zip Stunning.xcframework
