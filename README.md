@@ -2,208 +2,128 @@
   <img src="./stunning.png" width="160" alt="Stunning Logo"/>
 </p>
 
-<h1 align="center">Stunning - Network Tunneling Engine</h1>
+<h1 align="center">Stunning — Network Tunneling Engine</h1>
 
 <p align="center">
-  <strong>Production-ready tunneling with 10 protocols, 4 interfaces, and real-time monitoring</strong>
+  <strong>Multi-protocol tunneling with composable anti-DPI plugin chains, access-control gates, and real-time metrics.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/hbahadorzadeh/stunning/releases/tag/v1.1.0"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.0-blue.svg"></a>
-  <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
-  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <a href="https://github.com/hbahadorzadeh/stunning/releases/latest"><img alt="Release" src="https://img.shields.io/badge/release-v1.1.0-blue.svg"></a>
+  <a href="https://github.com/hbahadorzadeh/stunning/actions"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen.svg"></a>
+  <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-GPLv3-green.svg"></a>
   <a href="https://golang.org"><img alt="Go" src="https://img.shields.io/badge/go-1.25-blue.svg"></a>
+  <a href="https://github.com/sponsors/hbahadorzadeh"><img alt="Sponsor" src="https://img.shields.io/badge/sponsor-%E2%9D%A4-ff69b4.svg"></a>
 </p>
 
 <p align="center">
-  <a href="#features"><strong>Features</strong></a> •
-  <a href="#installation"><strong>Installation</strong></a> •
-  <a href="#quick-start"><strong>Quick Start</strong></a> •
-  <a href="#cli-usage"><strong>CLI Usage</strong></a> •
-  <a href="#api-usage"><strong>API Usage</strong></a> •
-  <a href="#monitoring"><strong>Monitoring</strong></a> •
-  <a href="#platforms"><strong>Platforms</strong></a>
+  <a href="#what-it-does">What it does</a> •
+  <a href="#install">Install</a> •
+  <a href="#quick-start">Quick start</a> •
+  <a href="#cli">CLI</a> •
+  <a href="#library">Library</a> •
+  <a href="#documentation">Docs</a>
 </p>
 
 ---
 
-## 🚀 Latest Release
+## What it does
 
-**v1.1.0** is now available! [Download](https://github.com/hbahadorzadeh/stunning/releases/tag/v1.1.0) CLI, desktop, mobile, and C-library builds for Linux, macOS, and Windows.
+**Stunning** forwards network traffic through pluggable protocols and interfaces.
+It's a modern, production-ready replacement for stunnel: multi-protocol, with
+composable **anti-DPI plugin chains** that disguise traffic to defeat
+deep-packet-inspection firewalls, **access-control gates** (authentication and
+port knocking), and built-in Prometheus metrics.
 
-- 🧩 Anti-DPI plugin chains + authentication & port-knock gates
-- ✅ Full test suite (unit, race, e2e, DPI evasion, auth) in CI
-- ✅ Multi-platform release pipeline
+It ships as a CLI, a desktop GUI, iOS/Android clients, a C shared library, and a
+Go package.
 
----
-
-## Overview
-
-**Stunning** is a modern tunneling engine that securely forwards network traffic through various protocols and interfaces. It's a production-ready replacement for stunnel, providing flexible multi-protocol support with real-time metrics, process-based management, and comprehensive monitoring.
-
-### Use Cases
-
-- 🔒 Secure legacy service access with TLS/HTTPS
-- 📊 Load balancing and traffic routing
-- 🌐 Protocol translation and bridging
-- 🔐 VPN alternatives with custom protocols  
-- 📡 Private network tunneling
-- 🚀 Microservice gateway and mesh integration
+**Use cases:** secure legacy services with TLS, censorship circumvention,
+VPN-style tunneling, SOCKS5/HTTP proxying, protocol bridging, and microservice
+gateways.
 
 ---
 
 ## Features
 
-### 🔄 Tunnel Protocols (10 Types)
+**Tunnel protocols (10):** `tcp`, `udp`, `udps` (secure UDP), `tls`, `http`,
+`https`, `h2`, `ws` (WebSocket), `dns`, `icmp`.
 
-| Protocol | Type | Use Case |
-|----------|------|----------|
-| **TCP** | Standard | Direct TCP forwarding |
-| **UDP** | Datagram | DNS, VoIP, gaming |
-| **UDPS** | Secure | Encrypted UDP tunneling |
-| **TLS** | Encrypted | Secure socket layer tunneling |
-| **HTTP** | Web | HTTP transparent proxy |
-| **HTTPS** | Web | HTTPS/SSL proxy |
-| **H2** | Modern | HTTP/2 multiplexed tunneling |
-| **WS** | WebSocket | WebSocket tunneling (HTTP upgrade) |
-| **DNS** | Query | DNS over custom protocol |
-| **ICMP** | Echo | Stealth tunneling via ICMP |
+**Interfaces (4):** TCP socket, SOCKS5 proxy, TUN device (VPN), serial port.
 
-### 🎯 Interface Types (4 Modes)
+**Anti-DPI plugin chains:** per-connection, compiled-in transforms (no `.so`, no
+CGO) that compress, encrypt, pad, and disguise traffic — `flate`, `aead`, `pad`,
+`probe-guard`, `tls-mimic`, `http-mimic`, `jitter`, `bucket`, `profile`, `chaff`.
+A high-entropy tunnel a censor would block passes cleanly once wrapped in
+`tls-mimic`. → [docs/PLUGINS.md](docs/PLUGINS.md)
 
-- **TCP Socket** — Standard network socket
-- **SOCKS5 Proxy** — SOCKS5 protocol support
-- **TUN Device** — Virtual network interface for VPN
-- **Serial** — Serial port communication
+**Access-control gates:** authentication (`psk`, `jwt`, `mtls`, `oauth`, `ldap`)
+and single-packet port knocking (`spa`). → [docs/PLUGINS.md#gates](docs/PLUGINS.md#gates)
 
-### 🧩 Plugin Chains (Anti-DPI)
+**Management & monitoring:** process-based tunnels, Prometheus metrics, JSON +
+health HTTP endpoints, auto-restart on failure.
 
-Composable, per-connection transforms that obfuscate, encrypt, compress, and
-disguise tunnel traffic to defeat deep-packet-inspection firewalls. Compiled in
-(no `.so`, no CGO) and combinable in any order.
-
-| Plugin | Category | Purpose |
-|--------|----------|---------|
-| `flate` | size | DEFLATE compression |
-| `aead` | security | ChaCha20-Poly1305 / AES-GCM authenticated encryption |
-| `pad` | anti-DPI | random length padding |
-| `probe-guard` | active-probe | keyed tag; silently drops censor probes |
-| `tls-mimic` | mimicry | disguises the wire as TLS |
-| `http-mimic` | mimicry | disguises the wire as HTTP/1.1 chunked |
-| `jitter` | morphing | random per-frame timing delay |
-| `bucket` | morphing | normalize frame sizes to a fixed quantum |
-| `profile` | morphing | mimic a real protocol's size/timing distribution |
-| `chaff` | morphing | inject decoy/cover traffic to mask volume & timing |
-
-A high-entropy encrypted tunnel that a censor blocks passes cleanly once wrapped
-in `tls-mimic`. See [Plugin Chains](#plugin-chains) below, the full
-[plugin reference](docs/PLUGINS.md), and [benchmarks](docs/BENCHMARKS.md).
-
-### 🛠️ Management & Monitoring
-
-- **Process-based** — Each tunnel runs as independent background process
-- **Prometheus Metrics** — Real-time metrics in standard format
-- **HTTP API** — JSON metrics and health endpoints
-- **Uptime Tracking** — Connection count, bytes transferred, error rates
-- **Auto-restart** — Automatic tunnel recovery on failure
-
-### 📦 Multiple Distributions
-
-- **CLI Tool** — Command-line tunnel manager (Linux, macOS, Windows)
-- **Desktop App** — Cross-platform GUI (Linux, macOS, Windows)
-- **Mobile Apps** — iOS and Android VPN clients
-- **C Library** — Embed tunneling in other applications
-- **Go Library** — Use as Go package
+**Distributions:** CLI, desktop (Fyne), iOS/Android, C library, Go package.
 
 ---
 
-## Installation
+## Install
 
-### From Releases
+### From releases
 
-Each release publishes, per platform:
-
-- **CLI tool** — `stunning-cli-<os>-<arch>` (linux/macos/windows, amd64/arm64)
-- **Desktop app** — `stunning-desktop-<os>-<arch>.{tar.gz,zip}` (Fyne GUI)
-- **C library** — `libstunning-<os>-<arch>.tar.gz` (shared lib + header)
-- **Mobile** — `stunning-android.apk`, `libstunning.aar`, `stunning-ios-xcframework.zip`
-- `SHA256SUMS.txt` for verification
+Download per-platform builds from the
+[latest release](https://github.com/hbahadorzadeh/stunning/releases/latest)
+(verify against `SHA256SUMS.txt`):
 
 ```bash
-# CLI — Linux (amd64)
+# CLI — Linux amd64
 wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/stunning-cli-linux-amd64
 chmod +x ./stunning-cli-linux-amd64
 ./stunning-cli-linux-amd64 help
-
-# macOS (Apple Silicon)
-wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/stunning-cli-darwin-arm64
-chmod +x ./stunning-cli-darwin-arm64
-
-# Windows (amd64): download stunning-cli-windows-amd64.exe
 ```
 
-### C Library
-
-Each `libstunning-<os>-<arch>.tar.gz` contains the shared library and its header:
-
-```bash
-# Linux (amd64)
-wget https://github.com/hbahadorzadeh/stunning/releases/latest/download/libstunning-linux-amd64.tar.gz
-tar -xzf libstunning-linux-amd64.tar.gz
-# -> libstunning-linux-amd64/{libstunning.so, libstunning.h}
-
-# Compile against it
-gcc -o myapp myapp.c -I./libstunning-linux-amd64 -L./libstunning-linux-amd64 -lstunning
-```
+| Distribution | Asset |
+| ------------ | ----- |
+| CLI | `stunning-cli-<os>-<arch>` (linux/macos/windows, amd64/arm64) |
+| Desktop | `stunning-desktop-<os>-<arch>.{tar.gz,zip}` |
+| C library | `libstunning-<os>-<arch>.tar.gz` (shared lib + header) |
+| Mobile | `stunning-android.apk`, `libstunning.aar`, `stunning-ios-xcframework.zip` |
+| Docker | `ghcr.io/hbahadorzadeh/stunning:<version>` (multi-arch CLI image) |
 
 ### Docker
 
 A multi-arch (amd64/arm64) CLI image is published to GHCR each release:
 
 ```bash
-docker pull ghcr.io/hbahadorzadeh/stunning:latest        # or :v1.1.0
-# Run with your config mounted
+docker pull ghcr.io/hbahadorzadeh/stunning:latest    # or :v1.1.0
 docker run --rm -v "$PWD/tunnels.json:/tunnels.json" \
   ghcr.io/hbahadorzadeh/stunning -config /tunnels.json fg my-tunnel
 ```
 
-### From Source
+### From source
 
 ```bash
 git clone https://github.com/hbahadorzadeh/stunning.git
 cd stunning
-go build -o ./stunning .
+go build -o ./stunning .      # requires Go 1.25+
 ./stunning help
 ```
 
-### Desktop App
-
-```bash
-# Install Fyne first
-go install fyne.io/fyne/v2/cmd/fyne@latest
-
-# Linux
-go build -o ./Stunning ./app/desktop/
-
-# macOS
-fyne package -os darwin -appID io.github.hbahadorzadeh.stunning \
-  -name Stunning -icon app/desktop/assets/icon.png \
-  -sourceDir ./app/desktop
-```
-
-### As Go Library
+### As a Go library
 
 ```bash
 go get github.com/hbahadorzadeh/stunning
 ```
 
+> Building the desktop app needs X11/OpenGL headers; building mobile needs the
+> Android SDK / Xcode. The Docker environment handles the desktop/CGO builds —
+> see [DOCKER.md](DOCKER.md).
+
 ---
 
-## Quick Start
+## Quick start
 
-### 1. Create Configuration
-
-Create `tunnels.json`:
+**1. Configure** `tunnels.json`:
 
 ```json
 {
@@ -215,66 +135,23 @@ Create `tunnels.json`:
     "Connect": "example.com:443",
     "Cert": "/path/to/cert.pem",
     "Key": "/path/to/key.pem"
-  },
-  
-  "http-proxy": {
-    "ServiceMode": "server",
-    "ServerType": "http",
-    "InterfaceType": "socks",
-    "Listen": "127.0.0.1:8080",
-    "Connect": "upstream-proxy.local:3128"
   }
 }
 ```
 
-### 2. Start Tunnel
+**2. Run:**
 
 ```bash
-# Start in background
-./stunning start secure-web
-
-# Or run in foreground (debugging)
-./stunning fg secure-web
+./stunning start secure-web    # background
+./stunning fg    secure-web    # foreground (debugging)
+./stunning status              # show all tunnels
 ```
 
-### 3. Check Status
-
-```bash
-./stunning status
-```
-
-Output:
-```
-╔════════════════════════════════════════════════════════════════════════════════╗
-║                         Tunnel Status                                          ║
-╠════════════════════════════════════════════════════════════════════════════════╣
-║ Name                 │ Status     │ Listen                    │ PID             │
-╠════════════════════════════════════════════════════════════════════════════════╣
-║ secure-web           │ ✓ Running  │ 127.0.0.1:443             │ 12345           │
-║ http-proxy           │ ✗ Stopped  │ 127.0.0.1:8080            │ -               │
-╚════════════════════════════════════════════════════════════════════════════════╝
-
-Metrics available at: http://localhost:9090/metrics
-```
-
----
-
-## Plugin Chains
-
-Plugin chains transform tunnel payloads to evade deep-packet inspection (DPI) and
-to add security or size optimization. Plugins are stateful per connection,
-compiled into the binary (no `.so`, no CGO — works on every platform), and
-combine in any order.
-
-### Enabling a chain
-
-Add a `Plugins` field to a tunnel config. **The same chain string must be set on
-both the client and the server** — the client's encode is the exact inverse of
-the server's decode.
+A tunnel with an anti-DPI chain (same `Plugins` string on both ends):
 
 ```json
 {
-  "secure-tunnel": {
+  "evasive": {
     "ServiceMode": "client",
     "ServerType": "tcp",
     "InterfaceType": "socks",
@@ -285,184 +162,40 @@ the server's decode.
 }
 ```
 
-### Chain grammar
-
-```
-name?k=v&k2=v2,name2,name3?k=v
-```
-
-Comma-separated plugins, each with optional `?`-prefixed `&`-joined params.
-`Encode` runs left→right on the way out; the peer's `Decode` runs right→left.
-
-### Available plugins
-
-| Plugin | Category | Params | Purpose |
-|--------|----------|--------|---------|
-| `flate` | size | `level` (0–9) | DEFLATE compression |
-| `aead` | security | `key` (hex, **required**), `algo` (`chacha`\|`aesgcm`) | authenticated encryption, random nonce |
-| `pad` | anti-DPI | `min`, `max` | random length padding |
-| `probe-guard` | active-probe | `key` (hex, **required**), `taglen` (8–32) | keyed tag; drops unauthenticated probes |
-| `tls-mimic` | mimicry | — | disguise the wire as TLS |
-| `http-mimic` | mimicry | — | disguise the wire as HTTP/1.1 chunked |
-| `jitter` | morphing | `min`, `max` (durations) | random per-frame timing delay |
-| `bucket` | morphing | `size` | pad frames to a fixed size quantum |
-| `profile` | morphing | `name` (`web`\|`video`\|`voip`\|`custom`), … | mimic a real protocol's size/timing distribution |
-| `chaff` | morphing | `min`, `max`, `interval`, `jitter` | inject decoy frames to mask volume/timing (place first) |
-
-### Ordering rules
-
-- **Compress before encrypt** — `flate` must come before `aead` (ciphertext does
-  not compress).
-- **Mimicry goes last** — `tls-mimic` / `http-mimic` provide the wire framing and
-  must be the rightmost plugin, or the length prefix would precede the protocol
-  header and break the disguise.
-
-### Recommended chains
-
-```text
-# fast, strong, looks like TLS
-flate,aead?key=<hex>,tls-mimic
-
-# add size-fingerprint resistance, look like HTTP
-flate,aead?key=<hex>,bucket?size=512,http-mimic
-
-# minimal obfuscation without crypto
-flate,pad?min=16&max=256
-```
-
-### Why it beats DPI
-
-A passive entropy detector flags high-entropy unknown protocols — exactly what a
-naive encrypted proxy looks like. Wrapping the chain in `tls-mimic` makes the wire
-open with a convincing TLS handshake, so a protocol allowlist passes it while the
-body stays encrypted. `probe-guard` drops active probes (no distinguishing
-response), and `pad` / `bucket` defeat packet-size fingerprinting.
-
-The [`test/dpi/`](test/dpi/) harness demonstrates this end to end against a
-simulated GFW middlebox. See the [plugin reference](docs/PLUGINS.md) and
-[benchmarks](docs/BENCHMARKS.md) for details.
-
-### Gates: authentication & port knocking
-
-Beyond the byte-transform chain, two **connection gates** control *who* may use a
-tunnel. Each has its own config field.
-
-**Authentication** (`Auth`) — a handshake that runs inside the chain framing (so
-it is disguised too) and rejects unauthorized clients:
-
-| Authenticator | Purpose |
-|---------------|---------|
-| `psk` | HMAC challenge-response with a shared key |
-| `jwt` | verify a presented JWT (HS256 secret / RS256 public key); identity = `sub` |
-| `mtls` | mutual-TLS client certificate; identity = cert Common Name |
-| `oauth` | validate an OAuth 2.0 token via RFC 7662 introspection |
-| `ldap` | verify username/password by an LDAP bind |
-
-```json
-"Auth": "jwt?alg=HS256&secret=<hex>"
-```
-
-**Port knocking** (`Knock`) — authorizes a source IP *before* it may connect, so a
-scanner sees nothing on the tunnel port:
-
-| Knocker | Purpose |
-|---------|---------|
-| `spa` | single encrypted UDP packet (HMAC + timestamp + nonce, anti-replay) authorizes the IP for a TTL |
-
-```json
-"Knock": "spa?key=<hex>&port=62201&ttl=10s"
-```
-
-Gates compose with the chain — a tunnel can require a knock, look like TLS,
-encrypt with `aead`, and authenticate clients by JWT all at once. Full reference:
-[docs/PLUGINS.md](docs/PLUGINS.md#gates).
-
-### Performance at a glance
-
-Plugins are cheap; the chain runs at hundreds of MB/s to multiple GB/s with ≤2
-allocations per frame on the crypto path (4 KiB frames, Apple M-series):
-
-| Plugin / chain | Throughput | allocs/op |
-|----------------|-----------:|----------:|
-| `aead` (AES-GCM, hardware) | ~1.9 GB/s | 2 |
-| `aead` (ChaCha20) | ~420 MB/s | 2 |
-| `profile` / `pad` (size shaping) | ~6 GB/s | 1–2 |
-| `flate` (compression — the heavy one) | ~110 MB/s | 13 |
-| `aead,tls-mimic` (framed, disguised) | ~250 MB/s | 5 |
-
-End-to-end through the simulated firewall, the payoff scenario: a high-entropy
-`aead` tunnel the censor **blocks** passes cleanly at **136 MB/s** once wrapped in
-`tls-mimic`. Gates (`auth`/`knock`) run once at setup, off the data path. Full
-methodology, per-chain tables, and the optimization history are in
-[docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+See the [Configuration guide](#configuration) and
+[docs/PLUGINS.md](docs/PLUGINS.md) for all fields.
 
 ---
 
-## CLI Usage
-
-### Commands
+## CLI
 
 ```bash
-# Start tunnel in background
-./stunning start <name>
-
-# Run tunnel in foreground (for debugging/testing)
-./stunning fg <name>
-
-# Stop a running tunnel
-./stunning stop <name>
-
-# Show status of all tunnels
-./stunning status
-
-# List all configured tunnels
-./stunning list
-
-# View Prometheus metrics
-./stunning metrics
-
-# Show help
-./stunning help
+./stunning start  <name>     # start a tunnel in the background
+./stunning fg     <name>     # run in the foreground
+./stunning stop   <name>     # stop a running tunnel
+./stunning status            # status of all tunnels
+./stunning list              # list configured tunnels
+./stunning metrics           # print Prometheus metrics
+./stunning version           # version
+./stunning help              # help
 ```
 
-### Options
-
-```bash
--config <file>       Config file (default: tunnels.json)
--metrics-port <port> Metrics HTTP port (default: 9090)
-```
-
-### Examples
-
-```bash
-# Start tunnel from custom config
-./stunning -config tunnels-prod.json start my-tunnel
-
-# Start on different metrics port
-./stunning -metrics-port 9091 start my-tunnel
-
-# Stop tunnel
-./stunning stop my-tunnel
-
-# View metrics directly
-curl http://localhost:9090/metrics
-```
+| Flag | Default | Purpose |
+| ---- | ------- | ------- |
+| `-config <file>` | `tunnels.json` | config file |
+| `-metrics-port <port>` | `9090` | metrics HTTP port |
 
 ---
 
-## API Usage (Go Library)
-
-### Create Tunnel Programmatically
+## Library
 
 ```go
 package main
 
-import (
-	"github.com/hbahadorzadeh/stunning/core"
-)
+import "github.com/hbahadorzadeh/stunning/core"
 
 func main() {
-	config := core.TunnelConfig{
+	cfg := core.TunnelConfig{
 		ServiceMode:   "server",
 		ServerType:    "tcp",
 		InterfaceType: "tcp",
@@ -470,219 +203,131 @@ func main() {
 		Connect:       "127.0.0.1:9090",
 	}
 
-	// Create tunnel
-	tunnel := core.TunnelFactory("my-tunnel", config)
-
-	// Start tunnel (blocking)
+	tunnel := core.TunnelFactory("my-tunnel", cfg)
 	go tunnel.ListenAndServer()
 
-	// Check if alive
 	if tunnel.IsAlive() {
-		println("Tunnel is running")
+		m := tunnel.GetMetrics()
+		println("sent:", m.BytesSent.Load(), "recv:", m.BytesReceived.Load())
+		println(m.Export("my-tunnel"))      // Prometheus text
+		println(m.ExportJSON("my-tunnel"))  // JSON
 	}
-
-	// Access metrics
-	metrics := tunnel.GetMetrics()
-	println("Bytes sent:", metrics.BytesSent.Load())
-	println("Bytes received:", metrics.BytesReceived.Load())
 }
-```
-
-### Get Metrics
-
-```go
-// Export Prometheus format
-prometheus := tunnel.GetMetrics().Export("my-tunnel")
-println(prometheus)
-
-// Export JSON format
-json := tunnel.GetMetrics().ExportJSON("my-tunnel")
-println(json)
 ```
 
 ---
 
 ## Monitoring
 
-### Prometheus Metrics
-
-Metrics are automatically exported at `http://localhost:9090/metrics`:
-
-```prometheus
-tunnel_uptime_seconds{tunnel="my-tunnel"} 3600
-tunnel_bytes_received_total{tunnel="my-tunnel"} 1048576
-tunnel_bytes_sent_total{tunnel="my-tunnel"} 2097152
-tunnel_connections_total{tunnel="my-tunnel"} 125
-tunnel_connections_current{tunnel="my-tunnel"} 3
-tunnel_errors_total{tunnel="my-tunnel"} 2
-```
-
-### JSON API
-
-Get metrics as JSON:
+Metrics are exported at `http://localhost:9090`:
 
 ```bash
-curl http://localhost:9090/api/metrics
-
-curl http://localhost:9090/api/metrics/my-tunnel
+curl http://localhost:9090/metrics            # Prometheus text
+curl http://localhost:9090/api/metrics        # JSON, all tunnels
+curl http://localhost:9090/api/metrics/<name> # JSON, one tunnel
+curl http://localhost:9090/health             # health check
 ```
 
-### Health Check
+Exposed series: `tunnel_uptime_seconds`, `tunnel_bytes_{sent,received}_total`,
+`tunnel_connections_{total,current}`, `tunnel_errors_total` — all labeled by
+`tunnel`. Point Prometheus at `localhost:9090`.
 
-```bash
-curl http://localhost:9090/health
+---
+
+## Configuration
+
+Common fields per tunnel entry:
+
+| Field | Purpose |
+| ----- | ------- |
+| `ServiceMode` | `server` or `client` |
+| `ServerType` | protocol — `tcp`, `udp`, `udps`, `tls`, `http`, `https`, `h2`, `ws`, `dns`, `icmp` |
+| `InterfaceType` | `tcp`, `socks`, `tun`, `serial` |
+| `Listen` / `Connect` | local bind / upstream target |
+| `Cert` / `Key` | TLS/HTTPS certificate + key |
+| `Plugins` | anti-DPI chain spec ([docs/PLUGINS.md](docs/PLUGINS.md)) |
+| `Auth` / `Knock` | access-control gates ([docs/PLUGINS.md#gates](docs/PLUGINS.md#gates)) |
+| `DeviceName` / `Mtu` | TUN interface options |
+
+<details>
+<summary>TUN (VPN) and SOCKS examples</summary>
+
+```json
+{
+  "vpn": {
+    "ServiceMode": "server", "ServerType": "tcp", "InterfaceType": "tun",
+    "Listen": "10.0.0.1", "Connect": "vpn-gateway.local",
+    "DeviceName": "tun0", "Mtu": "1500"
+  },
+  "socks-proxy": {
+    "ServiceMode": "server", "ServerType": "tcp", "InterfaceType": "socks",
+    "Listen": "127.0.0.1:1080", "Connect": "upstream-proxy.local:3128"
+  }
+}
 ```
-
-### Prometheus Scraping
-
-Add to Prometheus `prometheus.yml`:
-
-```yaml
-scrape_configs:
-  - job_name: 'stunning-tunnels'
-    static_configs:
-      - targets: ['localhost:9090']
-```
+</details>
 
 ---
 
 ## Platforms
 
-<p align="center">
-
 | Platform | CLI | Desktop | Mobile | Library |
-|----------|:---:|:-------:|:------:|:-------:|
-| **Linux** | ✓ | ✓ | - | ✓ |
-| **macOS** | ✓ | ✓ | - | ✓ |
-| **Windows** | ✓ | ✓ | - | ✓ |
-| **iOS** | - | - | ✓ | ✓ |
-| **Android** | - | - | ✓ | ✓ |
+| -------- | :-: | :-----: | :----: | :-----: |
+| Linux (x86_64, ARM64) | ✓ | ✓ | – | ✓ |
+| macOS (Intel, Apple Silicon) | ✓ | ✓ | – | ✓ |
+| Windows (x86_64, ARM64) | ✓ | ✓ | – | ✓ |
+| iOS (ARM64) | – | – | ✓ | ✓ |
+| Android (ARM64) | – | – | ✓ | ✓ |
 
+---
+
+## Documentation
+
+| Doc | Contents |
+| --- | -------- |
+| [docs/PLUGINS.md](docs/PLUGINS.md) | Plugin chain reference, gates (auth/knock), security notes |
+| [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Per-plugin and end-to-end performance |
+| [test/dpi/](test/dpi/) | DPI-evasion test harness (simulated firewall) |
+| [DOCKER.md](DOCKER.md) | Building with Docker (desktop/CGO/cross-platform) |
+| [.github/CI_CD.md](.github/CI_CD.md) | CI and release pipelines |
+| [SECURITY.md](SECURITY.md) | Security model and vulnerability reporting |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
+
+---
+
+## Sponsor
+
+**Stunning** is built and maintained in the open under the GPLv3 license — free
+for everyone, including people who rely on it to reach an uncensored internet.
+Sponsorship funds anti-DPI protocol research, the iOS/Android clients, security
+review, and the release infrastructure.
+
+<p align="center">
+  <a href="https://github.com/sponsors/hbahadorzadeh">
+    <img alt="Sponsor on GitHub" src="https://img.shields.io/badge/Sponsor-%E2%9D%A4%20GitHub%20Sponsors-ff69b4?style=for-the-badge">
+  </a>
 </p>
-
-### Architecture Support
-
-- Linux: x86_64, ARM64
-- macOS: Intel, Apple Silicon (M1/M2/M3)
-- Windows: x86_64, ARM64 (CLI)
-- iOS: ARM64
-- Android: ARM64
-
----
-
-## Configuration Guide
-
-### TLS/HTTPS Tunnel
-
-For TLS or HTTPS protocols, provide certificate and key:
-
-```json
-{
-  "my-tls": {
-    "ServiceMode": "server",
-    "ServerType": "tls",
-    "InterfaceType": "tcp",
-    "Listen": "0.0.0.0:443",
-    "Connect": "backend-server:8080",
-    "Cert": "/etc/certs/cert.pem",
-    "Key": "/etc/certs/key.pem"
-  }
-}
-```
-
-### TUN Device Interface
-
-For VPN-like functionality, use TUN interface:
-
-```json
-{
-  "vpn": {
-    "ServiceMode": "server",
-    "ServerType": "tcp",
-    "InterfaceType": "tun",
-    "Listen": "10.0.0.1",
-    "Connect": "vpn-gateway.local",
-    "DeviceName": "tun0",
-    "Mtu": "1500"
-  }
-}
-```
-
-### SOCKS Proxy Interface
-
-For SOCKS5 proxy:
-
-```json
-{
-  "socks-proxy": {
-    "ServiceMode": "server",
-    "ServerType": "tcp",
-    "InterfaceType": "socks",
-    "Listen": "127.0.0.1:1080",
-    "Connect": "upstream-proxy.local:3128"
-  }
-}
-```
-
----
-
-## Docker Build
-
-Build for all platforms using Docker:
-
-```bash
-# Build everything
-docker-compose run build-all
-
-# Run tests
-docker-compose run test
-
-# Interactive shell
-docker-compose run shell
-```
-
-See [DOCKER.md](DOCKER.md) for detailed Docker guide.
-
----
-
-## Project Structure
-
-```
-.
-├── core/                    # Core tunneling library
-│   ├── tunnel/             # 10 tunnel protocol implementations
-│   ├── interface/          # 4 interface implementations
-│   ├── plugin/             # Anti-DPI plugin chain system
-│   ├── common/             # Shared utilities
-│   └── metrics/            # Prometheus metrics system
-├── app/
-│   ├── desktop/            # Fyne desktop app
-│   └── mobile/             # iOS/Android mobile apps
-├── bindings/               # Mobile language bindings (gomobile)
-├── clib/                   # C shared library wrapper
-├── test/dpi/               # 3-node docker DPI evasion harness
-├── docs/                   # PLUGINS.md, BENCHMARKS.md, design specs
-├── main.go                 # CLI tool
-└── README.md              # This file
-```
-
----
-
-## License
-
-MIT License - See [LICENSE](LICENSE) file
 
 ---
 
 ## Contributing
 
-Contributions welcome! Please:
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `go test -race ./...`
-5. Submit a pull request
+1. Fork and create a feature branch
+2. Make your changes (add tests where it makes sense)
+3. Run `go test -race ./...`
+4. Open a pull request
+
+> All contributions require agreement to the
+> [Contributor License Agreement (CLA)](CLA.md). Opening a pull request confirms
+> your agreement; the CLA bot will ask first-time contributors to sign.
+
+---
+
+## License
+
+GNU General Public License v3.0 — see [LICENSE](LICENSE).
 
 ---
 
@@ -690,10 +335,5 @@ Contributions welcome! Please:
 
 - 📧 Email: h.bahadorzadeh@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/hbahadorzadeh/stunning/issues)
-- 📖 Docs: Check project README and inline code comments
 
----
-
-<p align="center">
-  <strong>Made with ❤️ in Go</strong>
-</p>
+<p align="center"><sub>Made with ❤️ in Go</sub></p>
