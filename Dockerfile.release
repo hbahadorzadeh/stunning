@@ -1,0 +1,18 @@
+# Minimal multi-arch runtime image with the stunning CLI. Built and published to
+# GHCR by the release workflow. The repo's root Dockerfile is the heavy build/dev
+# image (used by docker-compose); this one is a lean distroless runtime.
+FROM --platform=$BUILDPLATFORM golang:1.25 AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -o /stunning .
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /stunning /usr/local/bin/stunning
+# Metrics endpoint (when enabled) and a place to mount tunnels.json.
+EXPOSE 9090
+ENTRYPOINT ["/usr/local/bin/stunning"]
+CMD ["help"]

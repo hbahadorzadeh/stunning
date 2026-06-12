@@ -156,6 +156,17 @@ tar -xzf libstunning-linux-amd64.tar.gz
 gcc -o myapp myapp.c -I./libstunning-linux-amd64 -L./libstunning-linux-amd64 -lstunning
 ```
 
+### Docker
+
+A multi-arch (amd64/arm64) CLI image is published to GHCR each release:
+
+```bash
+docker pull ghcr.io/hbahadorzadeh/stunning:latest        # or :v1.1.0
+# Run with your config mounted
+docker run --rm -v "$PWD/tunnels.json:/tunnels.json" \
+  ghcr.io/hbahadorzadeh/stunning -config /tunnels.json fg my-tunnel
+```
+
 ### From Source
 
 ```bash
