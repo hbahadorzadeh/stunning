@@ -26,7 +26,7 @@ jobs:
           path-to-signatures: 'signatures/version1/cla.json'
           path-to-document: 'https://github.com/hbahadorzadeh/stunning/blob/main/CLA.md'
           branch: 'main'
-          # Maintainers and bots that do not need to sign.
-          allowlist: hbahadorzadeh,dependabot[bot],*[bot]
+          # Maintainers, AI co-authors, and bots that do not need to sign.
+          allowlist: hbahadorzadeh,claude,dependabot[bot],*[bot]
           custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'
           custom-notsigned-prcomment: 'Thanks for your contribution! Before we can merge, please read our [CLA](https://github.com/hbahadorzadeh/stunning/blob/main/CLA.md) and sign it by posting the comment below.'
