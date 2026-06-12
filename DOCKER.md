@@ -231,14 +231,14 @@ Subsequent builds: ~15s (with cached dependencies)
 
 ## CI/CD Integration
 
-The Docker setup mirrors the `.github/workflows/release.yml` CI/CD pipeline:
+The same Docker environment backs the CI build/test jobs and the release
+pipeline, so local Docker builds reproduce CI exactly:
 
 ```bash
 # Local docker build
 docker-compose run build-all
-
-# Same steps run in GitHub Actions
-# (see .github/workflows/release.yml)
 ```
 
-Both produce identical artifacts through the same build steps.
+The CI `build`, `unit-tests`, and `integration-tests` jobs run inside this image;
+`release.yml` uses it to produce the published artifacts. See
+[.github/CI_CD.md](.github/CI_CD.md) for the full pipeline.

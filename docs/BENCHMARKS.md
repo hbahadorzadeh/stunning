@@ -7,7 +7,7 @@ evasion harness.
 ## Environment
 
 - CPU: Apple M-series (arm64), 8 logical CPUs
-- Go: 1.26
+- Go: 1.25
 - Microbenchmarks: `go test -bench` on `core/plugin`, `-benchtime=500ms`
 - End-to-end: `test/dpi/scenarios.sh`, 1 MiB × 2 concurrent streams
 
