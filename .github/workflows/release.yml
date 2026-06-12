@@ -108,8 +108,8 @@ jobs:
           - { os: ubuntu-latest, goos: linux, goarch: amd64, lib: libstunning.so, cc: "" }
           - { os: ubuntu-latest, goos: linux, goarch: arm64, lib: libstunning.so, cc: aarch64-linux-gnu-gcc }
           - { os: ubuntu-latest, goos: windows, goarch: amd64, lib: libstunning.dll, cc: x86_64-w64-mingw32-gcc }
-          - { os: macos-latest, goos: darwin, goarch: arm64, lib: libstunning.dylib, cc: "" }
-          - { os: macos-13, goos: darwin, goarch: amd64, lib: libstunning.dylib, cc: "" }
+          - { os: macos-latest, goos: darwin, goarch: arm64, lib: libstunning.dylib, cc: "clang -arch arm64" }
+          - { os: macos-latest, goos: darwin, goarch: amd64, lib: libstunning.dylib, cc: "clang -arch x86_64" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
@@ -154,7 +154,6 @@ jobs:
         include:
           - { os: ubuntu-latest, label: linux-amd64 }
           - { os: macos-latest, label: macos-arm64 }
-          - { os: macos-13, label: macos-amd64 }
           - { os: windows-latest, label: windows-amd64 }
     runs-on: ${{ matrix.os }}
     continue-on-error: true
@@ -169,7 +168,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev xorg-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev
       - name: Install Fyne CLI
-        run: go install fyne.io/fyne/v2/cmd/fyne@latest
+        run: go install fyne.io/tools/cmd/fyne@latest
       - name: Package desktop (Linux)
         if: runner.os == 'Linux'
         env: { CGO_ENABLED: 1 }
@@ -181,13 +180,13 @@ jobs:
         env: { CGO_ENABLED: 1 }
         run: |
           fyne package -os darwin -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon app/desktop/assets/icon.png -sourceDir ./app/desktop
+            -icon "$GITHUB_WORKSPACE/app/desktop/assets/icon.png" -sourceDir ./app/desktop
           zip -r -q "stunning-desktop-${{ matrix.label }}.zip" Stunning.app
       - name: Package desktop (Windows)
         if: runner.os == 'Windows'
         env: { CGO_ENABLED: 1 }
         run: |
-          fyne package -os windows -appID io.github.hbahadorzadeh.stunning -name Stunning -icon app/desktop/assets/icon.png -sourceDir ./app/desktop
+          fyne package -os windows -appID io.github.hbahadorzadeh.stunning -name Stunning -icon "$env:GITHUB_WORKSPACE\app\desktop\assets\icon.png" -sourceDir ./app/desktop
           Compress-Archive -Path Stunning.exe -DestinationPath "stunning-desktop-${{ matrix.label }}.zip"
       - uses: actions/upload-artifact@v7
         with:
@@ -217,17 +216,16 @@ jobs:
       - uses: android-actions/setup-android@v4
         with:
           packages: 'platforms;android-33 ndk;25.1.8937393 build-tools;33.0.2'
-      - name: Install Fyne + gomobile
+      - name: Install Fyne + gomobile + x/mobile
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/tools/cmd/fyne@latest
           go install golang.org/x/mobile/cmd/gomobile@latest
+          go get golang.org/x/mobile/bind@latest
           gomobile init
       - name: Build APK
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
           fyne package -os android -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon app/mobile/assets/icon.png -sourceDir ./app/mobile
+            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" -sourceDir ./app/mobile
           mv Stunning.apk stunning-android.apk
       - name: Build AAR binding
         run: gomobile bind -target android -androidapi 21 -o libstunning.aar ./bindings/
@@ -254,10 +252,11 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: 1.25
-      - name: Install Fyne + gomobile
+      - name: Install Fyne + gomobile + x/mobile
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/tools/cmd/fyne@latest
           go install golang.org/x/mobile/cmd/gomobile@latest
+          go get golang.org/x/mobile/bind@latest
           gomobile init
       - name: Build iOS binding (xcframework)
         run: gomobile bind -target ios -o Stunning.xcframework ./bindings/
@@ -265,7 +264,7 @@ jobs:
         env: { CGO_ENABLED: 1 }
         run: |
           fyne package -os ios -appID io.github.hbahadorzadeh.stunning -name Stunning \
-            -icon app/mobile/assets/icon.png -sourceDir ./app/mobile || \
+            -icon "$GITHUB_WORKSPACE/app/mobile/assets/icon.png" -sourceDir ./app/mobile || \
             echo "iOS .ipa packaging needs signing; see publish-app-store"
       - name: Archive xcframework
         run: zip -r -q stunning-ios-xcframework.zip Stunning.xcframework
