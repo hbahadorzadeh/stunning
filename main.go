@@ -133,6 +133,8 @@ func resolveConfig(name string, f tunnelFlags) (core.TunnelConfig, error) {
 	var conf core.TunnelConfig
 	if confs, err := readConfig(configFile); err == nil {
 		conf = confs[name]
+	} else if !os.IsNotExist(err) {
+		return conf, fmt.Errorf("failed to read config file %s: %w", configFile, err)
 	}
 
 	if f.mode != "" {
@@ -265,7 +267,35 @@ func stopTunnel(name string) error {
 func showStatus(configFile string) error {
 	confs, err := readConfig(configFile)
 	if err != nil {
-		return fmt.Errorf("no tunnels configured in %s: %w", configFile, err)
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to read config file %s: %w", configFile, err)
+		}
+		confs = make(map[string]core.TunnelConfig)
+	}
+
+	// Pick up ad-hoc tunnels (started without a tunnels.json entry) from
+	// their persisted run configs in ~/.stunning/pids/<name>.run.json.
+	if entries, err := os.ReadDir(pidDir); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".run.json") {
+				continue
+			}
+			name := strings.TrimSuffix(entry.Name(), ".run.json")
+			if _, exists := confs[name]; exists {
+				continue
+			}
+			data, err := os.ReadFile(filepath.Join(pidDir, entry.Name()))
+			if err != nil {
+				continue
+			}
+			var runConfs map[string]core.TunnelConfig
+			if err := json.Unmarshal(data, &runConfs); err != nil {
+				continue
+			}
+			if c, ok := runConfs[name]; ok {
+				confs[name] = c
+			}
+		}
 	}
 
 	names := make([]string, 0, len(confs))
@@ -273,6 +303,10 @@ func showStatus(configFile string) error {
 		names = append(names, name)
 	}
 	sort.Strings(names)
+
+	if len(names) == 0 {
+		return fmt.Errorf("no tunnels configured or running")
+	}
 
 	t := table.New().
 		Border(lipgloss.RoundedBorder()).
@@ -299,6 +333,7 @@ func showStatus(configFile string) error {
 				status = errStyle.Render("✗ dead")
 				pidStr = strconv.Itoa(pid)
 				os.Remove(pidFile)
+				os.Remove(filepath.Join(pidDir, name+".run.json"))
 			}
 		} else {
 			status = dimStyle.Render("- stopped")
