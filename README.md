@@ -25,6 +25,13 @@
   <a href="#documentation">Docs</a>
 </p>
 
+<p align="center">
+  <img src="./test/dpi/demo.gif" width="720" alt="Stunning anti-DPI demo: a censor blocks an encrypted aead tunnel, then passes the same tunnel once tls-mimic is added"/>
+</p>
+<p align="center">
+  <sub>Same encrypted tunnel — <code>aead</code> alone gets <strong>blocked</strong>, <code>aead,tls-mimic</code> <strong>passes</strong>. <a href="test/dpi/">DPI-evasion harness →</a></sub>
+</p>
+
 ---
 
 ## What it does
