@@ -38,8 +38,11 @@ run_scenario() { # chain expect
   done
   printf '\r\033[K'
   wait "$pid" 2>/dev/null || true
-  VERDICT=$(grep -m1 'censor verdict:' "$LOG" | awk '{print $3}')
-  MBPS=$(grep -m1 'metrics:' "$LOG" | grep -oE '[0-9]+(\.[0-9]+)? MB/s' | head -1)
+  VERDICT=$(grep -m1 'censor verdict:' "$LOG" | awk '{print $3}' || true)
+  local raw_mbps
+  raw_mbps=$(grep -m1 'metrics:' "$LOG" | grep -oE '"throughput_mbps":[0-9.]+' | grep -oE '[0-9.]+$' || true)
+  MBPS=""
+  [ -n "$raw_mbps" ] && MBPS=$(printf '%.1f MB/s' "$raw_mbps")
 }
 
 clear

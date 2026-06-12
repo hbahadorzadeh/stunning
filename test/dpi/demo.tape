@@ -19,5 +19,5 @@ Set Theme "Dracula"
 Hide
 Type "bash test/dpi/demo.sh" Enter
 Show
-# Cover both docker scenarios; trim afterward with gifsicle if needed.
-Sleep 120s
+# Demo runs ~35s end to end (two docker scenarios); pad slightly for variance.
+Sleep 45s
